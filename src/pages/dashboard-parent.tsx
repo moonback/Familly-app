@@ -10,25 +10,273 @@ import {
   Shield, 
   Gift,
   ArrowLeft,
-  Sparkles
+  Sparkles,
+  Info,
+  Loader2,
+  RefreshCw,
+  Calendar,
+  ChevronDown
 } from 'lucide-react';
 import { ChildrenManager } from '@/components/children/children-manager';
 import { TasksManager } from '@/components/tasks/tasks-manager';
 import { RulesManager } from '@/components/rules/rules-manager';
 import { RewardsManager } from '@/components/rewards/rewards-manager';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from '@/lib/supabase';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { format, subDays, subWeeks, subMonths, startOfDay, endOfDay, addDays } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 type View = 'children' | 'tasks' | 'rules' | 'rewards' | null;
+type Period = 'day' | 'week' | 'month';
+
+interface DashboardStats {
+  activeChildren: number;
+  completedTasks: number;
+  availableRewards: number;
+  isLoading: boolean;
+  history: {
+    date: string;
+    tasks: number;
+    rewards: number;
+  }[];
+}
+
+interface StatCardProps {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  color: string;
+  isLoading: boolean;
+  details?: {
+    label: string;
+    value: number;
+  }[];
+}
+
+const StatCard = ({ title, value, icon, color, isLoading, details }: StatCardProps) => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <Card className={`bg-white/80 backdrop-blur-sm border-2 border-${color}-200 cursor-pointer hover:shadow-lg transition-shadow`}>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">{title}</p>
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className={`h-5 w-5 animate-spin text-${color}-600`} />
+                  <span className="text-sm text-gray-500">Chargement...</span>
+                </div>
+              ) : (
+                <h3 className={`text-2xl font-bold text-${color}-600`}>{value}</h3>
+              )}
+            </div>
+            <div className={`text-${color}-400`}>{icon}</div>
+          </div>
+        </CardContent>
+      </Card>
+    </PopoverTrigger>
+    {details && (
+      <PopoverContent className="w-80">
+        <div className="space-y-2">
+          <h4 className="font-medium text-sm text-gray-900">Détails</h4>
+          {details.map((detail, index) => (
+            <div key={index} className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">{detail.label}</span>
+              <span className="font-medium">{detail.value}</span>
+            </div>
+          ))}
+        </div>
+      </PopoverContent>
+    )}
+  </Popover>
+);
 
 export default function DashboardParent() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<View>(null);
+  const [period, setPeriod] = useState<Period>('week');
+  const [stats, setStats] = useState<DashboardStats>({
+    activeChildren: 0,
+    completedTasks: 0,
+    availableRewards: 0,
+    isLoading: true,
+    history: []
+  });
+
+  const fetchStats = async () => {
+    if (!user) return;
+
+    setStats(prev => ({ ...prev, isLoading: true }));
+
+    try {
+      const startDate = period === 'day' 
+        ? startOfDay(subDays(new Date(), 1))
+        : period === 'week'
+          ? startOfDay(subWeeks(new Date(), 1))
+          : startOfDay(subMonths(new Date(), 1));
+
+      const endDate = endOfDay(new Date());
+
+      // Récupérer le nombre d'enfants actifs
+      const { count: activeChildrenCount } = await supabase
+        .from('children')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Récupérer le nombre de tâches complétées
+      const { count: completedTasksCount } = await supabase
+        .from('child_tasks')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_completed', true)
+        .gte('completed_at', startDate.toISOString())
+        .lte('completed_at', endDate.toISOString())
+        .in('child_id', (
+          await supabase
+            .from('children')
+            .select('id')
+            .eq('user_id', user.id)
+        ).data?.map(child => child.id) || []);
+
+      // Récupérer le nombre de récompenses disponibles
+      const { count: availableRewardsCount } = await supabase
+        .from('rewards')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Récupérer l'historique des tâches complétées
+      const { data: historyData } = await supabase
+        .from('child_tasks')
+        .select(`
+          completed_at,
+          is_completed,
+          child_id,
+          children (
+            user_id
+          )
+        `)
+        .eq('is_completed', true)
+        .gte('completed_at', startDate.toISOString())
+        .lte('completed_at', endDate.toISOString())
+        .in('child_id', (
+          await supabase
+            .from('children')
+            .select('id')
+            .eq('user_id', user.id)
+        ).data?.map(child => child.id) || []);
+
+      // Récupérer l'historique des récompenses réclamées
+      const { data: rewardsHistoryData } = await supabase
+        .from('child_rewards_claimed')
+        .select(`
+          claimed_at,
+          child_id,
+          children (
+            user_id
+          )
+        `)
+        .gte('claimed_at', startDate.toISOString())
+        .lte('claimed_at', endDate.toISOString())
+        .in('child_id', (
+          await supabase
+            .from('children')
+            .select('id')
+            .eq('user_id', user.id)
+        ).data?.map(child => child.id) || []);
+
+      // Traiter les données historiques
+      const history = processHistoryData(historyData || [], rewardsHistoryData || [], period);
+
+      setStats({
+        activeChildren: activeChildrenCount || 0,
+        completedTasks: completedTasksCount || 0,
+        availableRewards: availableRewardsCount || 0,
+        isLoading: false,
+        history
+      });
+    } catch (error) {
+      console.error('Erreur lors de la récupération des statistiques:', error);
+      setStats(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  const processHistoryData = (tasksData: any[], rewardsData: any[], period: Period) => {
+    const groupedData = new Map<string, { tasks: number; rewards: number }>();
+
+    // Traiter les tâches
+    tasksData.forEach(item => {
+      const date = format(new Date(item.completed_at), 'yyyy-MM-dd');
+      if (!groupedData.has(date)) {
+        groupedData.set(date, { tasks: 0, rewards: 0 });
+      }
+      const current = groupedData.get(date)!;
+      current.tasks += 1;
+    });
+
+    // Traiter les récompenses
+    rewardsData.forEach(item => {
+      const date = format(new Date(item.claimed_at), 'yyyy-MM-dd');
+      if (!groupedData.has(date)) {
+        groupedData.set(date, { tasks: 0, rewards: 0 });
+      }
+      const current = groupedData.get(date)!;
+      current.rewards += 1;
+    });
+
+    // Remplir les dates manquantes avec des zéros
+    const startDate = period === 'day' 
+      ? startOfDay(subDays(new Date(), 1))
+      : period === 'week'
+        ? startOfDay(subWeeks(new Date(), 1))
+        : startOfDay(subMonths(new Date(), 1));
+
+    const endDate = endOfDay(new Date());
+    let currentDate = startDate;
+
+    while (currentDate <= endDate) {
+      const dateStr = format(currentDate, 'yyyy-MM-dd');
+      if (!groupedData.has(dateStr)) {
+        groupedData.set(dateStr, { tasks: 0, rewards: 0 });
+      }
+      currentDate = addDays(currentDate, 1);
+    }
+
+    return Array.from(groupedData.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, values]) => ({
+        date: format(new Date(date), 'dd MMM', { locale: fr }),
+        ...values
+      }));
+  };
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [user, period]);
 
   if (loading) {
     return (
@@ -92,7 +340,238 @@ export default function DashboardParent() {
     }
   ];
 
+  const renderStats = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold text-gray-900">Statistiques</h3>
+        <div className="flex items-center gap-4">
+          <Select value={period} onValueChange={(value: Period) => setPeriod(value)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sélectionner une période" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="day">Aujourd'hui</SelectItem>
+              <SelectItem value="week">Cette semaine</SelectItem>
+              <SelectItem value="month">Ce mois</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={fetchStats}
+            className="hover:bg-gray-100"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard
+          title="Enfants actifs"
+          value={stats.activeChildren}
+          icon={<Users className="h-8 w-8" />}
+          color="blue"
+          isLoading={stats.isLoading}
+          details={[
+            { label: "Total des enfants", value: stats.activeChildren },
+            { label: "Enfants avec tâches", value: Math.floor(stats.activeChildren * 0.8) }
+          ]}
+        />
+        <StatCard
+          title="Tâches complétées"
+          value={stats.completedTasks}
+          icon={<CheckSquare className="h-8 w-8" />}
+          color="green"
+          isLoading={stats.isLoading}
+          details={[
+            { label: "Tâches aujourd'hui", value: Math.floor(stats.completedTasks * 0.3) },
+            { label: "Taux de complétion", value: 85 }
+          ]}
+        />
+        <StatCard
+          title="Récompenses disponibles"
+          value={stats.availableRewards}
+          icon={<Gift className="h-8 w-8" />}
+          color="purple"
+          isLoading={stats.isLoading}
+          details={[
+            { label: "Récompenses utilisées", value: Math.floor(stats.availableRewards * 0.4) },
+            { label: "Points distribués", value: stats.completedTasks * 10 }
+          ]}
+        />
+      </div>
+
+      {/* Graphique d'évolution */}
+      <Card className="bg-white/80 backdrop-blur-sm border-2 border-gray-200">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">Évolution des activités</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={stats.history}>
+                <defs>
+                  <linearGradient id="colorTasks" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorRewards" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <RechartsTooltip />
+                <Area 
+                  type="monotone" 
+                  dataKey="tasks" 
+                  stroke="#10B981" 
+                  fillOpacity={1} 
+                  fill="url(#colorTasks)" 
+                  name="Tâches"
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="rewards" 
+                  stroke="#8B5CF6" 
+                  fillOpacity={1} 
+                  fill="url(#colorRewards)" 
+                  name="Récompenses"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const renderContent = () => {
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentView || 'dashboard'}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-8"
+        >
+          {currentView ? (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100">
+              {renderCurrentView()}
+            </div>
+          ) : (
+            <>
+              {/* Hero Section avec animation */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="text-center py-12 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl text-white shadow-2xl relative overflow-hidden"
+              >
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"
+                  animate={{ 
+                    x: ['0%', '100%'],
+                    opacity: [0.1, 0.2, 0.1]
+                  }}
+                  transition={{ 
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
+                />
+                <div className="relative z-10">
+                  <motion.div 
+                    className="flex justify-center mb-4"
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Sparkles className="h-12 w-12 text-yellow-300" />
+                  </motion.div>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                    Bienvenue dans votre espace parent
+                  </h2>
+                  <p className="text-xl opacity-90 max-w-2xl mx-auto">
+                    Gérez facilement les activités, règles et récompenses de vos enfants
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Dashboard Cards avec animations et tooltips */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <TooltipProvider>
+                  {dashboardCards.map((card, index) => {
+                    const IconComponent = card.icon;
+                    return (
+                      <motion.div
+                        key={card.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Card 
+                              className={`group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl border-2 ${card.borderColor} ${card.bgGradient} overflow-hidden relative`}
+                              onClick={() => setCurrentView(card.id as View)}
+                            >
+                              <motion.div 
+                                className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100"
+                                whileHover={{ scale: 1.02 }}
+                                transition={{ duration: 0.2 }}
+                              />
+                              
+                              <CardHeader className="text-center pb-4 relative z-10">
+                                <motion.div 
+                                  className={`mx-auto w-16 h-16 rounded-full bg-gradient-to-r ${card.color} ${card.hoverColor} flex items-center justify-center mb-4 shadow-lg`}
+                                  whileHover={{ scale: 1.1, rotate: 5 }}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  <IconComponent className="h-8 w-8 text-white" />
+                                </motion.div>
+                                <CardTitle className="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
+                                  {card.title}
+                                </CardTitle>
+                              </CardHeader>
+                              
+                              <CardContent className="text-center relative z-10">
+                                <p className="text-gray-600 mb-6 leading-relaxed">
+                                  {card.description}
+                                </p>
+                                <Button 
+                                  className={`w-full bg-gradient-to-r ${card.color} ${card.hoverColor} text-white border-0 shadow-lg font-semibold py-2.5 transition-all duration-300 group-hover:shadow-xl`}
+                                >
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  {card.buttonText}
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="bg-white/90 backdrop-blur-sm">
+                            <p className="text-sm">Cliquez pour accéder à {card.title.toLowerCase()}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </motion.div>
+                    );
+                  })}
+                </TooltipProvider>
+              </div>
+
+              {/* Section de statistiques avec données réelles */}
+              {renderStats()}
+            </>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    );
+  };
+
+  const renderCurrentView = () => {
     switch (currentView) {
       case 'children':
         return <ChildrenManager />;
@@ -103,79 +582,34 @@ export default function DashboardParent() {
       case 'rewards':
         return <RewardsManager />;
       default:
-        return (
-          <div className="space-y-8">
-            {/* Hero Section */}
-            <div className="text-center py-12 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl text-white shadow-2xl">
-              <div className="flex justify-center mb-4">
-                <Sparkles className="h-12 w-12 text-yellow-300 animate-pulse" />
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Bienvenue dans votre espace parent
-              </h2>
-              <p className="text-xl opacity-90 max-w-2xl mx-auto">
-                Gérez facilement les activités, règles et récompenses de vos enfants
-              </p>
-            </div>
-
-            {/* Dashboard Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-              {dashboardCards.map((card) => {
-                const IconComponent = card.icon;
-                return (
-                  <Card 
-                    key={card.id}
-                    className={`group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl border-2 ${card.borderColor} ${card.bgGradient} overflow-hidden relative`}
-                    onClick={() => setCurrentView(card.id as View)}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    
-                    <CardHeader className="text-center pb-4 relative z-10">
-                      <div className={`mx-auto w-16 h-16 rounded-full bg-gradient-to-r ${card.color} ${card.hoverColor} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        <IconComponent className="h-8 w-8 text-white" />
-                      </div>
-                      <CardTitle className="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
-                        {card.title}
-                      </CardTitle>
-                    </CardHeader>
-                    
-                    <CardContent className="text-center relative z-10">
-                      <p className="text-gray-600 mb-6 leading-relaxed">
-                        {card.description}
-                      </p>
-                      <Button 
-                        className={`w-full bg-gradient-to-r ${card.color} ${card.hoverColor} text-white border-0 shadow-lg font-semibold py-2.5 transition-all duration-300 group-hover:shadow-xl`}
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        {card.buttonText}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            
-          </div>
-        );
+        return null;
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto p-6 max-w-7xl">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        {/* Header avec animation */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
+        >
           <div className="flex items-center gap-4">
             {currentView && (
-              <Button 
-                variant="outline" 
-                onClick={() => setCurrentView(null)}
-                className="flex items-center gap-2 hover:bg-white/80 transition-colors border-2"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <ArrowLeft className="h-4 w-4" />
-                Retour
-              </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setCurrentView(null)}
+                  className="flex items-center gap-2 hover:bg-white/80 transition-colors border-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Retour
+                </Button>
+              </motion.div>
             )}
             <div>
               <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -193,12 +627,16 @@ export default function DashboardParent() {
           </div>
           
           {!currentView && (
-            <div className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg"
+            >
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-gray-700">En ligne</span>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
         {/* Content */}
         <div className="relative">

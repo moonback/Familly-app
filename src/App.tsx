@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from '@/context/auth-context';
+import { AuthProvider, useAuth } from '@/context/auth-context';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { MainNav } from '@/components/layout/main-nav';
@@ -9,6 +9,24 @@ import DashboardParent from '@/pages/dashboard-parent';
 import DashboardChild from '@/pages/dashboard-child';
 import ChildHome from '@/pages/home';
 import './App.css';
+
+// Composant de protection des routes
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+  return <>{children}</>;
+};
+
+// Composant pour la page 404
+const NotFound = () => (
+  <div className="flex flex-col items-center justify-center min-h-screen">
+    <h1 className="text-4xl font-bold mb-4">404</h1>
+    <p className="text-lg mb-4">Page non trouvée</p>
+    <Navigate to="/" replace />
+  </div>
+);
 
 function App() {
   return (
@@ -20,11 +38,39 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/dashboard/parent" element={<DashboardParent />} />
-              <Route path="/dashboard/child" element={<Navigate to="/dashboard/parent" replace />} />
-              <Route path="/dashboard/child/:childId" element={<DashboardChild />} />
-              <Route path="/child/:childId" element={<ChildHome />} />
-              {/* Ajoutez d'autres routes ici si nécessaire */}
+              <Route 
+                path="/dashboard/parent" 
+                element={
+                  <ProtectedRoute>
+                    <DashboardParent />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/child" 
+                element={
+                  <ProtectedRoute>
+                    <Navigate to="/dashboard/parent" replace state={{ message: "Veuillez sélectionner un enfant" }} />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/child/:childId" 
+                element={
+                  <ProtectedRoute>
+                    <DashboardChild />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/child/:childId" 
+                element={
+                  <ProtectedRoute>
+                    <ChildHome />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
           <Toaster />
