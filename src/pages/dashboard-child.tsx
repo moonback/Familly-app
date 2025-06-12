@@ -609,7 +609,7 @@ export default function DashboardChild() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto">
-          {/* Profil de l'enfant - Design completement repensé */}
+          {/* Profil de l'enfant */}
           <motion.div
             initial={{ x: -100, opacity: 0, rotateY: -30 }}
             animate={{ x: 0, opacity: 1, rotateY: 0 }}
@@ -622,7 +622,7 @@ export default function DashboardChild() {
           >
             <Card className="relative overflow-hidden border-0 shadow-2xl h-full">
               <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600" />
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Cpath d="M20 20c0 11.046-8.954 20-20 20v20h40V20H20z"/%3E%3C/g%3E%3C/svg%3E')] opacity-30" />
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-30" />
               
               <div className="relative p-6 text-center text-white h-full flex flex-col justify-between">
                 <div>
@@ -718,32 +718,10 @@ export default function DashboardChild() {
                   </div>
                 </motion.div>
               </div>
-              
-              {/* Étoiles flottantes */}
-              <motion.div 
-                className="absolute top-4 right-4 text-yellow-300"
-                animate={{ 
-                  rotate: [0, 360],
-                  scale: [1, 1.3, 1]
-                }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                ⭐
-              </motion.div>
-              <motion.div 
-                className="absolute bottom-4 left-4 text-pink-300"
-                animate={{ 
-                  rotate: [360, 0],
-                  scale: [1, 1.2, 1]
-                }}
-                transition={{ duration: 4, repeat: Infinity }}
-              >
-                ✨
-              </motion.div>
             </Card>
           </motion.div>
 
-          {/* Section des tâches - Design revolutionné */}
+          {/* Section des tâches */}
           <motion.div
             initial={{ y: 100, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -756,4 +734,185 @@ export default function DashboardChild() {
           >
             <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/80 backdrop-blur-sm">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20" />
+                <CardHeader className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <CardTitle className="text-2xl font-bold text-gray-800">Mes Tâches</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">Progression</span>
+                      <Progress value={progressPercentage} className="w-32" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="relative z-10">
+                  <div className="space-y-4">
+                    {childTasks.map((childTask) => (
+                      <motion.div
+                        key={childTask.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex items-center gap-4 p-4 rounded-lg border-2 ${
+                          childTask.is_completed 
+                            ? 'bg-green-50 border-green-200' 
+                            : 'bg-white border-gray-200'
+                        }`}
+                      >
+                        <Checkbox
+                          checked={childTask.is_completed}
+                          onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
+                          className="h-6 w-6"
+                        />
+                        <div className="flex-1">
+                          <Label className="text-lg font-medium">
+                            {childTask.task.label}
+                          </Label>
+                          <p className="text-sm text-gray-500">
+                            {childTask.task.points_reward} points
+                          </p>
+                        </div>
+                        {childTask.is_completed && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="text-green-500"
+                          >
+                            <CheckCircleIcon className="h-6 w-6" />
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* Section des récompenses */}
+          <motion.div
+            initial={{ y: 100, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 100,
+              delay: 0.6 
+            }}
+            className="lg:col-span-3"
+          >
+            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/80 backdrop-blur-sm">
+              <CardHeader className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20" />
+                <CardTitle className="relative z-10 text-2xl font-bold text-gray-800">
+                  Mes Récompenses
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="relative z-10">
+                <div className="space-y-4">
+                  {rewards.map((reward) => (
+                    <motion.div
+                      key={reward.id}
+                      whileHover={{ scale: 1.02 }}
+                      className={`p-4 rounded-lg border-2 ${
+                        child?.points >= reward.cost
+                          ? 'bg-white border-purple-200'
+                          : 'bg-gray-50 border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-gray-900">{reward.label}</h4>
+                          <p className="text-sm text-gray-500">{reward.cost} points</p>
+                        </div>
+                        <Button
+                          onClick={() => handleRewardClaim(reward.id, reward.cost)}
+                          disabled={!child || child.points < reward.cost}
+                          className={`${
+                            child?.points >= reward.cost
+                              ? 'bg-purple-600 hover:bg-purple-700'
+                              : 'bg-gray-400'
+                          }`}
+                        >
+                          <GiftIcon className="h-4 w-4 mr-2" />
+                          Obtenir
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Section de la devinette quotidienne */}
+        {currentRiddle && !riddleSolved && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8"
+          >
+            <Card className="bg-white/80 backdrop-blur-sm border-2 border-purple-200 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                  <BrainIcon className="h-6 w-6 text-purple-600" />
+                  Devinette du Jour
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleRiddleSubmit} className="space-y-4">
+                  <div className="bg-purple-50 p-6 rounded-lg border-2 border-purple-100">
+                    <p className="text-lg font-medium text-gray-800 mb-4">
+                      {currentRiddle.question}
+                    </p>
+                    <div className="flex gap-4">
+                      <Input
+                        type="text"
+                        value={riddleAnswer}
+                        onChange={(e) => setRiddleAnswer(e.target.value)}
+                        placeholder="Ta réponse..."
+                        className="flex-1"
+                      />
+                      <Button type="submit" className="bg-purple-600 hover:bg-purple-700">
+                        Valider
+                      </Button>
+                    </div>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Animation de succès */}
+        <AnimatePresence>
+          {showSuccess && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+            >
+              <div className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border-2 border-green-200">
+                <motion.div
+                  animate={{ 
+                    rotate: [0, 360],
+                    scale: [1, 1.2, 1]
+                  }}
+                  transition={{ duration: 1 }}
+                  className="text-6xl mb-4 text-center"
+                >
+                  🎉
+                </motion.div>
+                <h3 className="text-2xl font-bold text-center text-gray-800 mb-2">
+                  Bravo !
+                </h3>
+                <p className="text-gray-600 text-center">
+                  Tu as gagné {currentRiddle?.points} points !
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
