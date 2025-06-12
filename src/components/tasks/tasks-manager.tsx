@@ -77,6 +77,7 @@ export function TasksManager() {
         user_id: user.id,
       };
 
+      let taskId: string;
       if (editingTask) {
         const { error } = await supabase
           .from('tasks')
@@ -85,20 +86,47 @@ export function TasksManager() {
           .eq('user_id', user.id);
 
         if (error) throw error;
+        taskId = editingTask.id;
         toast({
           title: 'Succès',
           description: "La tâche a été mise à jour avec succès",
         });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('tasks')
-          .insert([taskData]);
+          .insert([taskData])
+          .select()
+          .single();
 
         if (error) throw error;
+        taskId = data.id;
         toast({
           title: 'Succès',
           description: "La tâche a été ajoutée avec succès",
         });
+
+        // Récupérer tous les enfants de l'utilisateur
+        const { data: children, error: childrenError } = await supabase
+          .from('children')
+          .select('id')
+          .eq('user_id', user.id);
+
+        if (childrenError) throw childrenError;
+
+        // Créer les tâches pour chaque enfant
+        const today = new Date().toISOString().split('T')[0];
+        const childTasks = children.map(child => ({
+          child_id: child.id,
+          task_id: taskId,
+          due_date: today,
+          is_completed: false
+        }));
+
+        const { error: childTasksError } = await supabase
+          .from('child_tasks')
+          .insert(childTasks);
+
+        if (childTasksError) throw childTasksError;
       }
 
       setIsDialogOpen(false);
@@ -106,6 +134,7 @@ export function TasksManager() {
       setFormData({ label: '', points_reward: '', is_daily: true });
       fetchTasks();
     } catch (error) {
+      console.error('Erreur:', error);
       toast({
         title: 'Erreur',
         description: "Une erreur est survenue lors de l'enregistrement",

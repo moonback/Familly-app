@@ -81,7 +81,7 @@ export default function DashboardChild() {
           task:tasks(*)
         `)
         .eq('child_id', childId)
-        .eq('due_date', new Date().toISOString().split('T')[0]);
+        .order('due_date', { ascending: true });
 
       if (tasksError) throw tasksError;
       setChildTasks(tasksData);
@@ -317,7 +317,7 @@ export default function DashboardChild() {
                         id={`task-${childTask.id}`}
                         checked={childTask.is_completed}
                         onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
-                        className="h-6 w-6 border-2 border-purple-300 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                        className="h-6 w-6 border-2 border-purple-300 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 cursor-pointer hover:scale-110 transition-transform"
                       />
                       {childTask.is_completed && (
                         <CheckCircleIcon className="absolute -top-1 -right-1 h-4 w-4 text-green-500 animate-bounce" />
@@ -326,17 +326,19 @@ export default function DashboardChild() {
                     
                     <Label 
                       htmlFor={`task-${childTask.id}`} 
-                      className={`flex-1 text-lg font-medium cursor-pointer ${
-                        childTask.is_completed ? 'line-through text-green-600' : 'text-gray-800'
+                      className={`flex-1 text-lg font-medium cursor-pointer transition-all duration-300 ${
+                        childTask.is_completed 
+                          ? 'line-through text-green-600 opacity-75' 
+                          : 'text-gray-800 hover:text-purple-600'
                       }`}
                     >
                       {childTask.task.label}
                     </Label>
                     
-                    <div className={`px-4 py-2 rounded-full font-bold text-sm ${
+                    <div className={`px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 ${
                       childTask.is_completed 
                         ? 'bg-green-100 text-green-700' 
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
                     }`}>
                       +{childTask.task.points_reward} points
                     </div>
