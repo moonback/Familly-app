@@ -422,15 +422,36 @@ export default function DashboardChild() {
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="flex items-center justify-center min-h-[calc(100vh-80px)]"
+        className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100"
       >
-        <div className="text-center">
+        <div className="text-center relative">
           <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"
-          />
-          <p className="text-lg font-medium text-gray-600">Chargement de ton tableau de bord...</p>
+            animate={{ 
+              rotate: 360,
+              scale: [1, 1.2, 1],
+            }}
+            transition={{ 
+              rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+              scale: { duration: 1.5, repeat: Infinity }
+            }}
+            className="rounded-full h-20 w-20 bg-gradient-to-br from-purple-500 to-pink-500 mx-auto mb-6 flex items-center justify-center shadow-2xl"
+          >
+            <SparklesIcon className="h-10 w-10 text-white" />
+          </motion.div>
+          <motion.p 
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
+          >
+            Chargement de ton monde magique...
+          </motion.p>
+          <motion.div
+            animate={{ y: [-5, 5, -5] }}
+            transition={{ duration: 1, repeat: Infinity }}
+            className="text-4xl mt-4"
+          >
+            ✨
+          </motion.div>
         </div>
       </motion.div>
     );
@@ -448,347 +469,291 @@ export default function DashboardChild() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-screen overflow-hidden bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50"
+      className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 relative overflow-hidden"
     >
+      {/* Éléments décoratifs de fond */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div 
+          animate={{ 
+            x: [0, 100, 0],
+            y: [0, 50, 0],
+            rotate: [0, 180, 360]
+          }}
+          transition={{ duration: 20, repeat: Infinity }}
+          className="absolute top-10 left-10 text-6xl opacity-20"
+        >
+          ⭐
+        </motion.div>
+        <motion.div 
+          animate={{ 
+            x: [0, -80, 0],
+            y: [0, 30, 0],
+            rotate: [0, -180, -360]
+          }}
+          transition={{ duration: 25, repeat: Infinity }}
+          className="absolute top-20 right-20 text-5xl opacity-20"
+        >
+          🌟
+        </motion.div>
+        <motion.div 
+          animate={{ 
+            x: [0, 60, 0],
+            y: [0, -40, 0],
+            rotate: [0, 90, 180]
+          }}
+          transition={{ duration: 15, repeat: Infinity }}
+          className="absolute bottom-20 left-32 text-4xl opacity-20"
+        >
+          ✨
+        </motion.div>
+        <motion.div 
+          animate={{ 
+            x: [0, -40, 0],
+            y: [0, 60, 0],
+            rotate: [0, -90, -180]
+          }}
+          transition={{ duration: 18, repeat: Infinity }}
+          className="absolute bottom-32 right-16 text-5xl opacity-20"
+        >
+          🎈
+        </motion.div>
+      </div>
+
+      {/* Animation de confettis */}
       <AnimatePresence>
         {showConfetti && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0 }}
-            className="fixed inset-0 pointer-events-none z-50"
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
+          <div className="fixed inset-0 pointer-events-none z-50">
+            {[...Array(20)].map((_, i) => (
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="text-6xl"
+                key={i}
+                initial={{ 
+                  y: -100, 
+                  x: Math.random() * window.innerWidth,
+                  opacity: 1,
+                  scale: 1
+                }}
+                animate={{ 
+                  y: window.innerHeight + 100,
+                  rotate: 360,
+                  scale: [1, 1.5, 0.5]
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ 
+                  duration: 3 + Math.random() * 2,
+                  ease: "easeOut"
+                }}
+                className="absolute text-3xl"
               >
-                🎉
+                {['🎉', '🎊', '⭐', '🌟', '✨', '🎈'][Math.floor(Math.random() * 6)]}
               </motion.div>
-            </div>
-          </motion.div>
+            ))}
+          </div>
         )}
       </AnimatePresence>
 
-      <div className="h-full p-4">
+      <div className="relative z-10 p-6">
+        {/* En-tête avec titre amélioré */}
         <motion.div 
-          initial={{ y: -20, opacity: 0 }}
+          initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="text-center mb-4"
+          transition={{ type: "spring", stiffness: 100 }}
+          className="text-center mb-8"
         >
-          <motion.h1 
-            className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-1"
+          <motion.div
             animate={{ 
-              scale: [1, 1.05, 1],
-              rotate: [0, 2, -2, 0]
+              rotateY: [0, 360],
+              scale: [1, 1.1, 1]
             }}
-            transition={{ duration: 2, repeat: Infinity }}
+            transition={{ 
+              rotateY: { duration: 4, repeat: Infinity },
+              scale: { duration: 2, repeat: Infinity }
+            }}
+            className="text-6xl mb-4"
           >
-            🌟 Mon Tableau de Bord 🌟
+            🏰
+          </motion.div>
+          <motion.h1 
+            className="text-4xl md:text-5xl font-black mb-3"
+            style={{
+              background: 'linear-gradient(45deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundSize: '300% 300%',
+            }}
+            animate={{ 
+              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+            }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
+            Mon Royaume Magique
           </motion.h1>
           <motion.p 
-            className="text-lg text-gray-600 font-medium"
+            className="text-xl text-gray-700 font-semibold mb-2"
             animate={{ 
-              y: [0, -5, 0],
-              opacity: [1, 0.8, 1]
+              y: [0, -8, 0],
             }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            Salut {child.name} ! Prêt pour une journée incroyable ?
+            Bonjour Super Héros {child.name} ! 🦸‍♀️
           </motion.p>
           <motion.div 
-            className="text-base text-gray-700 font-medium"
-            animate={{ 
-              scale: [1, 1.05, 1],
-              rotate: [0, 1, -1, 0]
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
+            className="inline-flex items-center bg-white/70 backdrop-blur-sm rounded-full px-6 py-2 shadow-lg border border-purple-200"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 400 }}
           >
-            <CalendarIcon className="inline-block mr-2 h-4 w-4 text-purple-500" />
-            {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
+            <CalendarIcon className="h-5 w-5 mr-2 text-purple-600" />
+            <span className="text-lg font-medium text-gray-800">
+              {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
+            </span>
           </motion.div>
         </motion.div>
 
-        <div className="grid grid-cols-12 gap-4 h-[calc(100vh-180px)]">
-          {/* Profil de l'enfant */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto">
+          {/* Profil de l'enfant - Design completement repensé */}
           <motion.div
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="col-span-3"
+            initial={{ x: -100, opacity: 0, rotateY: -30 }}
+            animate={{ x: 0, opacity: 1, rotateY: 0 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 100,
+              delay: 0.2 
+            }}
+            className="lg:col-span-3"
           >
-            <Card className="h-full relative overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-2xl">
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20" />
-              <div className="relative p-4 flex flex-col items-center text-center">
-                <motion.div 
-                  className="relative mb-4"
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <Avatar className="h-24 w-24 border-4 border-white shadow-xl ring-4 ring-purple-300">
-                    <AvatarImage src={child.avatar_url} alt={child.name} />
-                    <AvatarFallback className="text-xl bg-gradient-to-br from-purple-400 to-pink-400 text-white">
-                      {child.name.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                </motion.div>
-                
-                <motion.h2 
-                  className="text-2xl font-bold mb-1"
-                  animate={{ 
-                    scale: [1, 1.05, 1],
-                    rotate: [0, 2, -2, 0]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  {child.name}
-                </motion.h2>
-                <motion.p 
-                  className="text-base opacity-90 mb-4"
-                  animate={{ 
-                    y: [0, -5, 0],
-                    opacity: [1, 0.8, 1]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  🎂 {child.age} ans
-                </motion.p>
-                
-                <motion.div 
-                  className="bg-white/20 backdrop-blur-sm rounded-xl p-4 w-full"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <div className="flex items-center justify-center text-2xl font-bold mb-2">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    >
-                      <TrophyIcon className="h-6 w-6 mr-2 text-yellow-300" />
-                    </motion.div>
-                    <motion.span 
-                      className="bg-gradient-to-r from-yellow-200 to-yellow-100 bg-clip-text text-transparent"
-                      animate={{ 
-                        scale: [1, 1.1, 1],
-                        rotate: [0, 2, -2, 0]
-                      }}
+            <Card className="relative overflow-hidden border-0 shadow-2xl h-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600" />
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Cpath d="M20 20c0 11.046-8.954 20-20 20v20h40V20H20z"/%3E%3C/g%3E%3C/svg%3E')] opacity-30" />
+              
+              <div className="relative p-6 text-center text-white h-full flex flex-col justify-between">
+                <div>
+                  <motion.div 
+                    className="relative mb-6"
+                    whileHover={{ 
+                      scale: 1.15,
+                      rotateY: 15,
+                      rotateX: 5
+                    }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <div className="absolute -inset-4 bg-gradient-to-r from-pink-400 to-yellow-400 rounded-full blur-lg opacity-50 animate-pulse" />
+                    <Avatar className="relative h-28 w-28 mx-auto border-4 border-white shadow-2xl ring-4 ring-pink-300/50">
+                      <AvatarImage src={child.avatar_url} alt={child.name} />
+                      <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold">
+                        {child.name.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <motion.div 
+                      className="absolute -top-2 -right-2 text-2xl"
+                      animate={{ rotate: [0, 20, -20, 0] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      {child.points} Points
-                    </motion.span>
+                      👑
+                    </motion.div>
+                  </motion.div>
+                  
+                  <motion.h2 
+                    className="text-3xl font-black mb-2"
+                    animate={{ 
+                      textShadow: [
+                        '0 0 20px rgba(255,255,255,0.5)',
+                        '0 0 30px rgba(255,255,255,0.8)',
+                        '0 0 20px rgba(255,255,255,0.5)'
+                      ]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    {child.name}
+                  </motion.h2>
+                  <motion.p 
+                    className="text-lg opacity-90 mb-6 font-semibold"
+                    animate={{ 
+                      scale: [1, 1.05, 1]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    🎂 {child.age} ans - Niveau Expert
+                  </motion.p>
+                </div>
+                
+                <motion.div 
+                  className="bg-white/20 backdrop-blur-md rounded-2xl p-6 border border-white/30"
+                  whileHover={{ 
+                    scale: 1.05,
+                    backgroundColor: 'rgba(255,255,255,0.25)'
+                  }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="flex items-center justify-center mb-3">
+                    <motion.div
+                      animate={{ 
+                        rotate: 360,
+                        scale: [1, 1.2, 1]
+                      }}
+                      transition={{ 
+                        rotate: { duration: 10, repeat: Infinity, ease: "linear" },
+                        scale: { duration: 2, repeat: Infinity }
+                      }}
+                      className="mr-3"
+                    >
+                      <TrophyIcon className="h-8 w-8 text-yellow-300 drop-shadow-lg" />
+                    </motion.div>
+                    <span className="text-sm font-semibold text-yellow-100">Points Magiques</span>
+                  </div>
+                  <motion.div
+                    className="text-4xl font-black mb-2"
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      textShadow: [
+                        '0 0 20px rgba(255,255,0,0.5)',
+                        '0 0 30px rgba(255,255,0,0.8)',
+                        '0 0 20px rgba(255,255,0,0.5)'
+                      ]
+                    }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    {child.points}
+                  </motion.div>
+                  <div className="text-xs text-yellow-100 font-medium">
+                    Continue comme ça, champion ! 🌟
                   </div>
                 </motion.div>
               </div>
+              
+              {/* Étoiles flottantes */}
+              <motion.div 
+                className="absolute top-4 right-4 text-yellow-300"
+                animate={{ 
+                  rotate: [0, 360],
+                  scale: [1, 1.3, 1]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                ⭐
+              </motion.div>
+              <motion.div 
+                className="absolute bottom-4 left-4 text-pink-300"
+                animate={{ 
+                  rotate: [360, 0],
+                  scale: [1, 1.2, 1]
+                }}
+                transition={{ duration: 4, repeat: Infinity }}
+              >
+                ✨
+              </motion.div>
             </Card>
           </motion.div>
 
-          {/* Tâches du jour */}
+          {/* Section des tâches - Design revolutionné */}
           <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="col-span-5"
+            initial={{ y: 100, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 100,
+              delay: 0.4 
+            }}
+            className="lg:col-span-6"
           >
-            <Card className="h-full shadow-xl bg-white/80 backdrop-blur-sm border-0">
-              <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-t-lg py-3">
-                <CardTitle className="text-xl flex items-center">
-                  <motion.div
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <ListChecksIcon className="mr-2 h-5 w-5" />
-                  </motion.div>
-                  🎯 Mes Missions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 overflow-y-auto h-[calc(100%-60px)]">
-                <div className="mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-base font-semibold text-gray-700">
-                      Progression ({completedTasks}/{totalTasks})
-                    </span>
-                    <motion.div 
-                      animate={{ 
-                        scale: [1, 1.2, 1],
-                        rotate: [0, 10, -10, 0]
-                      }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="text-xl"
-                    >
-                      {progressPercentage === 100 ? '🎉' : progressPercentage >= 50 ? '💪' : '🚀'}
-                    </motion.div>
-                  </div>
-                  <Progress 
-                    value={progressPercentage} 
-                    className="w-full h-3 bg-gray-200 rounded-full overflow-hidden"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  {childTasks.map((childTask, index) => (
-                    <motion.div
-                      key={childTask.id}
-                      initial={{ x: -50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      <div 
-                        className={`relative flex items-center space-x-3 p-3 rounded-lg border-2 transition-all duration-300 ${
-                          childTask.is_completed 
-                            ? 'bg-green-50 border-green-200 shadow-md' 
-                            : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-lg'
-                        } ${completedTasksAnimation.includes(childTask.id) ? 'animate-pulse bg-yellow-100' : ''}`}
-                      >
-                        <Checkbox
-                          id={`task-${childTask.id}`}
-                          checked={childTask.is_completed}
-                          onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
-                          className="h-5 w-5 border-2 border-purple-300 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                        />
-                        
-                        <Label 
-                          htmlFor={`task-${childTask.id}`} 
-                          className={`flex-1 text-base font-medium cursor-pointer transition-all duration-300 ${
-                            childTask.is_completed 
-                              ? 'line-through text-green-600 opacity-75' 
-                              : 'text-gray-800 hover:text-purple-600'
-                          }`}
-                        >
-                          {childTask.task.label}
-                        </Label>
-                        
-                        <div className={`px-3 py-1 rounded-full font-bold text-sm ${
-                          childTask.is_completed 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-purple-100 text-purple-700'
-                        }`}>
-                          +{childTask.task.points_reward}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Récompenses et Devinette */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="col-span-4"
-          >
-            <div className="grid grid-rows-2 gap-4 h-full">
-              {/* Devinette du jour */}
-              <Card className="shadow-xl bg-white/80 backdrop-blur-sm border-0">
-                <CardHeader className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-t-lg py-3">
-                  <CardTitle className="text-xl flex items-center">
-                    <motion.div
-                      animate={{ rotate: [0, 10, -10, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <BrainIcon className="mr-2 h-5 w-5" />
-                    </motion.div>
-                    🎯 Devinette
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  {currentRiddle && !riddleSolved ? (
-                    <div className="space-y-4">
-                      <div className="text-base font-medium text-gray-800 bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
-                        {currentRiddle.question}
-                      </div>
-                      <div className="flex gap-2">
-                        <Input
-                          type="text"
-                          placeholder="Ta réponse..."
-                          value={riddleAnswer}
-                          onChange={(e) => setRiddleAnswer(e.target.value)}
-                          className="flex-1 text-base"
-                        />
-                        <Button
-                          onClick={handleRiddleSubmit}
-                          className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold text-base py-2 px-4"
-                        >
-                          OK
-                        </Button>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        Points à gagner : <span className="font-bold text-yellow-600">{currentRiddle.points} points</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-4">
-                      <p className="text-base text-gray-600">
-                        {riddleSolved 
-                          ? "Tu as déjà résolu la devinette d'aujourd'hui !" 
-                          : "Chargement..."}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Récompenses */}
-              <Card className="shadow-xl bg-white/80 backdrop-blur-sm border-0 overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-t-lg py-3">
-                  <CardTitle className="text-xl flex items-center">
-                    <motion.div
-                      animate={{ rotate: [0, 10, -10, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <GiftIcon className="mr-2 h-5 w-5" />
-                    </motion.div>
-                    🎁 Récompenses
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 overflow-y-auto h-[calc(100%-60px)]">
-                  <div className="space-y-3">
-                    {rewards.map((reward) => (
-                      <motion.div
-                        key={reward.id}
-                        whileHover={{ scale: 1.02 }}
-                      >
-                        <Card className={`relative overflow-hidden ${
-                          child.points >= reward.cost 
-                            ? 'bg-gradient-to-br from-green-100 to-emerald-100 border-green-300' 
-                            : 'bg-gradient-to-br from-gray-100 to-gray-200 border-gray-300'
-                        }`}>
-                          <div className="p-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <h3 className="text-base font-bold text-gray-800">
-                                {reward.label}
-                              </h3>
-                              <span className="text-sm font-bold text-purple-600">
-                                {reward.cost} pts
-                              </span>
-                            </div>
-                            <Button
-                              className={`w-full text-sm py-2 ${
-                                child.points >= reward.cost
-                                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
-                                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              }`}
-                              disabled={child.points < reward.cost}
-                              onClick={() => handleRewardClaim(reward.id, reward.cost)}
-                            >
-                              {child.points >= reward.cost ? '🛒 Échanger' : `💰 ${reward.cost - child.points} pts manquants`}
-                            </Button>
-                          </div>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
+            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/80 backdrop-blur-sm">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r
