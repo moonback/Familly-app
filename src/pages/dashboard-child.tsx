@@ -253,7 +253,16 @@ export default function DashboardChild() {
             exit={{ opacity: 0, scale: 0 }}
             className="fixed inset-0 pointer-events-none z-50"
           >
-            <PartyPopperIcon className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 text-yellow-400" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="text-6xl"
+              >
+                🎉
+              </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -264,7 +273,7 @@ export default function DashboardChild() {
           animate={{ y: 0, opacity: 1 }}
           className="text-center mb-8"
         >
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-2 animate-gradient">
             🌟 Mon Tableau de Bord 🌟
           </h1>
           <p className="text-xl text-gray-600 font-medium">Salut {child.name} ! Prêt pour une journée incroyable ?</p>
@@ -280,34 +289,72 @@ export default function DashboardChild() {
             <Card className="lg:col-span-1 relative overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-2xl transform hover:scale-105 transition-all duration-300">
               <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20" />
               <div className="relative p-8 flex flex-col items-center text-center">
-                <div className="relative mb-6">
+                <motion.div 
+                  className="relative mb-6"
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
                   <Avatar className="h-32 w-32 border-4 border-white shadow-xl ring-4 ring-purple-300">
                     <AvatarImage src={child.avatar_url} alt={child.name} />
                     <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-400 to-pink-400 text-white">
                       {child.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="absolute -top-2 -right-2 bg-yellow-400 rounded-full p-2 animate-bounce">
+                  <motion.div 
+                    className="absolute -top-2 -right-2 bg-yellow-400 rounded-full p-2"
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      rotate: [0, 10, -10, 0]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                  >
                     <StarIcon className="h-6 w-6 text-yellow-800" />
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
                 
                 <h2 className="text-3xl font-bold mb-2">{child.name}</h2>
                 <p className="text-lg opacity-90 mb-6">🎂 {child.age} ans</p>
                 
-                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 w-full">
+                <motion.div 
+                  className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 w-full"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
                   <div className="flex items-center justify-center text-3xl font-bold mb-2">
-                    <TrophyIcon className="h-8 w-8 mr-3 text-yellow-300 animate-pulse" />
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    >
+                      <TrophyIcon className="h-8 w-8 mr-3 text-yellow-300" />
+                    </motion.div>
                     <span className="bg-gradient-to-r from-yellow-200 to-yellow-100 bg-clip-text text-transparent">
                       {child.points} Points
                     </span>
                   </div>
                   <div className="flex justify-center space-x-1">
                     {[...Array(Math.min(5, Math.floor(child.points / 10)))].map((_, i) => (
-                      <StarIcon key={i} className="h-5 w-5 text-yellow-300 fill-current animate-pulse" style={{animationDelay: `${i * 0.1}s`}} />
+                      <motion.div
+                        key={i}
+                        animate={{ 
+                          y: [0, -5, 0],
+                          scale: [1, 1.2, 1]
+                        }}
+                        transition={{ 
+                          duration: 1,
+                          delay: i * 0.1,
+                          repeat: Infinity,
+                          repeatType: "reverse"
+                        }}
+                      >
+                        <StarIcon className="h-5 w-5 text-yellow-300 fill-current" />
+                      </motion.div>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               </div>
             </Card>
           </motion.div>
@@ -322,7 +369,12 @@ export default function DashboardChild() {
             <Card className="shadow-xl bg-white/80 backdrop-blur-sm border-0">
               <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-t-lg">
                 <CardTitle className="text-2xl flex items-center">
-                  <ListChecksIcon className="mr-3 h-7 w-7" />
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <ListChecksIcon className="mr-3 h-7 w-7" />
+                  </motion.div>
                   🎯 Mes Missions du Jour
                 </CardTitle>
               </CardHeader>
@@ -332,18 +384,29 @@ export default function DashboardChild() {
                     <span className="text-lg font-semibold text-gray-700">
                       Progression ({completedTasks}/{totalTasks})
                     </span>
-                    <motion.span 
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 0.5, repeat: Infinity }}
+                    <motion.div 
+                      animate={{ 
+                        scale: [1, 1.2, 1],
+                        rotate: [0, 10, -10, 0]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
                       className="text-2xl"
                     >
                       {progressPercentage === 100 ? '🎉' : progressPercentage >= 50 ? '💪' : '🚀'}
-                    </motion.span>
+                    </motion.div>
                   </div>
-                  <Progress 
-                    value={progressPercentage} 
-                    className="w-full h-4 bg-gray-200 rounded-full overflow-hidden"
-                  />
+                  <div className="relative">
+                    <Progress 
+                      value={progressPercentage} 
+                      className="w-full h-4 bg-gray-200 rounded-full overflow-hidden"
+                    />
+                    <motion.div
+                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPercentage}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                    />
+                  </div>
                   {progressPercentage === 100 && (
                     <motion.div 
                       initial={{ scale: 0 }}
@@ -362,6 +425,7 @@ export default function DashboardChild() {
                       initial={{ x: -50, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
                       transition={{ delay: index * 0.1 }}
+                      whileHover={{ scale: 1.02 }}
                     >
                       <div 
                         className={`relative flex items-center space-x-4 p-4 rounded-xl border-2 transition-all duration-300 ${
@@ -371,12 +435,21 @@ export default function DashboardChild() {
                         } ${completedTasksAnimation.includes(childTask.id) ? 'animate-pulse bg-yellow-100' : ''}`}
                       >
                         {completedTasksAnimation.includes(childTask.id) && (
-                          <div className="absolute inset-0 flex items-center justify-center">
+                          <motion.div 
+                            className="absolute inset-0 flex items-center justify-center"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0 }}
+                          >
                             <SparklesIcon className="h-8 w-8 text-yellow-500 animate-spin" />
-                          </div>
+                          </motion.div>
                         )}
                         
-                        <div className="relative">
+                        <motion.div 
+                          className="relative"
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                        >
                           <Checkbox
                             id={`task-${childTask.id}`}
                             checked={childTask.is_completed}
@@ -384,9 +457,15 @@ export default function DashboardChild() {
                             className="h-6 w-6 border-2 border-purple-300 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 cursor-pointer hover:scale-110 transition-transform"
                           />
                           {childTask.is_completed && (
-                            <CheckCircleIcon className="absolute -top-1 -right-1 h-4 w-4 text-green-500 animate-bounce" />
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                            >
+                              <CheckCircleIcon className="absolute -top-1 -right-1 h-4 w-4 text-green-500" />
+                            </motion.div>
                           )}
-                        </div>
+                        </motion.div>
                         
                         <Label 
                           htmlFor={`task-${childTask.id}`} 
@@ -399,13 +478,17 @@ export default function DashboardChild() {
                           {childTask.task.label}
                         </Label>
                         
-                        <div className={`px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 ${
-                          childTask.is_completed 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                        }`}>
+                        <motion.div 
+                          className={`px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 ${
+                            childTask.is_completed 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                          }`}
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                        >
                           +{childTask.task.points_reward} points
-                        </div>
+                        </motion.div>
                       </div>
                     </motion.div>
                   ))}
@@ -424,7 +507,12 @@ export default function DashboardChild() {
             <Card className="shadow-xl bg-white/80 backdrop-blur-sm border-0">
               <CardHeader className="bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-t-lg">
                 <CardTitle className="text-2xl flex items-center">
-                  <GiftIcon className="mr-3 h-7 w-7" />
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <GiftIcon className="mr-3 h-7 w-7" />
+                  </motion.div>
                   🎁 Boutique de Récompenses
                 </CardTitle>
               </CardHeader>
@@ -436,8 +524,7 @@ export default function DashboardChild() {
                       initial={{ y: 50, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: index * 0.1 }}
-                      onHoverStart={() => setHoveredReward(reward.id)}
-                      onHoverEnd={() => setHoveredReward(null)}
+                      whileHover={{ scale: 1.05 }}
                     >
                       <Card 
                         className={`relative overflow-hidden transform transition-all duration-300 ${
@@ -448,26 +535,45 @@ export default function DashboardChild() {
                             : 'bg-gradient-to-br from-gray-100 to-gray-200 border-gray-300'
                         }`}
                       >
-                        <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-400 transform rotate-45 translate-x-8 -translate-y-8"></div>
+                        <motion.div 
+                          className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-400 transform rotate-45 translate-x-8 -translate-y-8"
+                          animate={{ 
+                            rotate: [45, 50, 45],
+                            scale: [1, 1.1, 1]
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
                         <div className="relative p-6 flex flex-col items-center text-center">
-                          <div className="text-4xl mb-4">
+                          <motion.div 
+                            className="text-4xl mb-4"
+                            animate={{ 
+                              y: [0, -5, 0],
+                              scale: [1, 1.2, 1]
+                            }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
                             {child.points >= reward.cost ? '🎉' : '🔒'}
-                          </div>
+                          </motion.div>
                           <h3 className="text-xl font-bold mb-3 text-gray-800">{reward.label}</h3>
                           <p className="text-gray-600 mb-4">
                             Coût: <span className="font-bold text-lg text-purple-600">{reward.cost} points</span>
                           </p>
-                          <Button
-                            className={`w-full font-bold text-lg py-3 rounded-xl transition-all duration-300 ${
-                              child.points >= reward.cost
-                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl'
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            }`}
-                            disabled={child.points < reward.cost}
-                            onClick={() => handleRewardClaim(reward.id, reward.cost)}
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                           >
-                            {child.points >= reward.cost ? '🛒 Échanger' : `💰 ${reward.cost - child.points} points manquants`}
-                          </Button>
+                            <Button
+                              className={`w-full font-bold text-lg py-3 rounded-xl transition-all duration-300 ${
+                                child.points >= reward.cost
+                                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl'
+                                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              }`}
+                              disabled={child.points < reward.cost}
+                              onClick={() => handleRewardClaim(reward.id, reward.cost)}
+                            >
+                              {child.points >= reward.cost ? '🛒 Échanger' : `💰 ${reward.cost - child.points} points manquants`}
+                            </Button>
+                          </motion.div>
                         </div>
                       </Card>
                     </motion.div>
@@ -480,7 +586,16 @@ export default function DashboardChild() {
                     animate={{ scale: 1 }}
                     className="text-center py-12"
                   >
-                    <div className="text-6xl mb-4">🎁</div>
+                    <motion.div 
+                      className="text-6xl mb-4"
+                      animate={{ 
+                        y: [0, -10, 0],
+                        rotate: [0, 10, -10, 0]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      🎁
+                    </motion.div>
                     <p className="text-xl text-gray-600">Aucune récompense disponible pour le moment</p>
                   </motion.div>
                 )}
