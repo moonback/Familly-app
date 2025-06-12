@@ -62,7 +62,7 @@ export function MainNav() {
                 <HomeIcon className="h-6 w-6 text-white" />
               </div>
               <span className="font-bold text-lg bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Family Dashboard
+                Family
               </span>
             </Link>
 
