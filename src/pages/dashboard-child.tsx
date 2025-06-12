@@ -1,24 +1,200 @@
 import { useAuth } from '@/context/auth-context';
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { GiftIcon, TrophyIcon, ListChecksIcon } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { toast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
+
+interface Child {
+  id: string;
+  name: string;
+  age: number;
+  points: number;
+  avatar_url: string;
+  custom_color: string;
+  user_id: string;
+}
+
+interface Task {
+  id: string;
+  label: string;
+  points_reward: number;
+  is_daily: boolean;
+}
+
+interface ChildTask {
+  id: string;
+  task_id: string;
+  is_completed: boolean;
+  completed_at: string | null;
+  due_date: string;
+  task: Task;
+}
+
+interface Reward {
+  id: string;
+  label: string;
+  cost: number;
+}
 
 export default function DashboardChild() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { childId } = useParams();
+  const [child, setChild] = useState<Child | null>(null);
+  const [childTasks, setChildTasks] = useState<ChildTask[]>([]);
+  const [rewards, setRewards] = useState<Reward[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
+    } else if (user && childId) {
+      fetchChildData();
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, childId]);
 
-  if (loading) {
+  const fetchChildData = async () => {
+    try {
+      // Récupérer les informations de l'enfant
+      const { data: childData, error: childError } = await supabase
+        .from('children')
+        .select('*')
+        .eq('id', childId)
+        .single();
+
+      if (childError) throw childError;
+      setChild(childData);
+
+      // Récupérer les tâches de l'enfant
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('child_tasks')
+        .select(`
+          *,
+          task:tasks(*)
+        `)
+        .eq('child_id', childId)
+        .eq('due_date', new Date().toISOString().split('T')[0]);
+
+      if (tasksError) throw tasksError;
+      setChildTasks(tasksData);
+
+      // Récupérer les récompenses disponibles
+      const { data: rewardsData, error: rewardsError } = await supabase
+        .from('rewards')
+        .select('*')
+        .eq('user_id', childData.user_id);
+
+      if (rewardsError) throw rewardsError;
+      setRewards(rewardsData);
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible de charger les données",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTaskToggle = async (childTaskId: string, isCompleted: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('child_tasks')
+        .update({
+          is_completed: !isCompleted,
+          completed_at: !isCompleted ? new Date().toISOString() : null
+        })
+        .eq('id', childTaskId);
+
+      if (error) throw error;
+
+      // Mettre à jour les points de l'enfant si la tâche est complétée
+      if (!isCompleted) {
+        const childTask = childTasks.find(ct => ct.id === childTaskId);
+        if (childTask) {
+          const { error: updateError } = await supabase
+            .from('children')
+            .update({
+              points: (child?.points || 0) + childTask.task.points_reward
+            })
+            .eq('id', childId);
+
+          if (updateError) throw updateError;
+          setChild(prev => prev ? { ...prev, points: prev.points + childTask.task.points_reward } : null);
+        }
+      }
+
+      fetchChildData();
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la tâche:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible de mettre à jour la tâche",
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRewardClaim = async (rewardId: string, cost: number) => {
+    if (!child) return;
+
+    try {
+      if (child.points < cost) {
+        toast({
+          title: 'Erreur',
+          description: "Points insuffisants",
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Créer l'enregistrement de récompense réclamée
+      const { error: claimError } = await supabase
+        .from('child_rewards_claimed')
+        .insert([{
+          child_id: childId,
+          reward_id: rewardId,
+          claimed_at: new Date().toISOString()
+        }]);
+
+      if (claimError) throw claimError;
+
+      // Mettre à jour les points de l'enfant
+      const { error: updateError } = await supabase
+        .from('children')
+        .update({
+          points: child.points - cost
+        })
+        .eq('id', childId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: 'Succès',
+        description: "Récompense réclamée avec succès",
+      });
+
+      fetchChildData();
+    } catch (error) {
+      console.error('Erreur lors de la réclamation de la récompense:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible de réclamer la récompense",
+        variant: 'destructive',
+      });
+    }
+  };
+
+  if (loading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
         <p>Chargement du tableau de bord enfant...</p>
@@ -26,37 +202,13 @@ export default function DashboardChild() {
     );
   }
 
-  if (!user) {
-    return null; // Redirection gérée par useEffect
+  if (!user || !child) {
+    return null;
   }
 
-  // Données fictives pour l'exemple
-  const child = {
-    name: 'Léa',
-    age: 8,
-    points: 120,
-    avatar_url: 'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    custom_color: 'bg-pink-100 text-pink-800',
-  };
-
-  const tasks = [
-    { id: '1', label: 'Faire son lit', points: 10, done: true },
-    { id: '2', label: 'Brosser ses dents', points: 5, done: false },
-    { id: '3', label: 'Ranger ses jouets', points: 15, done: false },
-    { id: '4', label: 'Faire ses devoirs', points: 20, done: false },
-    { id: '5', label: 'Aider à mettre la table', points: 10, done: true },
-  ];
-
-  const rewards = [
-    { id: 'r1', label: '1h d’écran', cost: 50 },
-    { id: 'r2', label: 'Dessert spécial', cost: 30 },
-    { id: 'r3', label: 'Choisir le film du soir', cost: 75 },
-    { id: 'r4', label: 'Une nouvelle BD', cost: 200 },
-  ];
-
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.done).length;
-  const progressPercentage = (completedTasks / totalTasks) * 100;
+  const totalTasks = childTasks.length;
+  const completedTasks = childTasks.filter(t => t.is_completed).length;
+  const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
     <div className="container mx-auto p-6">
@@ -64,7 +216,7 @@ export default function DashboardChild() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profil de l'enfant */}
-        <Card className={`lg:col-span-1 p-6 flex flex-col items-center ${child.custom_color}`}>
+        <Card className={`lg:col-span-1 p-6 flex flex-col items-center ${child.custom_color || 'bg-blue-100 text-blue-800'}`}>
           <Avatar className="h-24 w-24 mb-4 border-4 border-white shadow-lg">
             <AvatarImage src={child.avatar_url} alt={child.name} />
             <AvatarFallback>{child.name.substring(0, 2).toUpperCase()}</AvatarFallback>
@@ -90,13 +242,17 @@ export default function DashboardChild() {
               <Progress value={progressPercentage} className="w-full" />
             </div>
             <div className="space-y-3">
-              {tasks.map((task) => (
-                <div key={task.id} className="flex items-center space-x-3 p-3 border rounded-md bg-card">
-                  <Checkbox id={`task-${task.id}`} checked={task.done} />
-                  <Label htmlFor={`task-${task.id}`} className="flex-1 text-lg font-medium">
-                    {task.label}
+              {childTasks.map((childTask) => (
+                <div key={childTask.id} className="flex items-center space-x-3 p-3 border rounded-md bg-card">
+                  <Checkbox
+                    id={`task-${childTask.id}`}
+                    checked={childTask.is_completed}
+                    onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
+                  />
+                  <Label htmlFor={`task-${childTask.id}`} className="flex-1 text-lg font-medium">
+                    {childTask.task.label}
                   </Label>
-                  <span className="text-primary font-semibold">+{task.points} points</span>
+                  <span className="text-primary font-semibold">+{childTask.task.points_reward} points</span>
                 </div>
               ))}
             </div>
@@ -119,6 +275,7 @@ export default function DashboardChild() {
                   <Button
                     className="w-full"
                     disabled={child.points < reward.cost}
+                    onClick={() => handleRewardClaim(reward.id, reward.cost)}
                   >
                     Échanger ({reward.cost} pts)
                   </Button>

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/context/auth-context';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
@@ -20,7 +20,8 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/dashboard/parent" element={<DashboardParent />} />
-              <Route path="/dashboard/child" element={<DashboardChild />} />
+              <Route path="/dashboard/child" element={<Navigate to="/dashboard/parent" replace />} />
+              <Route path="/dashboard/child/:childId" element={<DashboardChild />} />
               {/* Ajoutez d'autres routes ici si nécessaire */}
             </Routes>
           </main>

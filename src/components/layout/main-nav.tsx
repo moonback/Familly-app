@@ -3,9 +3,37 @@ import { HomeIcon, UserIcon, SettingsIcon, LogOutIcon, LogInIcon } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
 import { ModeToggle } from '@/components/layout/mode-toggle';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
+interface Child {
+  id: string;
+  name: string;
+}
 
 export function MainNav() {
   const { user, signOut } = useAuth();
+  const [children, setChildren] = useState<Child[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      fetchChildren();
+    }
+  }, [user]);
+
+  const fetchChildren = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('children')
+        .select('id, name')
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+      setChildren(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des enfants:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -25,11 +53,13 @@ export function MainNav() {
                 <UserIcon className="h-4 w-4 mr-2" /> Parent Dashboard
               </Button>
             </Link>
-            <Link to="/dashboard/child">
-              <Button variant="ghost">
-                <UserIcon className="h-4 w-4 mr-2" /> Child Dashboard
-              </Button>
-            </Link>
+            {children.map((child) => (
+              <Link key={child.id} to={`/dashboard/child/${child.id}`}>
+                <Button variant="ghost">
+                  <UserIcon className="h-4 w-4 mr-2" /> {child.name}
+                </Button>
+              </Link>
+            ))}
           </>
         )}
       </div>
