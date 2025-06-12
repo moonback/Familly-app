@@ -31,6 +31,9 @@ interface Task {
   label: string;
   points_reward: number;
   is_daily: boolean;
+  age_min: number;
+  age_max: number;
+  category: 'quotidien' | 'scolaire' | 'maison' | 'personnel';
 }
 
 interface ChildTask {
@@ -55,6 +58,67 @@ interface Riddle {
   points: number;
   is_solved: boolean;
 }
+
+const generateAgeAppropriateTasks = async (child: Child) => {
+  try {
+    // Vérifier si des tâches existent déjà pour aujourd'hui
+    const { data: existingTasks, error: checkError } = await supabase
+      .from('child_tasks')
+      .select('*')
+      .eq('child_id', child.id)
+      .eq('due_date', format(new Date(), 'yyyy-MM-dd'));
+
+    if (checkError) {
+      console.error('Erreur lors de la vérification des tâches existantes:', checkError);
+      return;
+    }
+
+    // Si aucune tâche n'existe pour aujourd'hui, en créer de nouvelles
+    if (!existingTasks || existingTasks.length === 0) {
+      // Récupérer toutes les tâches appropriées à l'âge de l'enfant
+      const { data: ageAppropriateTasks, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', child.user_id) // Utiliser le user_id du parent
+        .lte('age_min', child.age)
+        .gte('age_max', child.age);
+
+      if (tasksError) {
+        console.error('Erreur lors de la récupération des tâches:', tasksError);
+        return;
+      }
+
+      if (ageAppropriateTasks && ageAppropriateTasks.length > 0) {
+        // Sélectionner 5 tâches aléatoires parmi les tâches appropriées
+        const selectedTasks = ageAppropriateTasks
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 5);
+
+        // Créer les tâches dans la base de données
+        for (const task of selectedTasks) {
+          const { error: insertError } = await supabase
+            .from('child_tasks')
+            .insert([
+              {
+                child_id: child.id,
+                task_id: task.id,
+                due_date: format(new Date(), 'yyyy-MM-dd'),
+                is_completed: false
+              }
+            ]);
+
+          if (insertError) {
+            console.error('Erreur lors de la création de la tâche:', insertError);
+          }
+        }
+      } else {
+        console.log('Aucune tâche appropriée trouvée pour cet âge');
+      }
+    }
+  } catch (error) {
+    console.error('Erreur lors de la génération des tâches:', error);
+  }
+};
 
 export default function DashboardChild() {
   const { user, loading } = useAuth();
@@ -98,6 +162,9 @@ export default function DashboardChild() {
 
       if (childError) throw childError;
       setChild(childData);
+
+      // Générer des tâches appropriées à l'âge de l'enfant
+      await generateAgeAppropriateTasks(childData);
 
       // Récupérer les tâches de l'enfant
       const { data: tasksData, error: tasksError } = await supabase
