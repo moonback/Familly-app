@@ -59,6 +59,14 @@ interface Riddle {
   is_solved: boolean;
 }
 
+interface ChildRewardClaimed {
+  id: string;
+  child_id: string;
+  reward_id: string;
+  claimed_at: string;
+  reward: Reward;
+}
+
 const generateAgeAppropriateTasks = async (child: Child) => {
   try {
     // Vérifier si des tâches existent déjà pour aujourd'hui
@@ -136,6 +144,7 @@ export default function DashboardChild() {
   const [showRiddleSuccess, setShowRiddleSuccess] = useState(false);
   const [riddleSolved, setRiddleSolved] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [claimedRewards, setClaimedRewards] = useState<ChildRewardClaimed[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -187,6 +196,19 @@ export default function DashboardChild() {
 
       if (rewardsError) throw rewardsError;
       setRewards(rewardsData);
+
+      // Récupérer les récompenses réclamées
+      const { data: claimedRewardsData, error: claimedRewardsError } = await supabase
+        .from('child_rewards_claimed')
+        .select(`
+          *,
+          reward:rewards(*)
+        `)
+        .eq('child_id', childId)
+        .order('claimed_at', { ascending: false });
+
+      if (claimedRewardsError) throw claimedRewardsError;
+      setClaimedRewards(claimedRewardsData);
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       toast({
@@ -838,6 +860,59 @@ export default function DashboardChild() {
                     </motion.div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Section des récompenses réclamées */}
+          <motion.div
+            initial={{ y: 100, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 100,
+              delay: 0.8 
+            }}
+            className="lg:col-span-12 mt-6"
+          >
+            <Card className="shadow-2xl border-0 overflow-hidden bg-white/80 backdrop-blur-sm">
+              <CardHeader className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20" />
+                <CardTitle className="relative z-10 text-2xl font-bold text-gray-800 flex items-center gap-2">
+                  <TrophyIcon className="h-6 w-6 text-purple-600" />
+                  Mes Récompenses Obtenues
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="relative z-10">
+                {claimedRewards.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {claimedRewards.map((claimedReward) => (
+                      <motion.div
+                        key={claimedReward.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 rounded-lg border-2 bg-white border-purple-200"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-full bg-purple-100">
+                            <GiftIcon className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900">{claimedReward.reward.label}</h4>
+                            <p className="text-sm text-gray-500">
+                              Obtenue le {format(new Date(claimedReward.claimed_at), 'dd MMMM yyyy', { locale: fr })}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">Tu n'as pas encore obtenu de récompenses.</p>
+                    <p className="text-sm text-gray-400 mt-2">Continue à accomplir tes tâches pour gagner des points !</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
