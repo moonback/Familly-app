@@ -16,7 +16,8 @@ import {
   RefreshCw,
   Calendar,
   ChevronDown,
-  Brain
+  Brain,
+  Flame
 } from 'lucide-react';
 import { ChildrenManager } from '@/components/children/children-manager';
 import { TasksManager } from '@/components/tasks/tasks-manager';
@@ -46,6 +47,7 @@ import { supabase } from '@/lib/supabase';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { format, subDays, subWeeks, subMonths, startOfDay, endOfDay, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | null;
 type Period = 'day' | 'week' | 'month';
@@ -54,11 +56,31 @@ interface DashboardStats {
   activeChildren: number;
   completedTasks: number;
   availableRewards: number;
+  totalPoints: number;
+  averageCompletion: number;
   isLoading: boolean;
   history: {
     date: string;
     tasks: number;
     rewards: number;
+    points: number;
+  }[];
+  childrenStats: {
+    id: string;
+    name: string;
+    points: number;
+    completedTasks: number;
+    pendingTasks: number;
+    avatar_url: string;
+    streak: number;
+    lastActivity: string;
+  }[];
+  recentActivities: {
+    type: 'task' | 'reward' | 'points';
+    childName: string;
+    description: string;
+    timestamp: string;
+    points?: number;
   }[];
 }
 
@@ -150,8 +172,12 @@ export default function DashboardParent() {
     activeChildren: 0,
     completedTasks: 0,
     availableRewards: 0,
+    totalPoints: 0,
+    averageCompletion: 0,
     isLoading: true,
-    history: []
+    history: [],
+    childrenStats: [],
+    recentActivities: []
   });
 
   const fetchStats = async () => {
@@ -168,34 +194,80 @@ export default function DashboardParent() {
 
       const endDate = endOfDay(new Date());
 
-      // Récupérer le nombre d'enfants actifs
-      const { count: activeChildrenCount } = await supabase
+      // Récupérer les statistiques des enfants
+      const { data: childrenData, error: childrenError } = await supabase
         .from('children')
-        .select('*', { count: 'exact', head: true })
+        .select(`
+          id,
+          name,
+          points,
+          avatar_url,
+          child_tasks (
+            id,
+            is_completed,
+            completed_at
+          )
+        `)
         .eq('user_id', user.id);
 
-      // Récupérer le nombre de tâches complétées
-      const { count: completedTasksCount } = await supabase
-        .from('child_tasks')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_completed', true)
-        .gte('completed_at', startDate.toISOString())
-        .lte('completed_at', endDate.toISOString())
-        .in('child_id', (
-          await supabase
-            .from('children')
-            .select('id')
-            .eq('user_id', user.id)
-        ).data?.map(child => child.id) || []);
+      if (childrenError) throw childrenError;
 
-      // Récupérer le nombre de récompenses disponibles
-      const { count: availableRewardsCount } = await supabase
-        .from('rewards')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+      const childrenStats = childrenData?.map(child => ({
+        id: child.id,
+        name: child.name,
+        points: child.points,
+        completedTasks: child.child_tasks?.filter(t => t.is_completed).length || 0,
+        pendingTasks: child.child_tasks?.filter(t => !t.is_completed).length || 0,
+        avatar_url: child.avatar_url
+      })) || [];
+
+      // Calculer les streaks et dernières activités
+      const childrenStatsWithStreak = await Promise.all(childrenStats.map(async (child) => {
+        // Récupérer les tâches complétées des 7 derniers jours
+        const { data: recentTasks } = await supabase
+          .from('child_tasks')
+          .select('completed_at')
+          .eq('child_id', child.id)
+          .eq('is_completed', true)
+          .gte('completed_at', subDays(new Date(), 7).toISOString())
+          .order('completed_at', { ascending: false });
+
+        // Calculer le streak
+        let streak = 0;
+        let currentDate = new Date();
+        const completedDates = new Set(recentTasks?.map(t => format(new Date(t.completed_at), 'yyyy-MM-dd')) || []);
+
+        while (completedDates.has(format(currentDate, 'yyyy-MM-dd'))) {
+          streak++;
+          currentDate = subDays(currentDate, 1);
+        }
+
+        // Récupérer la dernière activité
+        const { data: lastActivity } = await supabase
+          .from('child_tasks')
+          .select('completed_at')
+          .eq('child_id', child.id)
+          .eq('is_completed', true)
+          .order('completed_at', { ascending: false })
+          .limit(1);
+
+        return {
+          ...child,
+          streak,
+          lastActivity: lastActivity?.[0]?.completed_at || null
+        };
+      }));
+
+      // Calculer les statistiques globales
+      const totalPoints = childrenStatsWithStreak.reduce((sum, child) => sum + child.points, 0);
+      const totalCompletedTasks = childrenStatsWithStreak.reduce((sum, child) => sum + child.completedTasks, 0);
+      const totalPendingTasks = childrenStatsWithStreak.reduce((sum, child) => sum + child.pendingTasks, 0);
+      const averageCompletion = totalPendingTasks > 0 
+        ? Math.round((totalCompletedTasks / (totalCompletedTasks + totalPendingTasks)) * 100)
+        : 100;
 
       // Récupérer l'historique des tâches complétées
-      const { data: historyData } = await supabase
+      const { data: tasksHistory } = await supabase
         .from('child_tasks')
         .select(`
           completed_at,
@@ -208,15 +280,10 @@ export default function DashboardParent() {
         .eq('is_completed', true)
         .gte('completed_at', startDate.toISOString())
         .lte('completed_at', endDate.toISOString())
-        .in('child_id', (
-          await supabase
-            .from('children')
-            .select('id')
-            .eq('user_id', user.id)
-        ).data?.map(child => child.id) || []);
+        .in('child_id', childrenStatsWithStreak.map(child => child.id));
 
       // Récupérer l'historique des récompenses réclamées
-      const { data: rewardsHistoryData } = await supabase
+      const { data: rewardsHistory } = await supabase
         .from('child_rewards_claimed')
         .select(`
           claimed_at,
@@ -227,22 +294,61 @@ export default function DashboardParent() {
         `)
         .gte('claimed_at', startDate.toISOString())
         .lte('claimed_at', endDate.toISOString())
-        .in('child_id', (
-          await supabase
-            .from('children')
-            .select('id')
-            .eq('user_id', user.id)
-        ).data?.map(child => child.id) || []);
+        .in('child_id', childrenStatsWithStreak.map(child => child.id));
+
+      // Récupérer l'historique des points
+      const { data: pointsHistory } = await supabase
+        .from('points_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      // Récupérer le nombre de récompenses disponibles
+      const { count: availableRewardsCount } = await supabase
+        .from('rewards')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
 
       // Traiter les données historiques
-      const history = processHistoryData(historyData || [], rewardsHistoryData || [], period);
+      const history = processHistoryData(
+        tasksHistory || [], 
+        rewardsHistory || [], 
+        pointsHistory || [],
+        period
+      );
+
+      // Récupérer les activités récentes
+      const { data: recentActivities } = await supabase
+        .from('points_history')
+        .select(`
+          *,
+          children (
+            name
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const formattedActivities = recentActivities?.map(activity => ({
+        type: 'points' as const,
+        childName: activity.children.name,
+        description: activity.reason,
+        timestamp: activity.created_at,
+        points: activity.points
+      })) || [];
 
       setStats({
-        activeChildren: activeChildrenCount || 0,
-        completedTasks: completedTasksCount || 0,
+        activeChildren: childrenStatsWithStreak.length,
+        completedTasks: totalCompletedTasks,
         availableRewards: availableRewardsCount || 0,
+        totalPoints,
+        averageCompletion,
         isLoading: false,
-        history
+        history,
+        childrenStats: childrenStatsWithStreak,
+        recentActivities: formattedActivities
       });
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques:', error);
@@ -250,14 +356,14 @@ export default function DashboardParent() {
     }
   };
 
-  const processHistoryData = (tasksData: any[], rewardsData: any[], period: Period) => {
-    const groupedData = new Map<string, { tasks: number; rewards: number }>();
+  const processHistoryData = (tasksData: any[], rewardsData: any[], pointsData: any[], period: Period) => {
+    const groupedData = new Map<string, { tasks: number; rewards: number; points: number }>();
 
     // Traiter les tâches
     tasksData.forEach(item => {
       const date = format(new Date(item.completed_at), 'yyyy-MM-dd');
       if (!groupedData.has(date)) {
-        groupedData.set(date, { tasks: 0, rewards: 0 });
+        groupedData.set(date, { tasks: 0, rewards: 0, points: 0 });
       }
       const current = groupedData.get(date)!;
       current.tasks += 1;
@@ -267,10 +373,20 @@ export default function DashboardParent() {
     rewardsData.forEach(item => {
       const date = format(new Date(item.claimed_at), 'yyyy-MM-dd');
       if (!groupedData.has(date)) {
-        groupedData.set(date, { tasks: 0, rewards: 0 });
+        groupedData.set(date, { tasks: 0, rewards: 0, points: 0 });
       }
       const current = groupedData.get(date)!;
       current.rewards += 1;
+    });
+
+    // Traiter les points
+    pointsData.forEach(item => {
+      const date = format(new Date(item.created_at), 'yyyy-MM-dd');
+      if (!groupedData.has(date)) {
+        groupedData.set(date, { tasks: 0, rewards: 0, points: 0 });
+      }
+      const current = groupedData.get(date)!;
+      current.points += item.points;
     });
 
     // Remplir les dates manquantes avec des zéros
@@ -286,7 +402,7 @@ export default function DashboardParent() {
     while (currentDate <= endDate) {
       const dateStr = format(currentDate, 'yyyy-MM-dd');
       if (!groupedData.has(dateStr)) {
-        groupedData.set(dateStr, { tasks: 0, rewards: 0 });
+        groupedData.set(dateStr, { tasks: 0, rewards: 0, points: 0 });
       }
       currentDate = addDays(currentDate, 1);
     }
@@ -424,7 +540,7 @@ export default function DashboardParent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
           title="Enfants actifs"
           value={stats.activeChildren}
@@ -444,7 +560,18 @@ export default function DashboardParent() {
           isLoading={stats.isLoading}
           details={[
             { label: "Tâches aujourd'hui", value: Math.floor(stats.completedTasks * 0.3) },
-            { label: "Taux de complétion", value: 85 }
+            { label: "Taux de complétion", value: stats.averageCompletion }
+          ]}
+        />
+        <StatCard
+          title="Points totaux"
+          value={stats.totalPoints}
+          icon={<Sparkles className="h-8 w-8" />}
+          color="yellow"
+          isLoading={stats.isLoading}
+          details={[
+            { label: "Points distribués", value: stats.totalPoints },
+            { label: "Points moyens/enfant", value: Math.round(stats.totalPoints / stats.activeChildren) }
           ]}
         />
         <StatCard
@@ -459,6 +586,129 @@ export default function DashboardParent() {
           ]}
         />
       </div>
+
+      {/* Activités récentes */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 shadow-xl">
+          <CardHeader className="border-b border-gray-200">
+            <CardTitle className="text-xl font-bold text-gray-900">Activités récentes</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              {stats.recentActivities.map((activity, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className={`p-2 rounded-full ${
+                    activity.type === 'task' ? 'bg-green-100' :
+                    activity.type === 'reward' ? 'bg-purple-100' :
+                    'bg-yellow-100'
+                  }`}>
+                    {activity.type === 'task' ? <CheckSquare className="h-5 w-5 text-green-600" /> :
+                     activity.type === 'reward' ? <Gift className="h-5 w-5 text-purple-600" /> :
+                     <Sparkles className="h-5 w-5 text-yellow-600" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{activity.childName}</p>
+                    <p className="text-sm text-gray-600">{activity.description}</p>
+                  </div>
+                  {activity.points && (
+                    <div className="text-right">
+                      <p className="font-bold text-yellow-600">+{activity.points}</p>
+                      <p className="text-xs text-gray-500">
+                        {format(new Date(activity.timestamp), 'dd MMM HH:mm', { locale: fr })}
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Tableau des performances des enfants avec streaks */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 shadow-xl">
+          <CardHeader className="border-b border-gray-200">
+            <CardTitle className="text-xl font-bold text-gray-900">Performance des enfants</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4">Enfant</th>
+                    <th className="text-center py-3 px-4">Points</th>
+                    <th className="text-center py-3 px-4">Streak</th>
+                    <th className="text-center py-3 px-4">Tâches complétées</th>
+                    <th className="text-center py-3 px-4">Tâches en attente</th>
+                    <th className="text-center py-3 px-4">Dernière activité</th>
+                    <th className="text-center py-3 px-4">Progression</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.childrenStats.map((child) => (
+                    <tr key={child.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={child.avatar_url} />
+                            <AvatarFallback>{child.name.substring(0, 2)}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{child.name}</span>
+                        </div>
+                      </td>
+                      <td className="text-center py-3 px-4">
+                        <span className="font-bold text-yellow-600">{child.points}</span>
+                      </td>
+                      <td className="text-center py-3 px-4">
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="font-bold text-orange-600">{child.streak}</span>
+                          <Flame className="h-4 w-4 text-orange-500" />
+                        </div>
+                      </td>
+                      <td className="text-center py-3 px-4">
+                        <span className="text-green-600">{child.completedTasks}</span>
+                      </td>
+                      <td className="text-center py-3 px-4">
+                        <span className="text-orange-600">{child.pendingTasks}</span>
+                      </td>
+                      <td className="text-center py-3 px-4">
+                        <span className="text-sm text-gray-600">
+                          {child.lastActivity ? format(new Date(child.lastActivity), 'dd MMM HH:mm', { locale: fr }) : 'Jamais'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div
+                            className="bg-blue-600 h-2.5 rounded-full"
+                            style={{
+                              width: `${(child.completedTasks / (child.completedTasks + child.pendingTasks)) * 100}%`
+                            }}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Graphique d'évolution amélioré */}
       <motion.div
@@ -482,6 +732,10 @@ export default function DashboardParent() {
                     <linearGradient id="colorRewards" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
                       <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorPoints" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -519,6 +773,15 @@ export default function DashboardParent() {
                     fillOpacity={1} 
                     fill="url(#colorRewards)" 
                     name="Récompenses"
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="points" 
+                    stroke="#F59E0B" 
+                    strokeWidth={2}
+                    fillOpacity={1} 
+                    fill="url(#colorPoints)" 
+                    name="Points"
                   />
                 </AreaChart>
               </ResponsiveContainer>
