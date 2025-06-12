@@ -75,34 +75,63 @@ interface StatCardProps {
 const StatCard = ({ title, value, icon, color, isLoading, details }: StatCardProps) => (
   <Popover>
     <PopoverTrigger asChild>
-      <Card className={`bg-white/80 backdrop-blur-sm border-2 border-${color}-200 cursor-pointer hover:shadow-lg transition-shadow`}>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">{title}</p>
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className={`h-5 w-5 animate-spin text-${color}-600`} />
-                  <span className="text-sm text-gray-500">Chargement...</span>
-                </div>
-              ) : (
-                <h3 className={`text-2xl font-bold text-${color}-600`}>{value}</h3>
-              )}
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <Card className={`bg-white/80 backdrop-blur-sm border-2 border-${color}-200 cursor-pointer hover:shadow-lg transition-all duration-300`}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">{title}</p>
+                {isLoading ? (
+                  <div className="flex items-center gap-2 mt-2">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Loader2 className={`h-5 w-5 text-${color}-600`} />
+                    </motion.div>
+                    <span className="text-sm text-gray-500">Chargement...</span>
+                  </div>
+                ) : (
+                  <motion.h3 
+                    className={`text-3xl font-bold text-${color}-600 mt-2`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {value}
+                  </motion.h3>
+                )}
+              </div>
+              <motion.div 
+                className={`text-${color}-400`}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
+                {icon}
+              </motion.div>
             </div>
-            <div className={`text-${color}-400`}>{icon}</div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
     </PopoverTrigger>
     {details && (
-      <PopoverContent className="w-80">
-        <div className="space-y-2">
-          <h4 className="font-medium text-sm text-gray-900">Détails</h4>
+      <PopoverContent className="w-80 bg-white/90 backdrop-blur-sm border-2 border-gray-200 shadow-xl">
+        <div className="space-y-3">
+          <h4 className="font-semibold text-sm text-gray-900 border-b pb-2">Détails</h4>
           {details.map((detail, index) => (
-            <div key={index} className="flex justify-between items-center text-sm">
+            <motion.div 
+              key={index} 
+              className="flex justify-between items-center text-sm"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
               <span className="text-gray-600">{detail.label}</span>
-              <span className="font-medium">{detail.value}</span>
-            </div>
+              <span className="font-medium bg-gray-100 px-3 py-1 rounded-full">{detail.value}</span>
+            </motion.div>
           ))}
         </div>
       </PopoverContent>
@@ -341,12 +370,18 @@ export default function DashboardParent() {
   ];
 
   const renderStats = () => (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">Statistiques</h3>
+        <motion.h3 
+          className="text-xl font-bold text-gray-900"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          Statistiques
+        </motion.h3>
         <div className="flex items-center gap-4">
           <Select value={period} onValueChange={(value: Period) => setPeriod(value)}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] bg-white/80 backdrop-blur-sm border-2">
               <SelectValue placeholder="Sélectionner une période" />
             </SelectTrigger>
             <SelectContent>
@@ -355,18 +390,28 @@ export default function DashboardParent() {
               <SelectItem value="month">Ce mois</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={fetchStats}
-            className="hover:bg-gray-100"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={fetchStats}
+              className="hover:bg-white/80 backdrop-blur-sm border-2"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </motion.div>
+            </Button>
+          </motion.div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="Enfants actifs"
           value={stats.activeChildren}
@@ -402,50 +447,72 @@ export default function DashboardParent() {
         />
       </div>
 
-      {/* Graphique d'évolution */}
-      <Card className="bg-white/80 backdrop-blur-sm border-2 border-gray-200">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">Évolution des activités</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={stats.history}>
-                <defs>
-                  <linearGradient id="colorTasks" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorRewards" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <RechartsTooltip />
-                <Area 
-                  type="monotone" 
-                  dataKey="tasks" 
-                  stroke="#10B981" 
-                  fillOpacity={1} 
-                  fill="url(#colorTasks)" 
-                  name="Tâches"
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="rewards" 
-                  stroke="#8B5CF6" 
-                  fillOpacity={1} 
-                  fill="url(#colorRewards)" 
-                  name="Récompenses"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Graphique d'évolution amélioré */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 shadow-xl">
+          <CardHeader className="border-b border-gray-200">
+            <CardTitle className="text-xl font-bold text-gray-900">Évolution des activités</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats.history}>
+                  <defs>
+                    <linearGradient id="colorTasks" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorRewards" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#6B7280"
+                    tick={{ fill: '#6B7280' }}
+                  />
+                  <YAxis 
+                    stroke="#6B7280"
+                    tick={{ fill: '#6B7280' }}
+                  />
+                  <RechartsTooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      border: '2px solid #E5E7EB',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="tasks" 
+                    stroke="#10B981" 
+                    strokeWidth={2}
+                    fillOpacity={1} 
+                    fill="url(#colorTasks)" 
+                    name="Tâches"
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="rewards" 
+                    stroke="#8B5CF6" 
+                    strokeWidth={2}
+                    fillOpacity={1} 
+                    fill="url(#colorRewards)" 
+                    name="Récompenses"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 
@@ -461,17 +528,21 @@ export default function DashboardParent() {
           className="space-y-8"
         >
           {currentView ? (
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-100">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border-2 border-gray-200"
+            >
               {renderCurrentView()}
-            </div>
+            </motion.div>
           ) : (
             <>
-              {/* Hero Section avec animation */}
+              {/* Hero Section avec animation améliorée */}
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
-                className="text-center py-12 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl text-white shadow-2xl relative overflow-hidden"
+                className="text-center py-16 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl text-white shadow-2xl relative overflow-hidden"
               >
                 <motion.div 
                   className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"
@@ -487,22 +558,35 @@ export default function DashboardParent() {
                 />
                 <div className="relative z-10">
                   <motion.div 
-                    className="flex justify-center mb-4"
-                    animate={{ rotate: [0, 10, -10, 0] }}
+                    className="flex justify-center mb-6"
+                    animate={{ 
+                      rotate: [0, 10, -10, 0],
+                      scale: [1, 1.1, 1]
+                    }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
-                    <Sparkles className="h-12 w-12 text-yellow-300" />
+                    <Sparkles className="h-16 w-16 text-yellow-300" />
                   </motion.div>
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                  <motion.h2 
+                    className="text-4xl md:text-5xl font-bold mb-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
                     Bienvenue dans votre espace parent
-                  </h2>
-                  <p className="text-xl opacity-90 max-w-2xl mx-auto">
+                  </motion.h2>
+                  <motion.p 
+                    className="text-xl opacity-90 max-w-2xl mx-auto"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
                     Gérez facilement les activités, règles et récompenses de vos enfants
-                  </p>
+                  </motion.p>
                 </div>
               </motion.div>
 
-              {/* Dashboard Cards avec animations et tooltips */}
+              {/* Dashboard Cards avec animations et tooltips améliorés */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <TooltipProvider>
                   {dashboardCards.map((card, index) => {
@@ -516,44 +600,57 @@ export default function DashboardParent() {
                       >
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Card 
-                              className={`group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl border-2 ${card.borderColor} ${card.bgGradient} overflow-hidden relative`}
-                              onClick={() => setCurrentView(card.id as View)}
+                            <motion.div
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
                             >
-                              <motion.div 
-                                className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100"
-                                whileHover={{ scale: 1.02 }}
-                                transition={{ duration: 0.2 }}
-                              />
-                              
-                              <CardHeader className="text-center pb-4 relative z-10">
+                              <Card 
+                                className={`group cursor-pointer transition-all duration-300 hover:shadow-xl border-2 ${card.borderColor} ${card.bgGradient} overflow-hidden relative`}
+                                onClick={() => setCurrentView(card.id as View)}
+                              >
                                 <motion.div 
-                                  className={`mx-auto w-16 h-16 rounded-full bg-gradient-to-r ${card.color} ${card.hoverColor} flex items-center justify-center mb-4 shadow-lg`}
-                                  whileHover={{ scale: 1.1, rotate: 5 }}
+                                  className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100"
+                                  whileHover={{ scale: 1.02 }}
                                   transition={{ duration: 0.2 }}
-                                >
-                                  <IconComponent className="h-8 w-8 text-white" />
-                                </motion.div>
-                                <CardTitle className="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
-                                  {card.title}
-                                </CardTitle>
-                              </CardHeader>
-                              
-                              <CardContent className="text-center relative z-10">
-                                <p className="text-gray-600 mb-6 leading-relaxed">
-                                  {card.description}
-                                </p>
-                                <Button 
-                                  className={`w-full bg-gradient-to-r ${card.color} ${card.hoverColor} text-white border-0 shadow-lg font-semibold py-2.5 transition-all duration-300 group-hover:shadow-xl`}
-                                >
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  {card.buttonText}
-                                </Button>
-                              </CardContent>
-                            </Card>
+                                />
+                                
+                                <CardHeader className="text-center pb-4 relative z-10">
+                                  <motion.div 
+                                    className={`mx-auto w-20 h-20 rounded-full bg-gradient-to-r ${card.color} ${card.hoverColor} flex items-center justify-center mb-4 shadow-lg`}
+                                    whileHover={{ scale: 1.1, rotate: 5 }}
+                                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                  >
+                                    <IconComponent className="h-10 w-10 text-white" />
+                                  </motion.div>
+                                  <CardTitle className="text-2xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
+                                    {card.title}
+                                  </CardTitle>
+                                </CardHeader>
+                                
+                                <CardContent className="text-center relative z-10">
+                                  <p className="text-gray-600 mb-6 leading-relaxed">
+                                    {card.description}
+                                  </p>
+                                  <motion.div
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                  >
+                                    <Button 
+                                      className={`w-full bg-gradient-to-r ${card.color} ${card.hoverColor} text-white border-0 shadow-lg font-semibold py-3 transition-all duration-300 group-hover:shadow-xl`}
+                                    >
+                                      <Plus className="mr-2 h-5 w-5" />
+                                      {card.buttonText}
+                                    </Button>
+                                  </motion.div>
+                                </CardContent>
+                              </Card>
+                            </motion.div>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom" className="bg-white/90 backdrop-blur-sm">
-                            <p className="text-sm">Cliquez pour accéder à {card.title.toLowerCase()}</p>
+                          <TooltipContent 
+                            side="bottom" 
+                            className="bg-white/90 backdrop-blur-sm border-2 border-gray-200 shadow-xl"
+                          >
+                            <p className="text-sm font-medium">Cliquez pour accéder à {card.title.toLowerCase()}</p>
                           </TooltipContent>
                         </Tooltip>
                       </motion.div>
@@ -589,7 +686,7 @@ export default function DashboardParent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto p-6 max-w-7xl">
-        {/* Header avec animation */}
+        {/* Header avec animation améliorée */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -612,16 +709,25 @@ export default function DashboardParent() {
               </motion.div>
             )}
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <motion.h1 
+                className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
                 {currentView ? 
                   dashboardCards.find(card => card.id === currentView)?.title || 'Tableau de bord Parent' :
                   'Tableau de bord Parent'
                 }
-              </h1>
+              </motion.h1>
               {!currentView && (
-                <p className="text-gray-600 mt-2 text-lg">
+                <motion.p 
+                  className="text-gray-600 mt-2 text-lg"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
                   Gérez votre famille avec style et simplicité
-                </p>
+                </motion.p>
               )}
             </div>
           </div>
@@ -630,9 +736,19 @@ export default function DashboardParent() {
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg"
+              className="flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg border-2 border-gray-200"
             >
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <motion.div 
+                className="w-3 h-3 bg-green-500 rounded-full"
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  opacity: [1, 0.5, 1]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity
+                }}
+              />
               <span className="text-sm font-medium text-gray-700">En ligne</span>
             </motion.div>
           )}
