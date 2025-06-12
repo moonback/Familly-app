@@ -104,20 +104,7 @@ export function MainNav() {
                               </span>
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link 
-                              to={`/child/${child.id}`}
-                              className="flex items-center justify-between w-full cursor-pointer"
-                            >
-                              <span className="flex items-center">
-                                <HomeIcon className="h-4 w-4 mr-2" />
-                                {child.name}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                Accueil
-                              </span>
-                            </Link>
-                          </DropdownMenuItem>
+                          
                         </div>
                       ))}
                     </DropdownMenuContent>
