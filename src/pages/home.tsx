@@ -38,59 +38,18 @@ export default function Home() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { childId } = useParams();
-  const [children, setChildren] = useState<Child[]>([]);
-  const [childTasks, setChildTasks] = useState<ChildTask[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [completedTasksAnimation, setCompletedTasksAnimation] = useState<string[]>([]);
   const [child, setChild] = useState<Child | null>(null);
   const [tasks, setTasks] = useState<ChildTask[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [completedTasksAnimation, setCompletedTasksAnimation] = useState<string[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
-    } else if (user) {
-      fetchData();
+    } else if (user && childId) {
+      fetchChildData();
     }
-  }, [user, loading, navigate]);
-
-  const fetchData = async () => {
-    try {
-      // Récupérer les enfants
-      const { data: childrenData, error: childrenError } = await supabase
-        .from('children')
-        .select('*')
-        .eq('user_id', user?.id);
-
-      if (childrenError) throw childrenError;
-      setChildren(childrenData || []);
-
-      // Récupérer toutes les tâches des enfants
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('child_tasks')
-        .select(`
-          *,
-          task:tasks(*)
-        `)
-        .in('child_id', childrenData?.map(child => child.id) || [])
-        .order('due_date', { ascending: true });
-
-      if (tasksError) throw tasksError;
-      setChildTasks(tasksData || []);
-
-      if (childId) {
-        fetchChildData();
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
-      toast({
-        title: 'Erreur',
-        description: "Impossible de charger les données",
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [user, loading, navigate, childId]);
 
   const fetchChildData = async () => {
     try {
@@ -118,7 +77,13 @@ export default function Home() {
       setTasks(tasksData || []);
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
-      toast.error('Erreur lors du chargement des données');
+      toast({
+        title: 'Erreur',
+        description: "Impossible de charger les données",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -126,7 +91,10 @@ export default function Home() {
     try {
       const { error } = await supabase
         .from('child_tasks')
-        .update({ is_completed: !isCompleted })
+        .update({ 
+          is_completed: !isCompleted,
+          completed_at: !isCompleted ? new Date().toISOString() : null
+        })
         .eq('id', taskId);
 
       if (error) throw error;
@@ -149,12 +117,25 @@ export default function Home() {
 
         if (updateError) throw updateError;
         setChild(prev => prev ? { ...prev, points: prev.points + pointsChange } : null);
+        
+        // Animation de célébration
+        setCompletedTasksAnimation(prev => [...prev, taskId]);
+        setTimeout(() => {
+          setCompletedTasksAnimation(prev => prev.filter(id => id !== taskId));
+        }, 2000);
       }
 
-      toast.success(isCompleted ? 'Tâche marquée comme non terminée' : 'Tâche terminée !');
+      toast({
+        title: !isCompleted ? '🎉 Bravo !' : 'Tâche mise à jour',
+        description: !isCompleted ? `Tu as gagné ${task?.task.points_reward} points !` : 'La tâche a été mise à jour',
+      });
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la tâche:', error);
-      toast.error('Erreur lors de la mise à jour de la tâche');
+      toast({
+        title: 'Erreur',
+        description: "Impossible de mettre à jour la tâche",
+        variant: 'destructive',
+      });
     }
   };
 
@@ -169,7 +150,7 @@ export default function Home() {
     );
   }
 
-  if (!user) {
+  if (!user || !child) {
     return null;
   }
 
@@ -179,161 +160,101 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       <div className="container mx-auto p-6">
-        <h1 className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
-          🏠 Tableau de Bord Familial
-        </h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {children.map((child) => {
-            const childTasksList = childTasks.filter(task => task.child_id === child.id);
-            const totalTasks = childTasksList.length;
-            const completedTasks = childTasksList.filter(t => t.is_completed).length;
-            const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-
-            return (
-              <Card key={child.id} className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center">
-                      <img 
-                        src={child.avatar_url} 
-                        alt={child.name} 
-                        className="w-8 h-8 rounded-full mr-2 border-2 border-white"
-                      />
-                      {child.name}
-                    </span>
-                    <div className="flex items-center">
-                      <StarIcon className="h-5 w-5 text-yellow-300 mr-1" />
-                      <span>{child.points} points</span>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-600">
-                        Progression ({completedTasks}/{totalTasks})
-                      </span>
-                      <span className="text-lg">
-                        {progressPercentage === 100 ? '🎉' : progressPercentage >= 50 ? '💪' : '🚀'}
-                      </span>
-                    </div>
-                    <Progress value={progressPercentage} className="h-2" />
-                  </div>
-
-                  <div className="space-y-3">
-                    {childTasksList.map((childTask) => (
-                      <div 
-                        key={childTask.id} 
-                        className={`relative flex items-center space-x-3 p-3 rounded-lg border transition-all duration-300 ${
-                          childTask.is_completed 
-                            ? 'bg-green-50 border-green-200' 
-                            : 'bg-white border-gray-200 hover:border-purple-300'
-                        } ${completedTasksAnimation.includes(childTask.id) ? 'animate-pulse bg-yellow-100' : ''}`}
-                      >
-                        {completedTasksAnimation.includes(childTask.id) && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <SparklesIcon className="h-6 w-6 text-yellow-500 animate-spin" />
-                          </div>
-                        )}
-                        
-                        <div className="relative">
-                          <Checkbox
-                            id={`task-${childTask.id}`}
-                            checked={childTask.is_completed}
-                            onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
-                            className="h-5 w-5 border-2 border-purple-300 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                          />
-                          {childTask.is_completed && (
-                            <CheckCircleIcon className="absolute -top-1 -right-1 h-3 w-3 text-green-500 animate-bounce" />
-                          )}
-                        </div>
-                        
-                        <Label 
-                          htmlFor={`task-${childTask.id}`} 
-                          className={`flex-1 text-sm font-medium cursor-pointer ${
-                            childTask.is_completed ? 'line-through text-green-600' : 'text-gray-800'
-                          }`}
-                        >
-                          {childTask.task.label}
-                        </Label>
-                        
-                        <div className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          childTask.is_completed 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-purple-100 text-purple-700'
-                        }`}>
-                          +{childTask.task.points_reward}
-                        </div>
-                      </div>
-                    ))}
-
-                    {childTasksList.length === 0 && (
-                      <div className="text-center py-4 text-gray-500">
-                        Aucune tâche pour le moment
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="mt-8">
-          <h2 className="text-3xl font-bold mb-4">Bonjour {child?.name} !</h2>
-          <div className="flex items-center gap-4">
-            <div className="text-lg">
-              Points: <span className="font-bold text-purple-600">{child?.points}</span>
-            </div>
-            <div className="flex-1">
-              <Progress value={progress} className="h-2" />
-              <p className="text-sm text-gray-500 mt-1">
-                {completedTasks} tâches terminées sur {tasks.length}
-              </p>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              🏠 Tableau de Bord de {child.name}
+            </h1>
+            <div className="flex items-center justify-center gap-4 mt-4">
+              <img 
+                src={child.avatar_url} 
+                alt={child.name} 
+                className="w-16 h-16 rounded-full border-4 border-purple-300 shadow-lg"
+              />
+              <div className="text-left">
+                <div className="flex items-center gap-2">
+                  <StarIcon className="h-6 w-6 text-yellow-400" />
+                  <span className="text-2xl font-bold text-purple-600">{child.points} points</span>
+                </div>
+                <div className="text-gray-600">Progression des tâches</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Mes Missions du Jour</CardTitle>
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+            <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
+              <CardTitle className="flex items-center">
+                <ListChecksIcon className="mr-3 h-6 w-6" />
+                Mes Missions du Jour
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-lg font-semibold text-gray-700">
+                    Progression ({completedTasks}/{tasks.length})
+                  </span>
+                  <span className="text-2xl">
+                    {progress === 100 ? '🎉' : progress >= 50 ? '💪' : '🚀'}
+                  </span>
+                </div>
+                <Progress value={progress} className="h-3" />
+              </div>
+
               <div className="space-y-4">
                 {tasks.map((childTask) => (
-                  <div
-                    key={childTask.id}
-                    className="flex items-center space-x-4 p-4 rounded-lg border hover:bg-gray-50 transition-colors"
+                  <div 
+                    key={childTask.id} 
+                    className={`relative flex items-center space-x-4 p-4 rounded-xl border-2 transition-all duration-300 ${
+                      childTask.is_completed 
+                        ? 'bg-green-50 border-green-200 shadow-md' 
+                        : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-lg'
+                    } ${completedTasksAnimation.includes(childTask.id) ? 'animate-pulse bg-yellow-100' : ''}`}
                   >
-                    <Checkbox
-                      id={childTask.id}
-                      checked={childTask.is_completed}
-                      onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
-                      className="h-5 w-5 cursor-pointer hover:scale-110 transition-transform"
-                    />
-                    <Label
-                      htmlFor={childTask.id}
-                      className={`flex-1 cursor-pointer ${
-                        childTask.is_completed ? 'line-through text-gray-500' : ''
-                      } hover:text-purple-600 transition-colors`}
+                    {completedTasksAnimation.includes(childTask.id) && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <SparklesIcon className="h-8 w-8 text-yellow-500 animate-spin" />
+                      </div>
+                    )}
+                    
+                    <div className="relative">
+                      <Checkbox
+                        id={`task-${childTask.id}`}
+                        checked={childTask.is_completed}
+                        onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
+                        className="h-6 w-6 border-2 border-purple-300 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500 cursor-pointer hover:scale-110 transition-transform"
+                      />
+                      {childTask.is_completed && (
+                        <CheckCircleIcon className="absolute -top-1 -right-1 h-4 w-4 text-green-500 animate-bounce" />
+                      )}
+                    </div>
+                    
+                    <Label 
+                      htmlFor={`task-${childTask.id}`} 
+                      className={`flex-1 text-lg font-medium cursor-pointer transition-all duration-300 ${
+                        childTask.is_completed 
+                          ? 'line-through text-green-600 opacity-75' 
+                          : 'text-gray-800 hover:text-purple-600'
+                      }`}
                     >
                       {childTask.task.label}
                     </Label>
-                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      childTask.is_completed
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors'
+                    
+                    <div className={`px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 ${
+                      childTask.is_completed 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
                     }`}>
                       +{childTask.task.points_reward} points
                     </div>
                   </div>
                 ))}
+
                 {tasks.length === 0 && (
-                  <p className="text-center text-gray-500 py-4">
-                    Aucune mission pour aujourd'hui !
-                  </p>
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">🎯</div>
+                    <p className="text-xl text-gray-600">Aucune mission pour aujourd'hui !</p>
+                  </div>
                 )}
               </div>
             </CardContent>
