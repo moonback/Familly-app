@@ -6,11 +6,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { GiftIcon, TrophyIcon, ListChecksIcon, StarIcon, SparklesIcon, CheckCircleIcon, PartyPopperIcon } from 'lucide-react';
+import { GiftIcon, TrophyIcon, ListChecksIcon, StarIcon, SparklesIcon, CheckCircleIcon, PartyPopperIcon, BrainIcon, CalendarIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface Child {
   id: string;
@@ -44,6 +48,14 @@ interface Reward {
   cost: number;
 }
 
+interface Riddle {
+  id: string;
+  question: string;
+  answer: string;
+  points: number;
+  is_solved: boolean;
+}
+
 export default function DashboardChild() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -55,6 +67,11 @@ export default function DashboardChild() {
   const [completedTasksAnimation, setCompletedTasksAnimation] = useState<string[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [hoveredReward, setHoveredReward] = useState<string | null>(null);
+  const [currentRiddle, setCurrentRiddle] = useState<Riddle | null>(null);
+  const [riddleAnswer, setRiddleAnswer] = useState('');
+  const [showRiddleSuccess, setShowRiddleSuccess] = useState(false);
+  const [riddleSolved, setRiddleSolved] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -63,6 +80,12 @@ export default function DashboardChild() {
       fetchChildData();
     }
   }, [user, loading, navigate, childId]);
+
+  useEffect(() => {
+    if (child?.user_id) {
+      fetchDailyRiddle();
+    }
+  }, [child?.user_id]);
 
   const fetchChildData = async () => {
     try {
@@ -106,6 +129,70 @@ export default function DashboardChild() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchDailyRiddle = async () => {
+    try {
+      // Vérifier d'abord si l'enfant a déjà une devinette pour aujourd'hui
+      const { data: existingRiddle, error: checkError } = await supabase
+        .from('daily_riddles')
+        .select('*, riddles(*)')
+        .eq('child_id', childId)
+        .eq('date', format(new Date(), 'yyyy-MM-dd'))
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Erreur lors de la vérification de la devinette:', checkError);
+        return;
+      }
+
+      if (existingRiddle) {
+        // Si une devinette existe déjà pour aujourd'hui, l'utiliser
+        setCurrentRiddle(existingRiddle.riddles);
+        setRiddleSolved(existingRiddle.is_solved);
+        return;
+      }
+
+      // Si aucune devinette n'existe pour aujourd'hui, en créer une nouvelle
+      const { data: riddle, error: riddleError } = await supabase
+        .from('riddles')
+        .select('*')
+        .eq('user_id', child?.user_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (riddleError) {
+        console.error('Erreur lors de la récupération de la devinette:', riddleError);
+        return;
+      }
+
+      if (riddle) {
+        // Créer une nouvelle entrée dans daily_riddles
+        const { data: dailyRiddle, error: insertError } = await supabase
+          .from('daily_riddles')
+          .insert([
+            {
+              child_id: childId,
+              riddle_id: riddle.id,
+              date: format(new Date(), 'yyyy-MM-dd'),
+              is_solved: false
+            }
+          ])
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Erreur lors de la création de la devinette quotidienne:', insertError);
+          return;
+        }
+
+        setCurrentRiddle(riddle);
+        setRiddleSolved(false);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération de la devinette:', error);
     }
   };
 
@@ -212,6 +299,57 @@ export default function DashboardChild() {
     }
   };
 
+  const handleRiddleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentRiddle || !riddleAnswer.trim()) return;
+
+    try {
+      const isCorrect = riddleAnswer.toLowerCase().trim() === currentRiddle.answer.toLowerCase().trim();
+      
+      if (isCorrect) {
+        // Mettre à jour le statut de la devinette dans daily_riddles
+        const { error: updateError } = await supabase
+          .from('daily_riddles')
+          .update({ is_solved: true })
+          .eq('child_id', childId)
+          .eq('date', format(new Date(), 'yyyy-MM-dd'));
+
+        if (updateError) {
+          console.error('Erreur lors de la mise à jour de la devinette:', updateError);
+          return;
+        }
+
+        // Mettre à jour les points de l'enfant
+        const { error: pointsError } = await supabase
+          .from('children')
+          .update({
+            points: (child?.points || 0) + currentRiddle.points
+          })
+          .eq('id', childId);
+
+        if (pointsError) {
+          console.error('Erreur lors de l\'ajout des points:', pointsError);
+          return;
+        }
+
+        setRiddleSolved(true);
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+        setRiddleAnswer('');
+        fetchChildData();
+      } else {
+        setRiddleAnswer('');
+        toast({
+          title: '❌ Oups !',
+          description: "Ce n'est pas la bonne réponse. Essaie encore !",
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors de la soumission de la réponse:', error);
+    }
+  };
+
   if (loading || isLoading) {
     return (
       <motion.div 
@@ -273,10 +411,37 @@ export default function DashboardChild() {
           animate={{ y: 0, opacity: 1 }}
           className="text-center mb-8"
         >
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-2 animate-gradient">
+          <motion.h1 
+            className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-2"
+            animate={{ 
+              scale: [1, 1.05, 1],
+              rotate: [0, 2, -2, 0]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
             🌟 Mon Tableau de Bord 🌟
-          </h1>
-          <p className="text-xl text-gray-600 font-medium">Salut {child.name} ! Prêt pour une journée incroyable ?</p>
+          </motion.h1>
+          <motion.p 
+            className="text-xl text-gray-600 font-medium"
+            animate={{ 
+              y: [0, -5, 0],
+              opacity: [1, 0.8, 1]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            Salut {child.name} ! Prêt pour une journée incroyable ?
+          </motion.p>
+          <motion.div 
+            className="mt-4 text-lg text-gray-700 font-medium"
+            animate={{ 
+              scale: [1, 1.05, 1],
+              rotate: [0, 1, -1, 0]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <CalendarIcon className="inline-block mr-2 h-5 w-5 text-purple-500" />
+            {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
+          </motion.div>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -316,8 +481,26 @@ export default function DashboardChild() {
                   </motion.div>
                 </motion.div>
                 
-                <h2 className="text-3xl font-bold mb-2">{child.name}</h2>
-                <p className="text-lg opacity-90 mb-6">🎂 {child.age} ans</p>
+                <motion.h2 
+                  className="text-3xl font-bold mb-2"
+                  animate={{ 
+                    scale: [1, 1.05, 1],
+                    rotate: [0, 2, -2, 0]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  {child.name}
+                </motion.h2>
+                <motion.p 
+                  className="text-lg opacity-90 mb-6"
+                  animate={{ 
+                    y: [0, -5, 0],
+                    opacity: [1, 0.8, 1]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  🎂 {child.age} ans
+                </motion.p>
                 
                 <motion.div 
                   className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 w-full"
@@ -331,9 +514,16 @@ export default function DashboardChild() {
                     >
                       <TrophyIcon className="h-8 w-8 mr-3 text-yellow-300" />
                     </motion.div>
-                    <span className="bg-gradient-to-r from-yellow-200 to-yellow-100 bg-clip-text text-transparent">
+                    <motion.span 
+                      className="bg-gradient-to-r from-yellow-200 to-yellow-100 bg-clip-text text-transparent"
+                      animate={{ 
+                        scale: [1, 1.1, 1],
+                        rotate: [0, 2, -2, 0]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
                       {child.points} Points
-                    </span>
+                    </motion.span>
                   </div>
                   <div className="flex justify-center space-x-1">
                     {[...Array(Math.min(5, Math.floor(child.points / 10)))].map((_, i) => (
@@ -341,7 +531,8 @@ export default function DashboardChild() {
                         key={i}
                         animate={{ 
                           y: [0, -5, 0],
-                          scale: [1, 1.2, 1]
+                          scale: [1, 1.2, 1],
+                          rotate: [0, 10, -10, 0]
                         }}
                         transition={{ 
                           duration: 1,
@@ -548,16 +739,33 @@ export default function DashboardChild() {
                             className="text-4xl mb-4"
                             animate={{ 
                               y: [0, -5, 0],
-                              scale: [1, 1.2, 1]
+                              scale: [1, 1.2, 1],
+                              rotate: [0, 10, -10, 0]
                             }}
                             transition={{ duration: 2, repeat: Infinity }}
                           >
                             {child.points >= reward.cost ? '🎉' : '🔒'}
                           </motion.div>
-                          <h3 className="text-xl font-bold mb-3 text-gray-800">{reward.label}</h3>
-                          <p className="text-gray-600 mb-4">
+                          <motion.h3 
+                            className="text-xl font-bold mb-3 text-gray-800"
+                            animate={{ 
+                              scale: [1, 1.05, 1],
+                              rotate: [0, 2, -2, 0]
+                            }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            {reward.label}
+                          </motion.h3>
+                          <motion.p 
+                            className="text-gray-600 mb-4"
+                            animate={{ 
+                              y: [0, -3, 0],
+                              opacity: [1, 0.8, 1]
+                            }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
                             Coût: <span className="font-bold text-lg text-purple-600">{reward.cost} points</span>
-                          </p>
+                          </motion.p>
                           <motion.div
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -597,6 +805,89 @@ export default function DashboardChild() {
                       🎁
                     </motion.div>
                     <p className="text-xl text-gray-600">Aucune récompense disponible pour le moment</p>
+                  </motion.div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Devinette du jour - Nouvelle section */}
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="lg:col-span-3"
+          >
+            <Card className="shadow-xl bg-white/80 backdrop-blur-sm border-0">
+              <CardHeader className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-t-lg">
+                <CardTitle className="text-2xl flex items-center">
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <BrainIcon className="mr-3 h-7 w-7" />
+                  </motion.div>
+                  🎯 Devinette du Jour
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {currentRiddle && !riddleSolved ? (
+                  <div className="space-y-6">
+                    <motion.div 
+                      className="text-xl font-medium text-gray-800 bg-yellow-50 p-6 rounded-xl border-2 border-yellow-200"
+                      animate={{ 
+                        scale: [1, 1.02, 1],
+                        rotate: [0, 1, -1, 0]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      {currentRiddle.question}
+                    </motion.div>
+                    <div className="flex gap-4">
+                      <Input
+                        type="text"
+                        placeholder="Ta réponse..."
+                        value={riddleAnswer}
+                        onChange={(e) => setRiddleAnswer(e.target.value)}
+                        className="flex-1 text-lg"
+                      />
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Button
+                          onClick={handleRiddleSubmit}
+                          className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold text-lg py-6 px-8"
+                        >
+                          Valider
+                        </Button>
+                      </motion.div>
+                    </div>
+                    <div className="text-center text-gray-600">
+                      Points à gagner : <span className="font-bold text-yellow-600">{currentRiddle.points} points bonus</span>
+                    </div>
+                  </div>
+                ) : currentRiddle && riddleSolved ? null : (
+                  <motion.div 
+                    className="text-center py-8"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                  >
+                    <motion.div 
+                      className="text-6xl mb-4"
+                      animate={{ 
+                        y: [0, -10, 0],
+                        rotate: [0, 10, -10, 0]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      🎉
+                    </motion.div>
+                    <p className="text-xl text-gray-600">
+                      {riddleSolved 
+                        ? "Tu as déjà résolu la devinette d'aujourd'hui ! Reviens demain pour une nouvelle énigme !" 
+                        : "Chargement de la devinette..."}
+                    </p>
                   </motion.div>
                 )}
               </CardContent>

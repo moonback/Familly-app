@@ -15,12 +15,14 @@ import {
   Loader2,
   RefreshCw,
   Calendar,
-  ChevronDown
+  ChevronDown,
+  Brain
 } from 'lucide-react';
 import { ChildrenManager } from '@/components/children/children-manager';
 import { TasksManager } from '@/components/tasks/tasks-manager';
 import { RulesManager } from '@/components/rules/rules-manager';
 import { RewardsManager } from '@/components/rewards/rewards-manager';
+import { RiddlesManager } from '@/components/riddles/riddles-manager';
 import {
   Tooltip,
   TooltipContent,
@@ -45,7 +47,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import { format, subDays, subWeeks, subMonths, startOfDay, endOfDay, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-type View = 'children' | 'tasks' | 'rules' | 'rewards' | null;
+type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | null;
 type Period = 'day' | 'week' | 'month';
 
 interface DashboardStats {
@@ -366,6 +368,17 @@ export default function DashboardParent() {
       bgGradient: 'bg-gradient-to-br from-purple-50 to-violet-100',
       borderColor: 'border-purple-200',
       buttonText: 'Gérer les Récompenses'
+    },
+    {
+      id: 'riddles',
+      title: 'Gérer les Devinettes',
+      description: 'Créez des devinettes quotidiennes pour que vos enfants gagnent des points bonus.',
+      icon: Brain,
+      color: 'from-blue-500 to-indigo-600',
+      hoverColor: 'hover:from-blue-600 hover:to-indigo-700',
+      bgGradient: 'bg-gradient-to-br from-blue-50 to-indigo-100',
+      borderColor: 'border-blue-200',
+      buttonText: 'Gérer les Devinettes'
     }
   ];
 
@@ -678,6 +691,8 @@ export default function DashboardParent() {
         return <RulesManager />;
       case 'rewards':
         return <RewardsManager />;
+      case 'riddles':
+        return <RiddlesManager />;
       default:
         return null;
     }
