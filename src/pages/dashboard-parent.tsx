@@ -155,21 +155,7 @@ export default function DashboardParent() {
               })}
             </div>
 
-            {/* Quick Stats Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
-                <h3 className="text-lg font-semibold mb-2">Enfants actifs</h3>
-                <p className="text-3xl font-bold">3</p>
-              </div>
-              <div className="bg-gradient-to-r from-green-500 to-teal-500 rounded-2xl p-6 text-white shadow-lg">
-                <h3 className="text-lg font-semibold mb-2">Tâches aujourd'hui</h3>
-                <p className="text-3xl font-bold">12</p>
-              </div>
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg">
-                <h3 className="text-lg font-semibold mb-2">Points distribués</h3>
-                <p className="text-3xl font-bold">245</p>
-              </div>
-            </div>
+            
           </div>
         );
     }

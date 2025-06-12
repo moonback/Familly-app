@@ -7,6 +7,7 @@ import HomePage from '@/pages/index';
 import AuthPage from '@/pages/auth';
 import DashboardParent from '@/pages/dashboard-parent';
 import DashboardChild from '@/pages/dashboard-child';
+import ChildHome from '@/pages/home';
 import './App.css';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
               <Route path="/dashboard/parent" element={<DashboardParent />} />
               <Route path="/dashboard/child" element={<Navigate to="/dashboard/parent" replace />} />
               <Route path="/dashboard/child/:childId" element={<DashboardChild />} />
+              <Route path="/child/:childId" element={<ChildHome />} />
               {/* Ajoutez d'autres routes ici si nécessaire */}
             </Routes>
           </main>
