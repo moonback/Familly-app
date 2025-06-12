@@ -17,7 +17,9 @@ import {
   Calendar,
   ChevronDown,
   Brain,
-  Flame
+  Flame,
+  CheckCircle,
+  Star
 } from 'lucide-react';
 import { ChildrenManager } from '@/components/children/children-manager';
 import { TasksManager } from '@/components/tasks/tasks-manager';
@@ -97,70 +99,33 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, icon, color, isLoading, details }: StatCardProps) => (
-  <Popover>
-    <PopoverTrigger asChild>
-      <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <Card className={`bg-white/80 backdrop-blur-sm border-2 border-${color}-200 cursor-pointer hover:shadow-lg transition-all duration-300`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">{title}</p>
-                {isLoading ? (
-                  <div className="flex items-center gap-2 mt-2">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    >
-                      <Loader2 className={`h-5 w-5 text-${color}-600`} />
-                    </motion.div>
-                    <span className="text-sm text-gray-500">Chargement...</span>
-                  </div>
-                ) : (
-                  <motion.h3 
-                    className={`text-3xl font-bold text-${color}-600 mt-2`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {value}
-                  </motion.h3>
-                )}
-              </div>
-              <motion.div 
-                className={`text-${color}-400`}
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              >
-                {icon}
-              </motion.div>
+  <Card className="bg-white shadow-sm hover:shadow-md transition-all duration-300">
+    <CardContent className="p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600">{title}</p>
+          {isLoading ? (
+            <div className="flex items-center gap-2 mt-1">
+              <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />
+              <span className="text-sm text-gray-500">Chargement...</span>
             </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </PopoverTrigger>
-    {details && (
-      <PopoverContent className="w-80 bg-white/90 backdrop-blur-sm border-2 border-gray-200 shadow-xl">
-        <div className="space-y-3">
-          <h4 className="font-semibold text-sm text-gray-900 border-b pb-2">Détails</h4>
-          {details.map((detail, index) => (
-            <motion.div 
-              key={index} 
-              className="flex justify-between items-center text-sm"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
+          ) : (
+            <motion.h3 
+              className="text-2xl font-semibold text-gray-800 mt-1"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              <span className="text-gray-600">{detail.label}</span>
-              <span className="font-medium bg-gray-100 px-3 py-1 rounded-full">{detail.value}</span>
-            </motion.div>
-          ))}
+              {value}
+            </motion.h3>
+          )}
         </div>
-      </PopoverContent>
-    )}
-  </Popover>
+        <div className={`p-2 rounded-lg bg-${color}-100`}>
+          {icon}
+        </div>
+      </div>
+    </CardContent>
+  </Card>
 );
 
 export default function DashboardParent() {
@@ -540,50 +505,34 @@ export default function DashboardParent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Enfants actifs"
+          title="Enfants Actifs"
           value={stats.activeChildren}
-          icon={<Users className="h-8 w-8" />}
+          icon={<Users className="h-5 w-5 text-blue-600" />}
           color="blue"
           isLoading={stats.isLoading}
-          details={[
-            { label: "Total des enfants", value: stats.activeChildren },
-            { label: "Enfants avec tâches", value: Math.floor(stats.activeChildren * 0.8) }
-          ]}
         />
         <StatCard
-          title="Tâches complétées"
+          title="Tâches Complétées"
           value={stats.completedTasks}
-          icon={<CheckSquare className="h-8 w-8" />}
+          icon={<CheckCircle className="h-5 w-5 text-green-600" />}
           color="green"
           isLoading={stats.isLoading}
-          details={[
-            { label: "Tâches aujourd'hui", value: Math.floor(stats.completedTasks * 0.3) },
-            { label: "Taux de complétion", value: stats.averageCompletion }
-          ]}
         />
         <StatCard
-          title="Points totaux"
-          value={stats.totalPoints}
-          icon={<Sparkles className="h-8 w-8" />}
-          color="yellow"
-          isLoading={stats.isLoading}
-          details={[
-            { label: "Points distribués", value: stats.totalPoints },
-            { label: "Points moyens/enfant", value: Math.round(stats.totalPoints / stats.activeChildren) }
-          ]}
-        />
-        <StatCard
-          title="Récompenses disponibles"
+          title="Récompenses Attribuées"
           value={stats.availableRewards}
-          icon={<Gift className="h-8 w-8" />}
+          icon={<Gift className="h-5 w-5 text-purple-600" />}
           color="purple"
           isLoading={stats.isLoading}
-          details={[
-            { label: "Récompenses utilisées", value: Math.floor(stats.availableRewards * 0.4) },
-            { label: "Points distribués", value: stats.completedTasks * 10 }
-          ]}
+        />
+        <StatCard
+          title="Points Totaux"
+          value={stats.totalPoints}
+          icon={<Star className="h-5 w-5 text-yellow-600" />}
+          color="yellow"
+          isLoading={stats.isLoading}
         />
       </div>
 
@@ -593,42 +542,24 @@ export default function DashboardParent() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 shadow-xl">
-          <CardHeader className="border-b border-gray-200">
-            <CardTitle className="text-xl font-bold text-gray-900">Activités récentes</CardTitle>
+        <Card className="bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold">Activités Récentes</CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
+          <CardContent>
+            <div className="space-y-2">
               {stats.recentActivities.map((activity, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className={`p-2 rounded-full ${
-                    activity.type === 'task' ? 'bg-green-100' :
-                    activity.type === 'reward' ? 'bg-purple-100' :
-                    'bg-yellow-100'
-                  }`}>
+                <div key={index} className="flex items-center gap-3 py-2 border-b last:border-0">
+                  <div className={`p-2 rounded-full bg-${activity.type === 'task' ? 'green' : activity.type === 'reward' ? 'purple' : 'yellow'}-50`}>
                     {activity.type === 'task' ? <CheckSquare className="h-5 w-5 text-green-600" /> :
                      activity.type === 'reward' ? <Gift className="h-5 w-5 text-purple-600" /> :
                      <Sparkles className="h-5 w-5 text-yellow-600" />}
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{activity.childName}</p>
-                    <p className="text-sm text-gray-600">{activity.description}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-700 truncate">{activity.description}</p>
+                    <p className="text-xs text-gray-500">{activity.timestamp}</p>
                   </div>
-                  {activity.points && (
-                    <div className="text-right">
-                      <p className="font-bold text-yellow-600">+{activity.points}</p>
-                      <p className="text-xs text-gray-500">
-                        {format(new Date(activity.timestamp), 'dd MMM HH:mm', { locale: fr })}
-                      </p>
-                    </div>
-                  )}
-                </motion.div>
+                </div>
               ))}
             </div>
           </CardContent>
