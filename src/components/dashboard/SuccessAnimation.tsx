@@ -59,7 +59,7 @@ export const SuccessAnimation = ({ show, points }: SuccessAnimationProps) => {
               >
                 🎉
               </motion.div>
-              <h3 className="text-3xl font-bold text-center text-gray-800 mb-3">
+              <h3 className="text-2xl font-bold text-center text-gray-800 mb-3">
                 Bravo !
               </h3>
               <p className="text-xl text-gray-600 text-center">

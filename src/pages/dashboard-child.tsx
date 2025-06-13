@@ -29,6 +29,7 @@ import { SuccessAnimation } from '@/components/dashboard/SuccessAnimation';
 import { LoadingScreen } from '@/components/dashboard/LoadingScreen';
 import { BackgroundDecorations } from '@/components/dashboard/BackgroundDecorations';
 import { Header } from '@/components/dashboard/Header';
+import { ValidatedRewardsList } from '@/components/dashboard/ValidatedRewardsList';
 
 const CONVERSION_RATE = 100; // 100 points = 1 euro
 
@@ -733,6 +734,17 @@ export default function DashboardChild() {
               onPointsUpdated={fetchChildData}
               className="transform hover:scale-[1.01] transition-transform duration-300"
             />
+
+            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <TrophyIcon className="w-6 h-6" />
+                Mes Récompenses Validées
+              </h2>
+              <ValidatedRewardsList 
+                claimedRewards={claimedRewards} 
+                childColor={child.custom_color}
+              />
+            </div>
           </motion.div>
 
           <DailyRiddle 

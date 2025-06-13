@@ -72,7 +72,7 @@ export const DailyRiddle = ({
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
         
         <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
-          <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+          <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-3">
             <BrainIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" style={{ '--child-color': childColor } as React.CSSProperties} />
             Devinette du Jour
           </CardTitle>

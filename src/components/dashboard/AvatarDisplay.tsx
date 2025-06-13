@@ -41,12 +41,12 @@ export const AvatarDisplay = ({ child, streak }: AvatarDisplayProps) => {
               <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-yellow-400 rounded-full blur-xl opacity-50 animate-pulse group-hover:opacity-70 transition-opacity duration-300" />
               <Avatar className="relative h-32 w-32 mx-auto border-4 border-white shadow-2xl ring-4 ring-pink-300/50 group-hover:ring-pink-400/70 transition-all duration-300">
                 <AvatarImage src={child.avatar_url} alt={child.name} />
-                <AvatarFallback className="text-3xl bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold">
+                <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold">
                   {child.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <motion.div 
-                className="absolute -top-4 -right-4 text-3xl"
+                className="absolute -top-4 -right-4 text-2xl"
                 animate={{ rotate: [0, 20, -20, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >

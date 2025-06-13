@@ -68,7 +68,7 @@ export const TaskList = ({ childTasks, onTaskToggle, childColor }: TaskListProps
 
         <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-6">
-            <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-3">
               <ListChecksIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" style={{ '--child-color': childColor } as React.CSSProperties} />
               Mes Missions
             </CardTitle>
