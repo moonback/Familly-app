@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   Plus, 
   Users, 
@@ -55,6 +57,12 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import { format, subDays, subWeeks, subMonths, startOfDay, endOfDay, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CalendarIcon, UserIcon, TrophyIcon, GiftIcon, ListChecksIcon, BrainIcon, FlameIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | null;
 type Period = 'day' | 'week' | 'month';

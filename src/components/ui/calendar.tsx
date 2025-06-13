@@ -7,6 +7,29 @@ import { buttonVariants } from '@/components/ui/button';
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
+const CalendarContainer = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("p-3", className)}
+    {...props}
+  />
+))
+CalendarContainer.displayName = "CalendarContainer"
+
+const CalendarHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex justify-between items-center", className)}
+    {...props}
+  />
+))
+
 function Calendar({
   className,
   classNames,

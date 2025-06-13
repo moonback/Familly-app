@@ -18,28 +18,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Correctement déstructurer l'objet retourné par onAuthStateChange
-    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user || null);
-        setLoading(false);
-      }
-    );
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => {
-        setUser(session?.user || null);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-
-    return () => {
-      // Appeler unsubscribe sur l'objet d'abonnement
-      authListener.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {

@@ -2,13 +2,18 @@ import { useAuth } from '@/context/auth-context';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
-import { ListChecksIcon, StarIcon, SparklesIcon, CheckCircleIcon, Loader2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { GiftIcon, TrophyIcon, ListChecksIcon, CheckCircleIcon, BrainIcon, CalendarIcon, FlameIcon } from 'lucide-react';
 
 interface Child {
   id: string;
