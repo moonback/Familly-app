@@ -4,9 +4,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PiggyBankIcon } from 'lucide-react';
+import { PiggyBankIcon, Plus, Minus, Heart } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Child, PiggyBankTransaction } from '@/types';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PiggyBankManagerProps {
   child: Child | null;
@@ -67,17 +68,64 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
 
   if (loading) return <div>Chargement...</div>;
 
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case 'savings':
+        return <Plus className="h-4 w-4 text-green-500" />;
+      case 'spending':
+        return <Minus className="h-4 w-4 text-red-500" />;
+      case 'donation':
+        return <Heart className="h-4 w-4 text-blue-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTransactionColor = (type: string) => {
+    switch (type) {
+      case 'savings':
+        return 'bg-green-50 text-green-700 border-green-200';
+      case 'spending':
+        return 'bg-red-50 text-red-700 border-red-200';
+      case 'donation':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      default:
+        return '';
+    }
+  };
+
   return (
-    <Card className="bg-white/90 backdrop-blur-md">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-3xl font-bold text-gray-800">
-          <PiggyBankIcon className="h-7 w-7" /> Tirelire
-        </CardTitle>
+    <Card className="bg-white/90 backdrop-blur-md shadow-xl border-0 rounded-2xl overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-xl">
+              <PiggyBankIcon className="h-6 w-6" />
+            </div>
+            <div>
+              <CardTitle className="text-2xl font-bold">Tirelire</CardTitle>
+              <p className="text-purple-100 text-sm">Gérez les transactions de {child?.name}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-purple-100">Solde actuel</p>
+            <p className="text-2xl font-bold">{child?.points || 0} pts</p>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="flex gap-2 mb-4">
-          <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value as 'savings' | 'spending' | 'donation' })}>
-            <SelectTrigger className="w-32">
+      <CardContent className="p-6">
+        <motion.form 
+          onSubmit={handleSubmit} 
+          className="flex gap-3 mb-6 p-4 bg-gray-50 rounded-xl"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Select 
+            value={formData.type} 
+            onValueChange={(value) => setFormData({ ...formData, type: value as 'savings' | 'spending' | 'donation' })}
+          >
+            <SelectTrigger className="w-32 bg-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -86,19 +134,56 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
               <SelectItem value="donation">Don</SelectItem>
             </SelectContent>
           </Select>
-          <Input type="number" placeholder="Points" value={formData.points} onChange={(e) => setFormData({ ...formData, points: e.target.value })} />
-          <Button type="submit">Ajouter</Button>
-        </form>
-        <ul className="space-y-2">
-          {transactions.map((t) => (
-            <li key={t.id} className="flex justify-between border-b pb-1 last:border-b-0">
-              <span>{t.type}</span>
-              <span>{t.points} pts</span>
-              <span className="text-sm text-gray-500">{new Date(t.created_at).toLocaleDateString('fr-FR')}</span>
-            </li>
-          ))}
-          {transactions.length === 0 && <p className="text-center">Aucune transaction</p>}
-        </ul>
+          <Input 
+            type="number" 
+            placeholder="Points" 
+            value={formData.points} 
+            onChange={(e) => setFormData({ ...formData, points: e.target.value })}
+            className="bg-white"
+          />
+          <Button 
+            type="submit"
+            className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white"
+          >
+            Ajouter
+          </Button>
+        </motion.form>
+
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Historique des transactions</h3>
+          <AnimatePresence>
+            {transactions.map((t, index) => (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ delay: index * 0.1 }}
+                className={`flex items-center justify-between p-4 rounded-xl border ${getTransactionColor(t.type)}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/50 rounded-lg">
+                    {getTransactionIcon(t.type)}
+                  </div>
+                  <div>
+                    <p className="font-medium capitalize">{t.type}</p>
+                    <p className="text-sm opacity-75">{new Date(t.created_at).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                </div>
+                <span className="font-bold">{t.points} pts</span>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          {transactions.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-8 text-gray-500"
+            >
+              Aucune transaction
+            </motion.div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
