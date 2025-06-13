@@ -1,3 +1,45 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Initialiser l'API Gemini
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+
+interface GeneratedRiddle {
+  question: string;
+  answer: string;
+  hint: string;
+}
+
+export async function generateRiddle(difficulty: 'facile' | 'moyen' | 'difficile'): Promise<GeneratedRiddle | null> {
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
+
+    const prompt = `Génère une devinette ${difficulty} pour un enfant. 
+    La devinette doit être amusante et éducative.
+    Format de réponse attendu (en JSON):
+    {
+      "question": "La question de la devinette",
+      "answer": "La réponse à la devinette",
+      "hint": "Un indice pour aider l'enfant à trouver la réponse"
+    }`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Extraire le JSON de la réponse
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Format de réponse invalide');
+    }
+
+    const riddle = JSON.parse(jsonMatch[0]) as GeneratedRiddle;
+    return riddle;
+  } catch (error) {
+    console.error('Erreur lors de la génération de la devinette:', error);
+    return null;
+  }
+}
+
 export async function generateSuggestions(type: 'task' | 'rule' | 'reward'): Promise<string[]> {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {

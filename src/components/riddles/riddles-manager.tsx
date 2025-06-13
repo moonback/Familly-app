@@ -5,11 +5,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
-import { BrainIcon, PlusIcon, TrashIcon, EditIcon } from 'lucide-react';
+import { BrainIcon, PlusIcon, TrashIcon, EditIcon, SparklesIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { generateRiddle } from '@/lib/gemini';
 
 interface Riddle {
   id: string;
@@ -17,16 +25,20 @@ interface Riddle {
   answer: string;
   points: number;
   user_id: string;
+  hint?: string;
 }
 
 export function RiddlesManager() {
   const { user } = useAuth();
   const [riddles, setRiddles] = useState<Riddle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [difficulty, setDifficulty] = useState<'facile' | 'moyen' | 'difficile'>('moyen');
   const [newRiddle, setNewRiddle] = useState({
     question: '',
     answer: '',
-    points: 50
+    points: 50,
+    hint: ''
   });
   const [editingRiddle, setEditingRiddle] = useState<Riddle | null>(null);
 
@@ -79,7 +91,8 @@ export function RiddlesManager() {
       setNewRiddle({
         question: '',
         answer: '',
-        points: 50
+        points: 50,
+        hint: ''
       });
       fetchRiddles();
     } catch (error) {
@@ -149,6 +162,40 @@ export function RiddlesManager() {
     }
   };
 
+  const handleGenerateRiddle = async () => {
+    if (!user) return;
+    
+    setIsGenerating(true);
+    try {
+      const generatedRiddle = await generateRiddle(difficulty);
+      
+      if (generatedRiddle) {
+        setNewRiddle({
+          question: generatedRiddle.question,
+          answer: generatedRiddle.answer,
+          points: difficulty === 'facile' ? 30 : difficulty === 'moyen' ? 50 : 70,
+          hint: generatedRiddle.hint
+        });
+        
+        toast({
+          title: 'Succès',
+          description: "Devinette générée avec succès",
+        });
+      } else {
+        throw new Error('Impossible de générer la devinette');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la génération de la devinette:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible de générer la devinette",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -174,6 +221,29 @@ export function RiddlesManager() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <Label htmlFor="difficulty">Difficulté</Label>
+                <Select value={difficulty} onValueChange={(value: 'facile' | 'moyen' | 'difficile') => setDifficulty(value)}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Sélectionner la difficulté" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="facile">Facile (30 points)</SelectItem>
+                    <SelectItem value="moyen">Moyen (50 points)</SelectItem>
+                    <SelectItem value="difficile">Difficile (70 points)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                onClick={handleGenerateRiddle}
+                disabled={isGenerating}
+                className="mt-6 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+              >
+                <SparklesIcon className="mr-2 h-4 w-4" />
+                {isGenerating ? 'Génération...' : 'Générer avec IA'}
+              </Button>
+            </div>
             <div>
               <Label htmlFor="question">Question</Label>
               <Textarea
@@ -195,28 +265,32 @@ export function RiddlesManager() {
               />
             </div>
             <div>
+              <Label htmlFor="hint">Indice (optionnel)</Label>
+              <Input
+                id="hint"
+                value={newRiddle.hint}
+                onChange={(e) => setNewRiddle(prev => ({ ...prev, hint: e.target.value }))}
+                placeholder="Entrez un indice pour aider l'enfant..."
+                className="mt-1"
+              />
+            </div>
+            <div>
               <Label htmlFor="points">Points à gagner</Label>
               <Input
                 id="points"
                 type="number"
                 value={newRiddle.points}
                 onChange={(e) => setNewRiddle(prev => ({ ...prev, points: parseInt(e.target.value) }))}
-                min="1"
                 className="mt-1"
               />
             </div>
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <Button
+              onClick={handleCreateRiddle}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
             >
-              <Button
-                onClick={handleCreateRiddle}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-              >
-                <PlusIcon className="mr-2 h-5 w-5" />
-                Créer la devinette
-              </Button>
-            </motion.div>
+              <PlusIcon className="mr-2 h-4 w-4" />
+              Créer la devinette
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -228,91 +302,121 @@ export function RiddlesManager() {
             key={riddle.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.02 }}
+            exit={{ opacity: 0, y: -20 }}
           >
             <Card className="bg-white/80 backdrop-blur-sm border-2 border-purple-200">
               <CardHeader>
-                <CardTitle className="text-xl font-bold text-purple-800">
-                  {editingRiddle?.id === riddle.id ? (
-                    <Textarea
-                      value={editingRiddle.question}
-                      onChange={(e) => setEditingRiddle(prev => prev ? { ...prev, question: e.target.value } : null)}
-                      className="mt-1"
-                    />
-                  ) : (
-                    riddle.question
-                  )}
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl font-bold text-purple-800">
+                    {riddle.question}
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditingRiddle(riddle)}
+                      className="hover:bg-purple-100"
+                    >
+                      <EditIcon className="h-4 w-4 text-purple-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteRiddle(riddle.id)}
+                      className="hover:bg-red-100"
+                    >
+                      <TrashIcon className="h-4 w-4 text-red-600" />
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Réponse</Label>
-                    {editingRiddle?.id === riddle.id ? (
-                      <Input
-                        value={editingRiddle.answer}
-                        onChange={(e) => setEditingRiddle(prev => prev ? { ...prev, answer: e.target.value } : null)}
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="text-gray-600 mt-1">{riddle.answer}</p>
-                    )}
-                  </div>
-                  <div>
-                    <Label>Points</Label>
-                    {editingRiddle?.id === riddle.id ? (
-                      <Input
-                        type="number"
-                        value={editingRiddle.points}
-                        onChange={(e) => setEditingRiddle(prev => prev ? { ...prev, points: parseInt(e.target.value) } : null)}
-                        min="1"
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="text-purple-600 font-bold mt-1">{riddle.points} points</p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {editingRiddle?.id === riddle.id ? (
-                      <>
-                        <Button
-                          onClick={handleUpdateRiddle}
-                          className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-                        >
-                          Sauvegarder
-                        </Button>
-                        <Button
-                          onClick={() => setEditingRiddle(null)}
-                          className="flex-1 bg-gray-500 hover:bg-gray-600 text-white"
-                        >
-                          Annuler
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          onClick={() => setEditingRiddle(riddle)}
-                          className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
-                        >
-                          <EditIcon className="mr-2 h-4 w-4" />
-                          Modifier
-                        </Button>
-                        <Button
-                          onClick={() => handleDeleteRiddle(riddle.id)}
-                          className="flex-1 bg-red-500 hover:bg-red-600 text-white"
-                        >
-                          <TrashIcon className="mr-2 h-4 w-4" />
-                          Supprimer
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <p className="text-gray-600">
+                    <span className="font-semibold">Réponse :</span> {riddle.answer}
+                  </p>
+                  {riddle.hint && (
+                    <p className="text-gray-500 italic">
+                      <span className="font-semibold">Indice :</span> {riddle.hint}
+                    </p>
+                  )}
+                  <p className="text-purple-600 font-semibold">
+                    {riddle.points} points
+                  </p>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
         ))}
       </div>
+
+      {/* Modal d'édition */}
+      {editingRiddle && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-lg bg-white/90 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-purple-800">
+                Modifier la devinette
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-question">Question</Label>
+                  <Textarea
+                    id="edit-question"
+                    value={editingRiddle.question}
+                    onChange={(e) => setEditingRiddle(prev => prev ? { ...prev, question: e.target.value } : null)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-answer">Réponse</Label>
+                  <Input
+                    id="edit-answer"
+                    value={editingRiddle.answer}
+                    onChange={(e) => setEditingRiddle(prev => prev ? { ...prev, answer: e.target.value } : null)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-hint">Indice (optionnel)</Label>
+                  <Input
+                    id="edit-hint"
+                    value={editingRiddle.hint || ''}
+                    onChange={(e) => setEditingRiddle(prev => prev ? { ...prev, hint: e.target.value } : null)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-points">Points</Label>
+                  <Input
+                    id="edit-points"
+                    type="number"
+                    value={editingRiddle.points}
+                    onChange={(e) => setEditingRiddle(prev => prev ? { ...prev, points: parseInt(e.target.value) } : null)}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingRiddle(null)}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={handleUpdateRiddle}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  >
+                    Enregistrer
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 } 

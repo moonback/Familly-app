@@ -16,7 +16,7 @@ import {
   DrawerTrigger,
   DrawerClose,
 } from '@/components/ui/drawer';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Child {
   id: string;
@@ -26,6 +26,7 @@ interface Child {
 export function MainNav() {
   const { user, signOut } = useAuth();
   const [children, setChildren] = useState<Child[]>([]);
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -33,6 +34,15 @@ export function MainNav() {
       fetchChildren();
     }
   }, [user]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const fetchChildren = async () => {
     try {
@@ -58,7 +68,11 @@ export function MainNav() {
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-purple-100 shadow-lg"
+      className={`sticky top-0 z-50 backdrop-blur-md transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-white/90 shadow-lg border-b border-purple-100' 
+          : 'bg-white/80 border-b border-purple-50'
+      }`}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
@@ -91,6 +105,7 @@ export function MainNav() {
                         variant="ghost"
                         size="icon"
                         aria-label="Ouvrir le menu"
+                        className="hover:bg-purple-50"
                       >
                         <MenuIcon className="h-5 w-5" />
                       </Button>
@@ -100,7 +115,11 @@ export function MainNav() {
                         <Link to="/dashboard/parent" onClick={() => {}}>
                           <Button
                             variant={isActive('/dashboard/parent') ? 'default' : 'ghost'}
-                            className="w-full justify-start"
+                            className={`w-full justify-start ${
+                              isActive('/dashboard/parent') 
+                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                                : 'hover:bg-purple-50'
+                            }`}
                           >
                             <UserIcon className="h-5 w-5 mr-2" />
                             Parent Dashboard
@@ -113,7 +132,10 @@ export function MainNav() {
                                 key={child.id}
                                 to={`/dashboard/child/${encodeURIComponent(child.name)}`}
                               >
-                                <Button variant="ghost" className="w-full justify-start">
+                                <Button 
+                                  variant="ghost" 
+                                  className="w-full justify-start hover:bg-purple-50"
+                                >
                                   <UserIcon className="h-5 w-5 mr-2" />
                                   {child.name}
                                 </Button>
@@ -123,7 +145,7 @@ export function MainNav() {
                         )}
                       </nav>
                       <DrawerClose asChild>
-                        <Button variant="ghost" className="mt-2 w-full">
+                        <Button variant="ghost" className="mt-2 w-full hover:bg-purple-50">
                           Fermer
                         </Button>
                       </DrawerClose>
@@ -134,56 +156,56 @@ export function MainNav() {
                   <Link to="/dashboard/parent">
                     <motion.div whileHover={{ scale: 1.05 }}>
                       <Button
-                      variant={isActive('/dashboard/parent') ? 'default' : 'ghost'} 
-                      className={`${
-                        isActive('/dashboard/parent') 
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                          : 'hover:bg-purple-50'
-                      } transition-all duration-300`}
-                    >
-                      <UserIcon className="h-5 w-5 mr-2" /> 
-                      Parent Dashboard
-                    </Button>
-                  </motion.div>
-                </Link>
+                        variant={isActive('/dashboard/parent') ? 'default' : 'ghost'} 
+                        className={`${
+                          isActive('/dashboard/parent') 
+                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                            : 'hover:bg-purple-50'
+                        } transition-all duration-300`}
+                      >
+                        <UserIcon className="h-5 w-5 mr-2" /> 
+                        Parent Dashboard
+                      </Button>
+                    </motion.div>
+                  </Link>
 
-                {children.length > 0 && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <motion.div whileHover={{ scale: 1.05 }}>
-                        <Button 
-                          variant="ghost" 
-                          className="hover:bg-purple-50 transition-all duration-300"
-                        >
-                          <UserIcon className="h-5 w-5 mr-2" />
-                          Enfants
-                          <ChevronDownIcon className="h-4 w-4 ml-2" />
-                        </Button>
-                      </motion.div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-64 p-2 bg-white/95 backdrop-blur-md border-purple-100 shadow-xl">
-                      {children.map((child) => (
-                        <div key={child.id} className="p-1">
-                          <DropdownMenuItem asChild>
-                            <Link 
-                              to={`/dashboard/child/${encodeURIComponent(child.name)}`}
-                              className="flex items-center justify-between w-full cursor-pointer p-2 rounded-lg hover:bg-purple-50 transition-colors"
-                            >
-                              <span className="flex items-center">
-                                <UserIcon className="h-5 w-5 mr-3 text-purple-500" />
-                                <span className="font-medium text-gray-700">{child.name}</span>
-                              </span>
-                              <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-600">
-                                Dashboard
-                              </span>
-                            </Link>
-                          </DropdownMenuItem>
-                        </div>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </div>
+                  {children.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <motion.div whileHover={{ scale: 1.05 }}>
+                          <Button 
+                            variant="ghost" 
+                            className="hover:bg-purple-50 transition-all duration-300"
+                          >
+                            <UserIcon className="h-5 w-5 mr-2" />
+                            Enfants
+                            <ChevronDownIcon className="h-4 w-4 ml-2" />
+                          </Button>
+                        </motion.div>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-64 p-2 bg-white/95 backdrop-blur-md border-purple-100 shadow-xl">
+                        {children.map((child) => (
+                          <div key={child.id} className="p-1">
+                            <DropdownMenuItem asChild>
+                              <Link 
+                                to={`/dashboard/child/${encodeURIComponent(child.name)}`}
+                                className="flex items-center justify-between w-full cursor-pointer p-2 rounded-lg hover:bg-purple-50 transition-colors"
+                              >
+                                <span className="flex items-center">
+                                  <UserIcon className="h-5 w-5 mr-3 text-purple-500" />
+                                  <span className="font-medium text-gray-700">{child.name}</span>
+                                </span>
+                                <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-600">
+                                  Dashboard
+                                </span>
+                              </Link>
+                            </DropdownMenuItem>
+                          </div>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
               </>
             )}
           </div>

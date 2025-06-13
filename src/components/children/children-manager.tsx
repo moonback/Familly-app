@@ -257,8 +257,7 @@ export function ChildrenManager() {
       const { error: updateError } = await supabase
         .from('children')
         .update({ 
-          points: 0,
-          streak: 0 // Réinitialiser le streak
+          points: 0
         })
         .eq('id', childId)
         .eq('user_id', user.id);
