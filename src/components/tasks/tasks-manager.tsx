@@ -322,104 +322,106 @@ export function TasksManager() {
                   {editingTask ? 'Modifier une tâche' : 'Ajouter une tâche'}
                 </DialogTitle>
               </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="label">Description</Label>
-                <Input
-                  id="label"
-                  value={formData.label}
-                  onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="points_reward">Points de récompense</Label>
-                <Input
-                  id="points_reward"
-                  type="number"
-                  value={formData.points_reward}
-                  onChange={(e) => setFormData({ ...formData, points_reward: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">Catégorie</Label>
-                <Select value={formData.category} onValueChange={(value: any) => setFormData({ ...formData, category: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une catégorie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="quotidien">Quotidien</SelectItem>
-                    <SelectItem value="scolaire">Scolaire</SelectItem>
-                    <SelectItem value="maison">Maison</SelectItem>
-                    <SelectItem value="personnel">Personnel</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="age_min">Âge minimum</Label>
+                  <Label htmlFor="label">Description</Label>
                   <Input
-                    id="age_min"
-                    type="number"
-                    min="3"
-                    max="18"
-                    value={formData.age_min}
-                    onChange={(e) => setFormData({ ...formData, age_min: e.target.value })}
+                    id="label"
+                    value={formData.label}
+                    onChange={(e) => setFormData({ ...formData, label: e.target.value })}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="age_max">Âge maximum</Label>
+                  <Label htmlFor="points_reward">Points de récompense</Label>
                   <Input
-                    id="age_max"
+                    id="points_reward"
                     type="number"
-                    min="3"
-                    max="18"
-                    value={formData.age_max}
-                    onChange={(e) => setFormData({ ...formData, age_max: e.target.value })}
+                    value={formData.points_reward}
+                    onChange={(e) => setFormData({ ...formData, points_reward: e.target.value })}
                     required
                   />
                 </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="is_daily"
-                  checked={formData.is_daily}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_daily: checked as boolean })}
-                />
-                <Label htmlFor="is_daily">Tâche quotidienne</Label>
-              </div>
-              <Button type="submit" className="w-full">
-                {editingTask ? 'Modifier' : 'Ajouter'}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-        <Dialog open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Suggestions IA</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-2">
-              {suggestionsLoading ? (
-                <p>Chargement...</p>
-              ) : (
-                suggestions.map((s, idx) => (
-                  <Button
-                    key={idx}
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleAddSuggestion(s)}
-                  >
-                    {s}
-                  </Button>
-                ))
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Catégorie</Label>
+                  <Select value={formData.category} onValueChange={(value: any) => setFormData({ ...formData, category: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner une catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="quotidien">Quotidien</SelectItem>
+                      <SelectItem value="scolaire">Scolaire</SelectItem>
+                      <SelectItem value="maison">Maison</SelectItem>
+                      <SelectItem value="personnel">Personnel</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="age_min">Âge minimum</Label>
+                    <Input
+                      id="age_min"
+                      type="number"
+                      min="3"
+                      max="18"
+                      value={formData.age_min}
+                      onChange={(e) => setFormData({ ...formData, age_min: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="age_max">Âge maximum</Label>
+                    <Input
+                      id="age_max"
+                      type="number"
+                      min="3"
+                      max="18"
+                      value={formData.age_max}
+                      onChange={(e) => setFormData({ ...formData, age_max: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="is_daily"
+                    checked={formData.is_daily}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_daily: checked as boolean })}
+                  />
+                  <Label htmlFor="is_daily">Tâche quotidienne</Label>
+                </div>
+                <Button type="submit" className="w-full">
+                  {editingTask ? 'Modifier' : 'Ajouter'}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
+
+      <Dialog open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Suggestions IA</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {suggestionsLoading ? (
+              <p>Chargement...</p>
+            ) : (
+              suggestions.map((s, idx) => (
+                <Button
+                  key={idx}
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => handleAddSuggestion(s)}
+                >
+                  {s}
+                </Button>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {tasks.map((task) => (

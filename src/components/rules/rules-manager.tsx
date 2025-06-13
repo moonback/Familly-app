@@ -234,56 +234,58 @@ export function RulesManager() {
                   {editingRule ? 'Modifier une règle' : 'Ajouter une règle'}
                 </DialogTitle>
               </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="label">Description</Label>
-                <Input
-                  id="label"
-                  value={formData.label}
-                  onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="points_penalty">Points de pénalité</Label>
-                <Input
-                  id="points_penalty"
-                  type="number"
-                  value={formData.points_penalty}
-                  onChange={(e) => setFormData({ ...formData, points_penalty: e.target.value })}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                {editingRule ? 'Modifier' : 'Ajouter'}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-        <Dialog open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Suggestions IA</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-2">
-              {suggestionsLoading ? (
-                <p>Chargement...</p>
-              ) : (
-                suggestions.map((s, idx) => (
-                  <Button
-                    key={idx}
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleAddSuggestion(s)}
-                  >
-                    {s}
-                  </Button>
-                ))
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="label">Description</Label>
+                  <Input
+                    id="label"
+                    value={formData.label}
+                    onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="points_penalty">Points de pénalité</Label>
+                  <Input
+                    id="points_penalty"
+                    type="number"
+                    value={formData.points_penalty}
+                    onChange={(e) => setFormData({ ...formData, points_penalty: e.target.value })}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  {editingRule ? 'Modifier' : 'Ajouter'}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
+
+      <Dialog open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Suggestions IA</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {suggestionsLoading ? (
+              <p>Chargement...</p>
+            ) : (
+              suggestions.map((s, idx) => (
+                <Button
+                  key={idx}
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => handleAddSuggestion(s)}
+                >
+                  {s}
+                </Button>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {rules.map((rule) => (
