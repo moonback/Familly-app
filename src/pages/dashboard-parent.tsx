@@ -74,6 +74,9 @@ interface DashboardStats {
     tasks: number;
     rewards: number;
     points: number;
+    savings?: number;
+    spending?: number;
+    donation?: number;
   }[];
   childrenStats: {
     id: string;
@@ -325,6 +328,13 @@ export default function DashboardParent() {
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
+      const { data: piggyHistory } = await supabase
+        .from('piggy_bank_transactions')
+        .select('*')
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString())
+        .in('child_id', childrenStatsWithStreak.map(child => child.id));
+
       // Récupérer le nombre de récompenses disponibles
       const { count: availableRewardsCount } = await supabase
         .from('rewards')
@@ -333,9 +343,10 @@ export default function DashboardParent() {
 
       // Traiter les données historiques
       const history = processHistoryData(
-        tasksHistory || [], 
-        rewardsHistory || [], 
+        tasksHistory || [],
+        rewardsHistory || [],
         pointsHistory || [],
+        piggyHistory || [],
         period
       );
 
@@ -377,14 +388,20 @@ export default function DashboardParent() {
     }
   };
 
-  const processHistoryData = (tasksData: any[], rewardsData: any[], pointsData: any[], period: Period) => {
-    const groupedData = new Map<string, { tasks: number; rewards: number; points: number }>();
+  const processHistoryData = (
+    tasksData: any[],
+    rewardsData: any[],
+    pointsData: any[],
+    piggyData: any[],
+    period: Period
+  ) => {
+    const groupedData = new Map<string, { tasks: number; rewards: number; points: number; savings: number; spending: number; donation: number }>();
 
     // Traiter les tâches
     tasksData.forEach(item => {
       const date = format(new Date(item.completed_at), 'yyyy-MM-dd');
       if (!groupedData.has(date)) {
-        groupedData.set(date, { tasks: 0, rewards: 0, points: 0 });
+        groupedData.set(date, { tasks: 0, rewards: 0, points: 0, savings: 0, spending: 0, donation: 0 });
       }
       const current = groupedData.get(date)!;
       current.tasks += 1;
@@ -394,7 +411,7 @@ export default function DashboardParent() {
     rewardsData.forEach(item => {
       const date = format(new Date(item.claimed_at), 'yyyy-MM-dd');
       if (!groupedData.has(date)) {
-        groupedData.set(date, { tasks: 0, rewards: 0, points: 0 });
+        groupedData.set(date, { tasks: 0, rewards: 0, points: 0, savings: 0, spending: 0, donation: 0 });
       }
       const current = groupedData.get(date)!;
       current.rewards += 1;
@@ -404,10 +421,21 @@ export default function DashboardParent() {
     pointsData.forEach(item => {
       const date = format(new Date(item.created_at), 'yyyy-MM-dd');
       if (!groupedData.has(date)) {
-        groupedData.set(date, { tasks: 0, rewards: 0, points: 0 });
+        groupedData.set(date, { tasks: 0, rewards: 0, points: 0, savings: 0, spending: 0, donation: 0 });
       }
       const current = groupedData.get(date)!;
       current.points += item.points;
+    });
+
+    piggyData.forEach(item => {
+      const date = format(new Date(item.created_at), 'yyyy-MM-dd');
+      if (!groupedData.has(date)) {
+        groupedData.set(date, { tasks: 0, rewards: 0, points: 0, savings: 0, spending: 0, donation: 0 });
+      }
+      const current = groupedData.get(date)!;
+      if (item.type === 'savings') current.savings += item.points;
+      if (item.type === 'spending') current.spending += item.points;
+      if (item.type === 'donation') current.donation += item.points;
     });
 
     // Remplir les dates manquantes avec des zéros
@@ -423,7 +451,7 @@ export default function DashboardParent() {
     while (currentDate <= endDate) {
       const dateStr = format(currentDate, 'yyyy-MM-dd');
       if (!groupedData.has(dateStr)) {
-        groupedData.set(dateStr, { tasks: 0, rewards: 0, points: 0 });
+        groupedData.set(dateStr, { tasks: 0, rewards: 0, points: 0, savings: 0, spending: 0, donation: 0 });
       }
       currentDate = addDays(currentDate, 1);
     }
@@ -456,6 +484,8 @@ export default function DashboardParent() {
         </div>
         <Skeleton className="h-80 w-full rounded-xl" />
       </div>
+
+
     );
   }
 
@@ -621,6 +651,25 @@ export default function DashboardParent() {
           subtitle="gagnés par la famille"
         />
       </div>
+
+      <Card className="bg-white/90 backdrop-blur-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Historique Tirelire</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={stats.history}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <RechartsTooltip />
+              <Bar dataKey="savings" stackId="a" fill="#10b981" name="Épargne" />
+              <Bar dataKey="spending" stackId="a" fill="#ef4444" name="Dépense" />
+              <Bar dataKey="donation" stackId="a" fill="#3b82f6" name="Don" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Performances des enfants avec design moderne */}
       <motion.div

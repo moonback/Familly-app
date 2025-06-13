@@ -67,6 +67,14 @@ export interface Purchase {
   purchased_at: string;
 }
 
+export interface PiggyBankTransaction {
+  id: string;
+  child_id: string;
+  type: 'savings' | 'spending' | 'donation';
+  points: number;
+  created_at: string;
+}
+
 export interface ChildTask {
   id: string;
   child_id: string;
@@ -137,6 +145,9 @@ export interface HistoryData {
   tasks: number;
   rewards: number;
   points: number;
+  savings?: number;
+  spending?: number;
+  donation?: number;
 }
 
 export interface ChildStats {

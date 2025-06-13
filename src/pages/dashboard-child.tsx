@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShopItemsList } from '@/components/shop/shop-items-list';
+import { PiggyBankManager } from '@/components/piggy-bank/piggy-bank-manager';
 
 interface Child {
   id: string;
@@ -1089,6 +1090,8 @@ export default function DashboardChild() {
         </div>
 
         <ShopItemsList child={child} onPointsUpdated={fetchChildData} />
+
+        <PiggyBankManager child={child} onPointsUpdated={fetchChildData} />
 
         {/* Section de la devinette quotidienne améliorée */}
         {currentRiddle && !riddleSolved && (
