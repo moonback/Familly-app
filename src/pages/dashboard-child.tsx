@@ -26,6 +26,7 @@ interface Child {
   avatar_url: string;
   custom_color: string;
   user_id: string;
+  created_at: string;
 }
 
 interface Task {
