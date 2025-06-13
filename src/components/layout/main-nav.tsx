@@ -1,5 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
-import { HomeIcon, UserIcon, LogOutIcon, LogInIcon, ChevronDownIcon, SparklesIcon, MenuIcon } from 'lucide-react';
+import {
+  HomeIcon,
+  UserIcon,
+  LogOutIcon,
+  LogInIcon,
+  ChevronDownIcon,
+  SparklesIcon,
+  MenuIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';
@@ -17,6 +25,7 @@ import {
   DrawerClose,
 } from '@/components/ui/drawer';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ModeToggle } from '@/components/layout/mode-toggle';
 
 interface Child {
   id: string;
@@ -65,31 +74,31 @@ export function MainNav() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <motion.nav 
+    <motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className={`sticky top-0 z-50 backdrop-blur-md transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/90 shadow-lg border-b border-purple-100' 
-          : 'bg-white/80 border-b border-purple-50'
+      className={`fixed top-0 inset-x-0 z-50 transition-colors duration-300 ${
+        isScrolled
+          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg ring-1 ring-purple-300'
+          : 'bg-white/70 backdrop-blur-xl'
       }`}
     >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16">
           {/* Logo et titre */}
           <div className="flex items-center space-x-6">
             <Link 
               to="/" 
               className="flex items-center space-x-3 group"
             >
-              <motion.div 
+              <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
-                className="p-3 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 shadow-lg"
+                className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 shadow"
               >
-                <SparklesIcon className="h-7 w-7 text-white" />
+                <SparklesIcon className="h-6 w-6 text-white" />
               </motion.div>
-              <motion.span 
-                className="font-black text-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent"
+              <motion.span
+                className="font-black text-xl bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent"
                 whileHover={{ scale: 1.05 }}
               >
                 Family
@@ -158,10 +167,10 @@ export function MainNav() {
                       <Button
                         variant={isActive('/dashboard/parent') ? 'default' : 'ghost'} 
                         className={`${
-                          isActive('/dashboard/parent') 
-                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                          isActive('/dashboard/parent')
+                            ? 'bg-purple-600 text-white shadow-md'
                             : 'hover:bg-purple-50'
-                        } transition-all duration-300`}
+                        } transition-colors duration-300`}
                       >
                         <UserIcon className="h-5 w-5 mr-2" /> 
                         Parent Dashboard
@@ -212,10 +221,11 @@ export function MainNav() {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
+            <ModeToggle />
             {user ? (
               <motion.div whileHover={{ scale: 1.05 }}>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   onClick={handleSignOut}
                   className="hover:bg-red-50 hover:text-red-500 transition-all duration-300"
                 >
@@ -226,9 +236,9 @@ export function MainNav() {
             ) : (
               <Link to="/auth">
                 <motion.div whileHover={{ scale: 1.05 }}>
-                  <Button 
+                  <Button
                     variant="default"
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
+                    className="bg-purple-600 text-white shadow-md hover:bg-purple-700 transition-colors duration-300"
                   >
                     <LogInIcon className="h-5 w-5 mr-2" />
                     <span className="hidden md:inline font-medium">Connexion</span>
