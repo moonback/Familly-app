@@ -19,6 +19,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ShopItemsList } from '@/components/shop/shop-items-list';
 import { PiggyBankManager } from '@/components/piggy-bank/piggy-bank-manager';
 
+import { Header } from "@/components/dashboard-child/Header";
+import { TaskList } from "@/components/dashboard-child/TaskList";
+import { RewardList } from "@/components/dashboard-child/RewardList";
+import { PenaltyList } from "@/components/dashboard-child/PenaltyList";
+import { DailyRiddle } from "@/components/dashboard-child/DailyRiddle";
+import { ConfettiAnimation } from "@/components/dashboard-child/ConfettiAnimation";
 interface Child {
   id: string;
   name: string;
@@ -546,28 +552,6 @@ export default function DashboardChild() {
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'quotidien': return '🌅';
-      case 'scolaire': return '📚';
-      case 'maison': return '🏠';
-      case 'personnel': return '🌟';
-      default: return '✅';
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'quotidien': return 'from-blue-400 to-blue-600';
-      case 'scolaire': return 'from-green-400 to-green-600';
-      case 'maison': return 'from-orange-400 to-orange-600';
-      case 'personnel': return 'from-purple-400 to-purple-600';
-      default: return 'from-gray-400 to-gray-600';
-    }
-  };
-
-  if (loading || isLoading) {
-    return (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -679,96 +663,12 @@ export default function DashboardChild() {
         </motion.div>
       </div>
 
-      {/* Animation de confettis améliorée */}
-      <AnimatePresence>
-        {showConfetti && (
-          <div className="fixed inset-0 pointer-events-none z-50">
-            {[...Array(30)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ 
-                  y: -100, 
-                  x: Math.random() * window.innerWidth,
-                  opacity: 1,
-                  scale: 1,
-                  rotate: 0
-                }}
-                animate={{ 
-                  y: window.innerHeight + 100,
-                  x: Math.random() * window.innerWidth - window.innerWidth/2,
-                  rotate: 360,
-                  scale: [1, 1.5, 0.5],
-                  opacity: [1, 1, 0]
-                }}
-                exit={{ opacity: 0 }}
-                transition={{ 
-                  duration: 3 + Math.random() * 2,
-                  ease: "easeOut"
-                }}
-                className="absolute text-4xl filter drop-shadow-lg"
-              >
-                {['🎉', '🎊', '⭐', '🌟', '✨', '🎈', '🎁', '🏆'][Math.floor(Math.random() * 8)]}
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </AnimatePresence>
+        <ConfettiAnimation show={showConfetti} />
 
       <motion.div className="relative z-10 p-6">        {/* En-tête avec titre amélioré */}
-        <motion.div 
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 100 }}
-          className="text-center mb-12"
-        >
-          <motion.div
-            animate={{ 
-              rotateY: [0, 360],
-              scale: [1, 1.2, 1],
-              y: [0, -10, 0]
-            }}
-            transition={{ 
-              rotateY: { duration: 4, repeat: Infinity },
-              scale: { duration: 2, repeat: Infinity },
-              y: { duration: 2, repeat: Infinity }
-            }}
-            className="text-7xl mb-6 filter drop-shadow-lg"
-          >
-            🏰
-          </motion.div>
-          <motion.h1 
-            className="text-5xl md:text-6xl font-black mb-4 bg-[linear-gradient(45deg,var(--child-color),#667eea,var(--child-color))] bg-clip-text text-transparent [background-size:300%_300%] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.1))]"
-            animate={{
-              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-            }}
-            transition={{ duration: 3, repeat: Infinity }}
-            style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}
-          >
-            Mon Royaume Magique
-          </motion.h1>
-          <motion.p 
-            className="text-2xl text-gray-700 font-semibold mb-4"
-            animate={{ 
-              y: [0, -8, 0],
-              scale: [1, 1.05, 1]
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            Bonjour Super Héros {child.name} ! 🦸‍♀️
-          </motion.p>
-          <motion.div 
-            className="inline-flex items-center bg-white/80 backdrop-blur-md rounded-full px-8 py-3 shadow-xl border-2 border-[var(--child-color)]"
-            whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <CalendarIcon className="h-6 w-6 mr-3 text-[color:var(--child-color)] drop-shadow-xl" />
-            <span className="text-xl font-medium text-gray-800">
-              {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
-            </span>
-          </motion.div>
-        </motion.div>
+          <Header child={child} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-8 max-w-7xl mx-auto">
           {/* Profil de l'enfant amélioré */}
           <motion.div
             initial={{ x: -100, opacity: 0, rotateY: -30 }}
@@ -778,7 +678,7 @@ export default function DashboardChild() {
               stiffness: 100,
               delay: 0.2 
             }}
-            className="lg:col-span-3"
+            className="md:col-span-3 lg:col-span-3"
           >
             <Card className="relative overflow-hidden border-0 shadow-2xl h-full transform hover:scale-[1.02] transition-transform duration-300">
               <div
@@ -896,353 +796,16 @@ export default function DashboardChild() {
             </Card>
           </motion.div>
 
-          {/* Section des tâches améliorée */}
-          <motion.div
-            initial={{ y: 100, opacity: 0, scale: 0.9 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 100,
-              delay: 0.4 
-            }}
-            className="lg:col-span-6"
-          >
-            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
-              <div className="relative">
-                <div
-                  className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
-                />
-                <CardHeader className="relative z-10">
-                  <div className="flex items-center justify-between mb-6">
-                    <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                      <ListChecksIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
-                      Mes Missions
-                    </CardTitle>
-                    <div className="flex items-center gap-3">
-                      <span className="text-base text-gray-600">Progression</span>
-                      <Progress value={progressPercentage} className="w-40 h-3" />
-                      <span className="text-sm font-medium text-gray-700">
-                        {completedTasks}/{totalTasks}
-                      </span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="relative z-10">
-                  <div className="space-y-4">
-                    {childTasks.map((childTask) => (
-                      <motion.div
-                        key={childTask.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ scale: 1.02 }}
-                        className={`flex items-center gap-4 p-5 rounded-xl border-2 ${
-                          childTask.is_completed 
-                            ? 'bg-green-50 border-green-200' 
-                            : 'bg-white border-gray-200 hover:border-purple-200'
-                        } transition-all duration-300`}
-                      >
-                        <Checkbox
-                          checked={childTask.is_completed}
-                          onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
-                          className="h-7 w-7 border-2"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-2xl">{getCategoryIcon(childTask.task.category)}</span>
-                            <Label className="text-xl font-medium">
-                              {childTask.task.label}
-                            </Label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span 
-                              className={`inline-block px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${getCategoryColor(childTask.task.category)} text-white`}
-                            >
-                              {childTask.task.category}
-                            </span>
-                            <span className="text-base text-gray-500">
-                              {childTask.task.points_reward} points
-                            </span>
-                          </div>
-                        </div>
-                        {childTask.is_completed && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="text-green-500"
-                          >
-                            <CheckCircleIcon className="h-7 w-7" />
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    ))}
+          <TaskList tasks={childTasks} progressPercentage={progressPercentage} completedTasks={completedTasks} totalTasks={totalTasks} onToggle={handleTaskToggle} />
 
-                    {childTasks.length === 0 && (
-                      <div className="text-center py-12">
-                        <div className="text-6xl mb-4">🎯</div>
-                        <p className="text-xl text-gray-600">Aucune mission pour aujourd'hui !</p>
-                        <p className="text-base text-gray-500 mt-2">Reviens demain pour de nouvelles aventures !</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </div>
-            </Card>
-          </motion.div>
-
-          {/* Section des récompenses améliorée */}
-          <motion.div
-            initial={{ y: 100, opacity: 0, scale: 0.9 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 100,
-              delay: 0.6 
-            }}
-            className="lg:col-span-3"
-          >
-            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
-              <CardHeader className="relative">
-                <div
-                  className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
-                />
-                <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
-                  <GiftIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
-                  Mes Récompenses
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="relative z-10">
-                <div className="space-y-4">
-                  {rewards.map((reward) => (
-                    <motion.div
-                      key={reward.id}
-                      whileHover={{ scale: 1.03 }}
-                      className={`p-5 rounded-xl border-2 ${
-                        child?.points >= reward.cost
-                          ? 'bg-white border-purple-200 hover:border-purple-300'
-                          : 'bg-gray-50 border-gray-200'
-                      } transition-all duration-300`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="text-lg font-medium text-gray-900">{reward.label}</h4>
-                          <p className="text-base text-gray-500">{reward.cost} points</p>
-                        </div>
-                        <Button
-                          onClick={() => handleRewardClaim(reward.id, reward.cost)}
-                          disabled={!child || child.points < reward.cost}
-                          className={`${
-                            child?.points >= reward.cost
-                              ? 'bg-[var(--child-color)] hover:opacity-80'
-                              : 'bg-gray-400'
-                          } transition-all duration-300`}
-                        >
-                          <GiftIcon className="h-5 w-5 mr-2" />
-                          Obtenir
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ))}
-
-                  {rewards.length === 0 && (
-                    <div className="text-center py-8">
-                      <div className="text-4xl mb-3">🎁</div>
-                      <p className="text-base text-gray-600">Aucune récompense disponible</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Section des récompenses réclamées améliorée */}
-          {claimedRewards.length > 0 && (
-            <motion.div
-              initial={{ y: 100, opacity: 0, scale: 0.9 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 100,
-                delay: 0.8 
-              }}
-              className="lg:col-span-12 mt-8"
-            >
-              <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
-                <CardHeader className="relative">
-                  <div
-                    className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
-                  />
-                  <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
-                    <TrophyIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
-                    Mes Récompenses Obtenues
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="relative z-10">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {claimedRewards.map((claimedReward) => (
-                      <motion.div
-                        key={claimedReward.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ scale: 1.03 }}
-                        className="p-6 rounded-xl border-2 bg-white border-purple-200 hover:border-purple-300 transition-all duration-300"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className="p-3 rounded-full bg-[color:var(--child-color)/0.12]"
-                          >
-                            <GiftIcon className="h-6 w-6 text-[color:var(--child-color)]" />
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-medium text-gray-900">{claimedReward.reward.label}</h4>
-                            <p className="text-base text-gray-500">
-                              Obtenue le {format(new Date(claimedReward.claimed_at), 'dd MMMM yyyy', { locale: fr })}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-
-          {/* Section des pénalités */}
-          {penalties.length > 0 && (
-            <motion.div
-              initial={{ y: 100, opacity: 0, scale: 0.9 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 100,
-                delay: 0.8 
-              }}
-              className="lg:col-span-12 mt-8"
-            >
-              <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
-                <CardHeader className="relative">
-                  <div
-                    className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
-                  />
-                  <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
-                    <AlertCircle className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
-                    Mes Pénalités
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="relative z-10">
-                  <div className="space-y-4">
-                    {penalties.map((penalty) => (
-                      <motion.div
-                        key={penalty.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center justify-between p-6 rounded-xl border-2 bg-red-50/50 border-red-100 hover:border-red-200 transition-all duration-300"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="p-3 rounded-full bg-red-100">
-                            <AlertCircle className="h-6 w-6 text-red-500" />
-                          </div>
-                          <div>
-                            <p className="text-lg font-medium text-gray-900">{penalty.reason}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Clock className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm text-gray-500">
-                                {format(new Date(penalty.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-red-500">-{Math.abs(penalty.points)} points</p>
-                          <p className="text-sm text-gray-500">Points retirés</p>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-        </div>
-
+          <RewardList rewards={rewards} claimedRewards={claimedRewards} child={child} onClaim={handleRewardClaim} />
+          <PenaltyList penalties={penalties} />
+          </div>
         <ShopItemsList child={child} onPointsUpdated={fetchChildData} />
 
         <PiggyBankManager child={child} onPointsUpdated={fetchChildData} />
 
-        {/* Section de la devinette quotidienne améliorée */}
-        {currentRiddle && !riddleSolved && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-8"
-          >
-            <Card className="bg-white/90 backdrop-blur-md border-2 border-[var(--child-color)] shadow-xl transform hover:scale-[1.01] transition-transform duration-300">
-              <CardHeader>
-                <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                  <BrainIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
-                  Devinette du Jour
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleRiddleSubmit} className="space-y-4">
-                  <div
-                    className="p-8 rounded-xl border-2 bg-[color:var(--child-color)/0.06] border-[color:var(--child-color)/0.25]"
-                  >
-                    <p className="text-xl font-medium text-gray-800 mb-6">
-                      {currentRiddle.question}
-                    </p>
-                    <div className="flex gap-4">
-                      <Input
-                        type="text"
-                        value={riddleAnswer}
-                        onChange={(e) => setRiddleAnswer(e.target.value)}
-                        placeholder="Ta réponse..."
-                        className="flex-1 text-lg p-4 rounded-lg border-2 focus:ring-2 border-[var(--child-color)] focus:ring-[var(--child-color)]"
-                      />
-                      <Button
-                        type="submit"
-                        className="text-lg px-8 hover:opacity-80 transition-opacity bg-[var(--child-color)]"
-                      >
-                        Valider
-                      </Button>
-                    </div>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Animation de succès améliorée */}
-        <AnimatePresence>
-          {showSuccess && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.5 }}
-              className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
-            >
-              <div className="bg-white/95 backdrop-blur-md p-10 rounded-3xl shadow-2xl border-2 border-green-200">
-                <motion.div
-                  animate={{ 
-                    rotate: [0, 360],
-                    scale: [1, 1.2, 1]
-                  }}
-                  transition={{ duration: 1 }}
-                  className="text-7xl mb-6 text-center"
-                >
-                  🎉
-                </motion.div>
-                <h3 className="text-3xl font-bold text-center text-gray-800 mb-3">
-                  Bravo !
-                </h3>
-                <p className="text-xl text-gray-600 text-center">
-                  Tu as gagné {currentRiddle?.points} points !
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          <DailyRiddle riddle={currentRiddle} solved={riddleSolved} answer={riddleAnswer} onAnswerChange={setRiddleAnswer} onSubmit={handleRiddleSubmit} showSuccess={showSuccess} />
       </motion.div>
     </motion.div>
   );
