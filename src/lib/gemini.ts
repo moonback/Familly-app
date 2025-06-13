@@ -18,7 +18,7 @@ export async function generateRiddle(difficulty: 'facile' | 'moyen' | 'difficile
     Format de réponse attendu (en JSON):
     {
       "question": "La question de la devinette",
-      "answer": "La réponse à la devinette",
+      "answer": "La réponse à la devinette juste le mot",
       "hint": "Un indice pour aider l'enfant à trouver la réponse"
     }`;
 

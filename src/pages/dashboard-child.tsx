@@ -312,13 +312,26 @@ export default function DashboardChild() {
 
   const fetchDailyRiddle = async () => {
     try {
+      console.log('Fetching daily riddle for child:', child?.id);
+      
       // Vérifier d'abord si l'enfant a déjà une devinette pour aujourd'hui
       const { data: existingRiddle, error: checkError } = await supabase
         .from('daily_riddles')
-        .select('*, riddles(*)')
+        .select(`
+          *,
+          riddles (
+            id,
+            question,
+            answer,
+            points,
+            hint
+          )
+        `)
         .eq('child_id', child?.id)
         .eq('date', format(new Date(), 'yyyy-MM-dd'))
         .single();
+
+      console.log('Existing riddle check:', { existingRiddle, checkError });
 
       if (checkError && checkError.code !== 'PGRST116') {
         console.error('Erreur lors de la vérification de la devinette:', checkError);
@@ -326,7 +339,7 @@ export default function DashboardChild() {
       }
 
       if (existingRiddle) {
-        // Si une devinette existe déjà pour aujourd'hui, l'utiliser
+        console.log('Using existing riddle:', existingRiddle);
         setCurrentRiddle(existingRiddle.riddles);
         setRiddleSolved(existingRiddle.is_solved);
         return;
@@ -335,8 +348,16 @@ export default function DashboardChild() {
       // Si aucune devinette n'existe pour aujourd'hui, en créer une nouvelle
       const { data: riddles, error: riddleError } = await supabase
         .from('riddles')
-        .select('*')
+        .select(`
+          id,
+          question,
+          answer,
+          points,
+          hint
+        `)
         .eq('user_id', child?.user_id);
+
+      console.log('Available riddles:', { riddles, riddleError });
 
       if (riddleError) {
         console.error('Erreur lors de la récupération des devinettes:', riddleError);
@@ -346,6 +367,7 @@ export default function DashboardChild() {
       if (riddles && riddles.length > 0) {
         // Sélectionner une devinette aléatoire
         const randomRiddle = riddles[Math.floor(Math.random() * riddles.length)];
+        console.log('Selected random riddle:', randomRiddle);
 
         // Créer une nouvelle entrée dans daily_riddles
         const { data: dailyRiddle, error: insertError } = await supabase
@@ -361,13 +383,17 @@ export default function DashboardChild() {
           .select()
           .single();
 
+        console.log('Created daily riddle:', { dailyRiddle, insertError });
+
         if (insertError) {
           console.error('Erreur lors de la création de la devinette quotidienne:', insertError);
           return;
         }
 
-        setCurrentRiddle(randomRiddle);
+        setCurrentRiddle({ ...randomRiddle, is_solved: false });
         setRiddleSolved(false);
+      } else {
+        console.log('Aucune devinette disponible pour cet utilisateur');
       }
     } catch (error) {
       console.error('Erreur lors de la récupération de la devinette:', error);

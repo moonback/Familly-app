@@ -38,7 +38,7 @@ export function RiddlesManager() {
     question: '',
     answer: '',
     points: 50,
-    hint: ''
+    hint: '',
   });
   const [editingRiddle, setEditingRiddle] = useState<Riddle | null>(null);
 
@@ -73,15 +73,49 @@ export function RiddlesManager() {
   const handleCreateRiddle = async () => {
     if (!user) return;
 
+    // Vérification des champs requis
+    if (!newRiddle.question.trim()) {
+      toast({
+        title: 'Erreur',
+        description: "La question est requise",
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!newRiddle.answer.trim()) {
+      toast({
+        title: 'Erreur',
+        description: "La réponse est requise",
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newRiddle.points <= 0) {
+      toast({
+        title: 'Erreur',
+        description: "Les points doivent être supérieurs à 0",
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('riddles')
         .insert([{
-          ...newRiddle,
+          question: newRiddle.question.trim(),
+          answer: newRiddle.answer.trim(),
+          points: newRiddle.points,
+          hint: newRiddle.hint?.trim() || null,
           user_id: user.id
         }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        throw error;
+      }
 
       toast({
         title: 'Succès',
@@ -92,14 +126,14 @@ export function RiddlesManager() {
         question: '',
         answer: '',
         points: 50,
-        hint: ''
+        hint: '',
       });
       fetchRiddles();
     } catch (error) {
       console.error('Erreur lors de la création de la devinette:', error);
       toast({
         title: 'Erreur',
-        description: "Impossible de créer la devinette",
+        description: "Impossible de créer la devinette. Veuillez réessayer.",
         variant: 'destructive',
       });
     }
@@ -114,7 +148,8 @@ export function RiddlesManager() {
         .update({
           question: editingRiddle.question,
           answer: editingRiddle.answer,
-          points: editingRiddle.points
+          points: editingRiddle.points,
+          hint: editingRiddle.hint,
         })
         .eq('id', editingRiddle.id);
 
@@ -174,7 +209,7 @@ export function RiddlesManager() {
           question: generatedRiddle.question,
           answer: generatedRiddle.answer,
           points: difficulty === 'facile' ? 30 : difficulty === 'moyen' ? 50 : 70,
-          hint: generatedRiddle.hint
+          hint: generatedRiddle.hint,
         });
         
         toast({
@@ -244,6 +279,7 @@ export function RiddlesManager() {
                 {isGenerating ? 'Génération...' : 'Générer avec IA'}
               </Button>
             </div>
+            
             <div>
               <Label htmlFor="question">Question</Label>
               <Textarea
@@ -254,6 +290,7 @@ export function RiddlesManager() {
                 className="mt-1"
               />
             </div>
+
             <div>
               <Label htmlFor="answer">Réponse</Label>
               <Input
@@ -264,6 +301,7 @@ export function RiddlesManager() {
                 className="mt-1"
               />
             </div>
+
             <div>
               <Label htmlFor="hint">Indice (optionnel)</Label>
               <Input
@@ -274,6 +312,7 @@ export function RiddlesManager() {
                 className="mt-1"
               />
             </div>
+
             <div>
               <Label htmlFor="points">Points à gagner</Label>
               <Input
@@ -284,6 +323,7 @@ export function RiddlesManager() {
                 className="mt-1"
               />
             </div>
+
             <Button
               onClick={handleCreateRiddle}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
@@ -331,10 +371,8 @@ export function RiddlesManager() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <p className="text-gray-600">
-                    <span className="font-semibold">Réponse :</span> {riddle.answer}
-                  </p>
+                <div className="space-y-4">
+                  <p className="text-gray-700">Réponse: {riddle.answer}</p>
                   {riddle.hint && (
                     <p className="text-gray-500 italic">
                       <span className="font-semibold">Indice :</span> {riddle.hint}
@@ -353,7 +391,7 @@ export function RiddlesManager() {
       {/* Modal d'édition */}
       {editingRiddle && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-lg bg-white/90 backdrop-blur-xl">
+          <Card className="w-full max-w-2xl bg-white">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-purple-800">
                 Modifier la devinette
@@ -370,6 +408,7 @@ export function RiddlesManager() {
                     className="mt-1"
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="edit-answer">Réponse</Label>
                   <Input
@@ -379,6 +418,7 @@ export function RiddlesManager() {
                     className="mt-1"
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="edit-hint">Indice (optionnel)</Label>
                   <Input
@@ -388,6 +428,7 @@ export function RiddlesManager() {
                     className="mt-1"
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="edit-points">Points</Label>
                   <Input
@@ -398,6 +439,7 @@ export function RiddlesManager() {
                     className="mt-1"
                   />
                 </div>
+
                 <div className="flex justify-end gap-2">
                   <Button
                     variant="outline"
