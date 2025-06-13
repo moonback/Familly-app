@@ -1,8 +1,6 @@
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { TrophyIcon, FlameIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { Trophy, Flame, Star, Sparkles } from 'lucide-react';
 
 interface AvatarDisplayProps {
   child: {
@@ -16,131 +14,184 @@ interface AvatarDisplayProps {
 }
 
 export const AvatarDisplay = ({ child, streak }: AvatarDisplayProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+  
   return (
-    <motion.div
-      initial={{ x: -100, opacity: 0, rotateY: -30 }}
-      animate={{ x: 0, opacity: 1, rotateY: 0 }}
-      transition={{ type: "spring", stiffness: 100, delay: 0.2 }}
-      className="lg:col-span-3"
+    <div 
+      className="lg:col-span-3 relative group perspective-1000"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative overflow-hidden border-0 shadow-2xl h-full transform hover:scale-[1.02] transition-transform duration-300 group rounded-xl">
-        <div className="absolute inset-0 bg-gray-500 opacity-90 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMTUiPjxwYXRoIGQ9Ik0yMCAyMGMwIDExLjA0Ni04Ljk1NCAyMC0yMCAyMHYyMGg0MFYyMEgyMHoiLz48L2c+PC9zdmc=')] opacity-30 group-hover:opacity-40 transition-opacity duration-300" />
-        
-        <div className="relative p-8 text-center text-black h-full flex flex-col justify-between">
-          <div>
-            <motion.div 
-              className="relative mb-8"
-              whileHover={{ 
-                scale: 1.15,
-                rotateY: 15,
-                rotateX: 5
-              }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-yellow-400 rounded-full blur-xl opacity-50 animate-pulse group-hover:opacity-70 transition-opacity duration-300" />
-              <Avatar className="relative h-32 w-32 mx-auto border-4 border-white shadow-2xl ring-4 ring-pink-300/50 group-hover:ring-pink-400/70 transition-all duration-300">
-                <AvatarImage src={child.avatar_url} alt={child.name} />
-                <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold">
-                  {child.name.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <motion.div 
-                className="absolute -top-4 -right-4 text-2xl"
-                animate={{ rotate: [0, 20, -20, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                👑
-              </motion.div>
-              
-            </motion.div>
-            
-            <motion.h2 
-              className="text-4xl font-black mb-3 text-white"
-              animate={{ 
-                textShadow: [
-                  '0 0 20px rgba(255,255,255,0.5)',
-                  '0 0 30px rgba(255,255,255,0.8)',
-                  '0 0 20px rgba(255,255,255,0.5)'
-                ]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              {child.name}
-            </motion.h2>
-            <motion.p 
-              className="text-xl opacity-90 mb-4 font-semibold text-white/90"
-              animate={{ 
-                scale: [1, 1.05, 1]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              🎂 {child.age} ans - Niveau Expert
-            </motion.p>
+      {/* Floating particles background */}
+      <div className="absolute inset-0 overflow-hidden rounded-2xl">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-20 animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
 
-            {streak > 0 && (
-              <motion.div 
-                className="bg-white/20 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/30 group-hover:border-white/50 transition-colors duration-300"
-                whileHover={{ scale: 1.05 }}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <motion.div
-                    animate={{ rotate: [0, 30, -30, 0] }}
-                    transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <FlameIcon className="h-6 w-6 text-orange-300 drop-shadow-lg" />
-                  </motion.div>
-                  <span className="text-lg font-bold text-white">Série: {streak} jour{streak > 1 ? 's' : ''}</span>
+      <div className={`relative overflow-hidden border-0 shadow-2xl h-full transition-all duration-700 rounded-2xl
+        ${isHovered ? 'scale-105 rotate-y-12' : ''} 
+        hover:shadow-4xl transform-gpu`}
+        style={{
+          background: `linear-gradient(135deg, 
+            ${child.custom_color || '#8B5CF6'} 0%, 
+            ${child.custom_color ? child.custom_color + '80' : '#A855F7'} 50%, 
+            ${child.custom_color ? child.custom_color + '60' : '#C084FC'} 100%)`,
+          backgroundSize: isHovered ? '120% 120%' : '100% 100%',
+          transition: 'all 0.7s ease'
+        }}
+      >
+        {/* Animated gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20" />
+        
+        {/* Floating geometric shapes */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className={`absolute top-8 right-8 w-16 h-16 bg-white/10 rounded-full transition-all duration-1000 ${isHovered ? 'scale-125 rotate-45' : ''}`} />
+          <div className={`absolute bottom-12 left-8 w-8 h-8 bg-yellow-300/20 rounded-full transition-all duration-1000 delay-150 ${isHovered ? 'scale-150 rotate-90' : ''}`} />
+          <div className={`absolute top-1/2 left-4 w-4 h-4 bg-pink-300/30 rotate-45 transition-all duration-1000 delay-300 ${isHovered ? 'scale-200 rotate-180' : ''}`} />
+        </div>
+        
+        <div className="relative p-8 text-center h-full flex flex-col justify-between">
+          {/* Header section */}
+          <div className="relative">
+            {/* Avatar with enhanced effects */}
+            <div className="relative mb-6">
+              <div className={`absolute inset-0 bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 rounded-full blur-2xl opacity-40 transition-all duration-700 ${isHovered ? 'opacity-70 scale-125' : ''}`} />
+              
+              <div className="relative">
+                <Avatar className={`h-36 w-36 mx-auto border-4 border-white/60 shadow-2xl ring-4 ring-white/30 transition-all duration-500 ${isHovered ? 'ring-8 ring-white/50 border-white/80' : ''}`}>
+                  <AvatarImage src={child.avatar_url} alt={child.name} className="object-cover" />
+                  <AvatarFallback className="text-3xl bg-gradient-to-br from-purple-500 to-pink-500 text-white font-black">
+                    {child.name.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                
+                {/* Floating crown with enhanced animation */}
+                <div className={`absolute -top-6 -right-6 text-4xl transition-all duration-500 ${isHovered ? 'scale-125 rotate-12' : ''}`}>
+                  <span className="drop-shadow-lg">👑</span>
                 </div>
-              </motion.div>
+                
+                {/* Sparkle effects */}
+                {isHovered && (
+                  <>
+                    <Sparkles className="absolute -top-4 -left-4 h-6 w-6 text-yellow-300 animate-pulse" />
+                    <Sparkles className="absolute -bottom-2 -right-2 h-4 w-4 text-pink-300 animate-pulse delay-300" />
+                    <Sparkles className="absolute -bottom-4 -left-2 h-5 w-5 text-purple-300 animate-pulse delay-500" />
+                  </>
+                )}
+              </div>
+            </div>
+            
+            {/* Name and info */}
+            <div className="space-y-4">
+              <h2 className={`text-4xl font-black text-white transition-all duration-500 ${isHovered ? 'scale-110' : ''}`}
+                  style={{ 
+                    textShadow: '0 4px 20px rgba(0,0,0,0.5), 0 0 40px rgba(255,255,255,0.3)' 
+                  }}>
+                {child.name}
+              </h2>
+              
+              <div className="flex items-center justify-center space-x-4">
+                <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+                  <span className="text-white/90 font-semibold">🎂 {child.age} ans</span>
+                </div>
+                <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-full px-4 py-2 border border-purple-300/30">
+                  <span className="text-white/90 font-semibold">⭐ Expert</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Streak display */}
+            {streak > 0 && (
+              <div className={`mt-6 bg-gradient-to-r from-orange-400/20 to-red-400/20 backdrop-blur-md rounded-2xl p-4 border border-orange-300/30 transition-all duration-500 ${isHovered ? 'scale-105 border-orange-300/50' : ''}`}>
+                <div className="flex items-center justify-center gap-3">
+                  <div className={`transition-all duration-300 ${isHovered ? 'animate-bounce' : ''}`}>
+                    <Flame className="h-7 w-7 text-orange-300 drop-shadow-lg" />
+                  </div>
+                  <span className="text-xl font-bold text-white">
+                    Série de feu: {streak} jour{streak > 1 ? 's' : ''} 🔥
+                  </span>
+                </div>
+              </div>
             )}
           </div>
           
-          <motion.div 
-            className="bg-white/20 backdrop-blur-md rounded-2xl p-8 border border-white/30 group-hover:border-white/50 transition-colors duration-300"
-            whileHover={{ 
-              scale: 1.05,
-              backgroundColor: 'rgba(255,255,255,0.25)'
-            }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <div className="flex items-center justify-center mb-4">
-              <motion.div
-                animate={{ 
-                  rotate: 360,
-                  scale: [1, 1.2, 1]
-                }}
-                transition={{ 
-                  rotate: { duration: 10, repeat: Infinity, ease: "linear" },
-                  scale: { duration: 2, repeat: Infinity }
-                }}
-                className="mr-4"
-              >
-                <TrophyIcon className="h-10 w-10 text-yellow-300 drop-shadow-lg" />
-              </motion.div>
-              <span className="text-base font-semibold text-yellow-100">Points Magiques</span>
+          {/* Points section */}
+          <div className={`relative transition-all duration-500 ${isHovered ? 'scale-105' : ''}`}>
+            <div className="bg-gradient-to-br from-white/25 to-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/40 shadow-2xl">
+              {/* Decorative elements */}
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-yellow-300 to-orange-300 rounded-full opacity-60" />
+              <div className="absolute -bottom-1 -left-1 w-6 h-6 bg-gradient-to-br from-pink-300 to-purple-300 rounded-full opacity-60" />
+              
+              <div className="flex items-center justify-center mb-6">
+                <div className={`mr-4 transition-all duration-500 ${isHovered ? 'rotate-12 scale-110' : ''}`}>
+                  <Trophy className="h-12 w-12 text-yellow-300 drop-shadow-2xl" />
+                </div>
+                <div>
+                  <span className="text-lg font-bold text-yellow-100 block">Points Magiques</span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Star className="h-4 w-4 text-yellow-300" />
+                    <Star className="h-4 w-4 text-yellow-300" />
+                    <Star className="h-4 w-4 text-yellow-300" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className={`text-6xl font-black mb-4 bg-gradient-to-r from-yellow-300 via-yellow-400 to-orange-400 bg-clip-text text-transparent transition-all duration-500 ${isHovered ? 'scale-110' : ''}`}
+                   style={{ 
+                     filter: 'drop-shadow(0 4px 8px rgba(255,193,7,0.3))' 
+                   }}>
+                {child.points.toLocaleString()}
+              </div>
+              
+              <div className="space-y-2">
+                <div className="text-lg text-yellow-200 font-semibold">
+                  💰 ~{((child?.points || 0) / 100).toFixed(2)} €
+                </div>
+                <div className="text-sm text-white/80 font-medium">
+                  Continue ton aventure magique ! ✨🌟
+                </div>
+              </div>
+              
+              {/* Progress bar */}
+              <div className="mt-4 bg-white/20 rounded-full h-2 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full transition-all duration-1000"
+                     style={{ width: `${Math.min((child.points % 1000) / 10, 100)}%` }} />
+              </div>
             </div>
-            <motion.div
-              className="text-5xl font-black mb-3 text-yellow-800"
-              animate={{
-                scale: [1, 1.1, 1],
-                textShadow: [
-                  '0 0 20px rgba(255,255,0,0.5)',
-                  '0 0 30px rgba(255,255,0,0.8)',
-                  '0 0 20px rgba(255,255,0,0.5)'
-                ]
-              }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              {child.points}
-            </motion.div>
-            <div className="text-sm text-yellow-800 font-medium">
-              ~{((child?.points || 0) / 100).toFixed(2)} €
-              Continue comme ça ! 🌟
-            </div>
-          </motion.div>
+          </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
-}; 
+};
+
+// Exemple d'utilisation
+// const App = () => {
+//   const sampleChild = {
+//     name: "Emma",
+//     age: 8,
+//     points: 2847,
+//     avatar_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face",
+//     custom_color: "#8B5CF6"
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-8">
+//       <div className="max-w-md mx-auto">
+//         <AvatarDisplay child={sampleChild} streak={5} />
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default App;
