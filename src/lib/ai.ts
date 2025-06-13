@@ -3,6 +3,7 @@ const AI_API_KEY = import.meta.env.VITE_AI_API_KEY;
 if (!AI_API_KEY) {
   console.warn('VITE_AI_API_KEY is not defined');
 }
+console.log('AI_API_KEY loaded:', AI_API_KEY ? 'YES' : 'NO');
 
 interface AIGeneratedRiddle {
   question: string;
@@ -10,7 +11,7 @@ interface AIGeneratedRiddle {
 }
 
 export async function generateRiddle(): Promise<AIGeneratedRiddle> {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/google/gemini-pro-2.5-preview:generateContent?key=${AI_API_KEY}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/google/gemini-2.0-flash:generateContent?key=${AI_API_KEY}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -21,7 +22,7 @@ export async function generateRiddle(): Promise<AIGeneratedRiddle> {
           role: 'user',
           parts: [
             {
-              text: 'Tu es un assistant qui crée des devinettes courtes pour des enfants. Réponds au format "Q: ...\nA: ..."\nGénère une devinette adaptée aux enfants avec la réponse.',
+              text: 'Tu es un assistant qui crée des devinettes courtes pour des enfants. Réponds au format "Q: ...\\nA: ..."\\nGénère une devinette adaptée aux enfants avec la réponse.',
             },
           ],
         },
@@ -39,8 +40,11 @@ export async function generateRiddle(): Promise<AIGeneratedRiddle> {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to generate riddle');
+    const errorResponse = await response.json();
+    console.error('Erreur API Gemini (Riddle):', errorResponse);
+    throw new Error(`Failed to generate riddle: ${errorResponse.error?.message || response.statusText}`);
   }
+
   const data = await response.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text as string;
   const [qLine = '', aLine = ''] = text.split('\n');
@@ -60,7 +64,7 @@ interface AIGeneratedTask {
 }
 
 export async function generateTask(): Promise<AIGeneratedTask> {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/google/gemini-pro-2.5-preview:generateContent?key=${AI_API_KEY}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/google/gemini-2.0-flash:generateContent?key=${AI_API_KEY}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -71,7 +75,7 @@ export async function generateTask(): Promise<AIGeneratedTask> {
           role: 'user',
           parts: [
             {
-              text: 'Tu es un assistant qui propose des exemples de tâches adaptées à la vie de famille. Réponds en JSON au format {\"label\":\"...\",\"points_reward\":30,\"is_daily\":true,\"age_min\":3,\"age_max\":12,\"category\":\"maison\"}',
+              text: 'Tu es un assistant qui propose des exemples de tâches adaptées à la vie de famille. Réponds en JSON au format {"label":"...","points_reward":30,"is_daily":true,"age_min":3,"age_max":12,"category":"maison"}',
             },
           ],
         },
@@ -89,14 +93,18 @@ export async function generateTask(): Promise<AIGeneratedTask> {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to generate task');
+    const errorResponse = await response.json();
+    console.error('Erreur API Gemini (Task):', errorResponse);
+    throw new Error(`Failed to generate task: ${errorResponse.error?.message || response.statusText}`);
   }
+
   const data = await response.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text as string;
   try {
     const task = JSON.parse(text);
     return task as AIGeneratedTask;
-  } catch {
+  } catch (error) {
+    console.error('Invalid AI task format:', error);
     throw new Error('Invalid AI task format');
   }
 }
