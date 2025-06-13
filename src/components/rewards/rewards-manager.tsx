@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { PlusCircleIcon, PencilIcon, TrashIcon } from 'lucide-react';
+import { PlusCircleIcon, PencilIcon, TrashIcon, SparklesIcon } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
+import { generateSuggestions } from '@/lib/gemini';
 
 interface Reward {
   id: string;
@@ -28,6 +29,9 @@ export function RewardsManager() {
     label: '',
     cost: '',
   });
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -152,6 +156,52 @@ export function RewardsManager() {
     }
   };
 
+  const loadSuggestions = async () => {
+    setSuggestionsLoading(true);
+    try {
+      const data = await generateSuggestions('reward');
+      setSuggestions(data);
+      setSuggestionsOpen(true);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: "Impossible de récupérer les suggestions",
+        variant: 'destructive',
+      });
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
+
+  const handleAddSuggestion = async (label: string) => {
+    if (!user) {
+      toast({
+        title: 'Erreur',
+        description: "Vous devez être connecté pour ajouter une récompense",
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      const { error } = await supabase.from('rewards').insert([
+        { label, cost: 50, user_id: user.id },
+      ]);
+      if (error) throw error;
+      toast({
+        title: 'Succès',
+        description: 'Récompense ajoutée depuis les suggestions',
+      });
+      setSuggestionsOpen(false);
+      fetchRewards();
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: "Impossible d'ajouter la récompense",
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -166,46 +216,76 @@ export function RewardsManager() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestion des Récompenses</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircleIcon className="mr-2 h-4 w-4" />
-              Ajouter une récompense
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingReward ? 'Modifier une récompense' : 'Ajouter une récompense'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="label">Nom de la récompense</Label>
-                <Input
-                  id="label"
-                  value={formData.label}
-                  onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cost">Coût en points</Label>
-                <Input
-                  id="cost"
-                  type="number"
-                  value={formData.cost}
-                  onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                {editingReward ? 'Modifier' : 'Ajouter'}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={loadSuggestions}>
+            <SparklesIcon className="mr-2 h-4 w-4" />
+            Suggestions IA
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircleIcon className="mr-2 h-4 w-4" />
+                Ajouter une récompense
               </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingReward ? 'Modifier une récompense' : 'Ajouter une récompense'}
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="label">Nom de la récompense</Label>
+                  <Input
+                    id="label"
+                    value={formData.label}
+                    onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cost">Coût en points</Label>
+                  <Input
+                    id="cost"
+                    type="number"
+                    value={formData.cost}
+                    onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  {editingReward ? 'Modifier' : 'Ajouter'}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
+
+      <Dialog open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Suggestions IA</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {suggestionsLoading ? (
+              <p>Chargement...</p>
+            ) : (
+              suggestions.map((s, idx) => (
+                <Button
+                  key={idx}
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => handleAddSuggestion(s)}
+                >
+                  {s}
+                </Button>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {rewards.map((reward) => (

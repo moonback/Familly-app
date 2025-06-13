@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { GiftIcon, TrophyIcon, ListChecksIcon, StarIcon, CheckCircleIcon, PartyPopperIcon, BrainIcon, CalendarIcon, FlameIcon, SparklesIcon } from 'lucide-react';
+import { GiftIcon, TrophyIcon, ListChecksIcon, StarIcon, CheckCircleIcon, PartyPopperIcon, BrainIcon, CalendarIcon, FlameIcon, SparklesIcon, AlertCircle, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
@@ -69,6 +69,13 @@ interface ChildRewardClaimed {
   reward_id: string;
   claimed_at: string;
   reward: Reward;
+}
+
+interface PenaltyHistory {
+  id: string;
+  points: number;
+  reason: string;
+  created_at: string;
 }
 
 const generateAgeAppropriateTasks = async (child: Child) => {
@@ -147,6 +154,7 @@ export default function DashboardChild() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [claimedRewards, setClaimedRewards] = useState<ChildRewardClaimed[]>([]);
   const [streak, setStreak] = useState(0);
+  const [penalties, setPenalties] = useState<PenaltyHistory[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -250,6 +258,17 @@ export default function DashboardChild() {
 
       if (claimedRewardsError) throw claimedRewardsError;
       setClaimedRewards(claimedRewardsData);
+
+      // Récupérer l'historique des pénalités
+      const { data: penaltiesData, error: penaltiesError } = await supabase
+        .from('points_history')
+        .select('*')
+        .eq('child_id', childData.id)
+        .lt('points', 0)
+        .order('created_at', { ascending: false });
+
+      if (penaltiesError) throw penaltiesError;
+      setPenalties(penaltiesData || []);
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
       toast({
@@ -1079,6 +1098,63 @@ export default function DashboardChild() {
                               Obtenue le {format(new Date(claimedReward.claimed_at), 'dd MMMM yyyy', { locale: fr })}
                             </p>
                           </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Section des pénalités */}
+          {penalties.length > 0 && (
+            <motion.div
+              initial={{ y: 100, opacity: 0, scale: 0.9 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 100,
+                delay: 0.8 
+              }}
+              className="lg:col-span-12 mt-8"
+            >
+              <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
+                <CardHeader className="relative">
+                  <div
+                    className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
+                  />
+                  <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <AlertCircle className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
+                    Mes Pénalités
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="relative z-10">
+                  <div className="space-y-4">
+                    {penalties.map((penalty) => (
+                      <motion.div
+                        key={penalty.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center justify-between p-6 rounded-xl border-2 bg-red-50/50 border-red-100 hover:border-red-200 transition-all duration-300"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-full bg-red-100">
+                            <AlertCircle className="h-6 w-6 text-red-500" />
+                          </div>
+                          <div>
+                            <p className="text-lg font-medium text-gray-900">{penalty.reason}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Clock className="h-4 w-4 text-gray-500" />
+                              <span className="text-sm text-gray-500">
+                                {format(new Date(penalty.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-red-500">-{Math.abs(penalty.points)} points</p>
+                          <p className="text-sm text-gray-500">Points retirés</p>
                         </div>
                       </motion.div>
                     ))}

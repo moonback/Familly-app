@@ -25,7 +25,8 @@ import {
   Zap,
   Heart,
   PiggyBankIcon,
-  Minus
+  Minus,
+  AlertCircle
 } from 'lucide-react';
 import { ChildrenManager } from '@/components/children/children-manager';
 import { TasksManager } from '@/components/tasks/tasks-manager';
@@ -60,8 +61,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PurchaseHistory } from '@/components/shop/purchase-history';
 import { ShopItemsOverview } from '@/components/shop/shop-items-overview';
 import { ShopManager } from '@/components/shop/shop-manager';
+import { PenaltyManager } from '@/components/penalties/penalty-manager';
 
-type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | 'shop' | null;
+type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | 'shop' | 'penalties' | null;
 type Period = 'day' | 'week' | 'month';
 
 interface DashboardStats {
@@ -565,6 +567,18 @@ export default function DashboardParent() {
       borderColor: 'border-violet-200',
       buttonText: 'Gérer la Boutique',
       accent: 'bg-violet-500'
+    },
+    {
+      id: 'penalties',
+      title: 'Gérer les Pénalités',
+      description: 'Appliquez des pénalités de points pour les règles non respectées.',
+      icon: AlertCircle,
+      color: 'from-red-500 to-rose-500',
+      hoverColor: 'hover:from-red-600 hover:to-rose-600',
+      bgGradient: 'bg-gradient-to-br from-red-50 to-rose-100',
+      borderColor: 'border-red-200',
+      buttonText: 'Gérer les Pénalités',
+      accent: 'bg-red-500'
     }
   ];
 
@@ -1137,6 +1151,34 @@ export default function DashboardParent() {
               </CardHeader>
               <CardContent className="p-6">
                 <ShopManager />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {currentView === 'penalties' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Pénalités</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCurrentView(null)}
+                    className="hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <PenaltyManager />
               </CardContent>
             </Card>
           </motion.div>
