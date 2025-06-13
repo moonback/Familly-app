@@ -52,6 +52,7 @@ export const AvatarDisplay = ({ child, streak }: AvatarDisplayProps) => {
               >
                 👑
               </motion.div>
+              
             </motion.div>
             
             <motion.h2 
