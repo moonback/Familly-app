@@ -172,6 +172,55 @@ export function ChildrenManager() {
     }
 
     try {
+      // Supprimer toutes les tâches de l'enfant
+      const { error: tasksError } = await supabase
+        .from('child_tasks')
+        .delete()
+        .eq('child_id', id);
+
+      if (tasksError) throw tasksError;
+
+      // Supprimer toutes les récompenses réclamées
+      const { error: rewardsError } = await supabase
+        .from('child_rewards_claimed')
+        .delete()
+        .eq('child_id', id);
+
+      if (rewardsError) throw rewardsError;
+
+      // Supprimer toutes les violations de règles
+      const { error: rulesError } = await supabase
+        .from('child_rules_violations')
+        .delete()
+        .eq('child_id', id);
+
+      if (rulesError) throw rulesError;
+
+      // Supprimer l'historique des points
+      const { error: pointsError } = await supabase
+        .from('points_history')
+        .delete()
+        .eq('child_id', id);
+
+      if (pointsError) throw pointsError;
+
+      // Supprimer l'historique de la tirelire
+      const { error: piggyError } = await supabase
+        .from('piggy_bank_transactions')
+        .delete()
+        .eq('child_id', id);
+
+      if (piggyError) throw piggyError;
+
+      // Supprimer les devinettes quotidiennes
+      const { error: riddlesError } = await supabase
+        .from('daily_riddles')
+        .delete()
+        .eq('child_id', id);
+
+      if (riddlesError) throw riddlesError;
+
+      // Maintenant, supprimer l'enfant
       const { error } = await supabase
         .from('children')
         .delete()
@@ -179,12 +228,14 @@ export function ChildrenManager() {
         .eq('user_id', user.id);
 
       if (error) throw error;
+      
       toast({
         title: 'Succès',
         description: "L'enfant a été supprimé avec succès",
       });
       fetchChildren();
     } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
       toast({
         title: 'Erreur',
         description: "Impossible de supprimer l'enfant",
