@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { HomeIcon, UserIcon, LogOutIcon, LogInIcon, ChevronDownIcon, SparklesIcon, MenuIcon } from 'lucide-react';
+import { HomeIcon, UserIcon, LogOutIcon, LogInIcon, ChevronDownIcon, SparklesIcon, MenuIcon, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';
@@ -202,6 +202,21 @@ export function MainNav() {
                             </DropdownMenuItem>
                           </div>
                         ))}
+                        <div className="border-t border-purple-100 my-2"></div>
+                        <DropdownMenuItem asChild>
+                          <Link 
+                            to="/set-parent-code"
+                            className="flex items-center justify-between w-full cursor-pointer p-2 rounded-lg hover:bg-purple-50 transition-colors"
+                          >
+                            <span className="flex items-center">
+                              <Lock className="h-5 w-5 mr-3 text-purple-500" />
+                              <span className="font-medium text-gray-700">Paramètres Parent</span>
+                            </span>
+                            <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-600">
+                              Code
+                            </span>
+                          </Link>
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
