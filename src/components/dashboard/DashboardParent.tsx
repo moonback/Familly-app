@@ -334,86 +334,119 @@ export const DashboardParent = () => {
       title: 'Gérer les Enfants',
       description: 'Ajoutez, modifiez ou supprimez les profils de vos enfants.',
       icon: Users,
-      color: 'from-pink-500 to-rose-500',
-      hoverColor: 'hover:from-pink-600 hover:to-rose-600',
-      bgGradient: 'bg-gradient-to-br from-pink-50 to-rose-100',
-      borderColor: 'border-pink-200',
-      buttonText: 'Gérer les Enfants',
-      accent: 'bg-pink-500'
+      color: 'text-pink-500',
+      hoverColor: 'hover:bg-pink-50',
+      bgColor: 'bg-white',
+      borderColor: 'border-gray-200',
+      buttonText: 'Gérer',
+      accent: 'bg-pink-100'
     },
     {
       id: 'tasks',
       title: 'Gérer les Tâches',
       description: 'Définissez les tâches quotidiennes et leurs points de récompense.',
       icon: CheckSquare,
-      color: 'from-emerald-500 to-teal-500',
-      hoverColor: 'hover:from-emerald-600 hover:to-teal-600',
-      bgGradient: 'bg-gradient-to-br from-emerald-50 to-teal-100',
-      borderColor: 'border-emerald-200',
-      buttonText: 'Gérer les Tâches',
-      accent: 'bg-emerald-500'
+      color: 'text-emerald-500',
+      hoverColor: 'hover:bg-emerald-50',
+      bgColor: 'bg-white',
+      borderColor: 'border-gray-200',
+      buttonText: 'Gérer',
+      accent: 'bg-emerald-100'
     },
     {
       id: 'rules',
       title: 'Gérer les Règles',
       description: 'Établissez les règles de comportement et les pénalités de points.',
       icon: Shield,
-      color: 'from-amber-500 to-orange-500',
-      hoverColor: 'hover:from-amber-600 hover:to-orange-600',
-      bgGradient: 'bg-gradient-to-br from-amber-50 to-orange-100',
-      borderColor: 'border-amber-200',
-      buttonText: 'Gérer les Règles',
-      accent: 'bg-amber-500'
+      color: 'text-amber-500',
+      hoverColor: 'hover:bg-amber-50',
+      bgColor: 'bg-white',
+      borderColor: 'border-gray-200',
+      buttonText: 'Gérer',
+      accent: 'bg-amber-100'
     },
     {
       id: 'rewards',
       title: 'Gérer les Récompenses',
       description: 'Créez des récompenses que vos enfants pourront échanger avec leurs points.',
       icon: Gift,
-      color: 'from-violet-600 to-purple-600',
-      hoverColor: 'hover:from-violet-600 hover:to-purple-600',
-      bgGradient: 'bg-gradient-to-br from-violet-50 to-purple-100',
-      borderColor: 'border-violet-200',
-      buttonText: 'Gérer les Récompenses',
-      accent: 'bg-violet-500'
+      color: 'text-violet-500',
+      hoverColor: 'hover:bg-violet-50',
+      bgColor: 'bg-white',
+      borderColor: 'border-gray-200',
+      buttonText: 'Gérer',
+      accent: 'bg-violet-100'
     },
     {
       id: 'riddles',
       title: 'Gérer les Devinettes',
       description: 'Créez des devinettes quotidiennes pour que vos enfants gagnent des points bonus.',
       icon: Brain,
-      color: 'from-cyan-500 to-blue-500',
-      hoverColor: 'hover:from-cyan-600 hover:to-blue-600',
-      bgGradient: 'bg-gradient-to-br from-cyan-50 to-blue-100',
-      borderColor: 'border-cyan-200',
-      buttonText: 'Gérer les Devinettes',
-      accent: 'bg-cyan-500'
+      color: 'text-cyan-500',
+      hoverColor: 'hover:bg-cyan-50',
+      bgColor: 'bg-white',
+      borderColor: 'border-gray-200',
+      buttonText: 'Gérer',
+      accent: 'bg-cyan-100'
     },
     {
       id: 'shop',
       title: 'Gérer la Boutique',
       description: 'Créez et gérez les articles que vos enfants peuvent acheter avec leurs points.',
       icon: Gift,
-      color: 'from-violet-600 to-purple-600',
-      hoverColor: 'hover:from-violet-600 hover:to-purple-600',
-      bgGradient: 'bg-gradient-to-br from-violet-50 to-purple-100',
-      borderColor: 'border-violet-200',
-      buttonText: 'Gérer la Boutique',
-      accent: 'bg-violet-500'
+      color: 'text-violet-500',
+      hoverColor: 'hover:bg-violet-50',
+      bgColor: 'bg-white',
+      borderColor: 'border-gray-200',
+      buttonText: 'Gérer',
+      accent: 'bg-violet-100'
     },
     {
       id: 'penalties',
       title: 'Gérer les Pénalités',
       description: 'Appliquez des pénalités de points pour les règles non respectées.',
       icon: AlertCircle,
-      color: 'from-red-500 to-rose-500',
-      hoverColor: 'hover:from-red-600 hover:to-rose-600',
-      bgGradient: 'bg-gradient-to-br from-red-50 to-rose-100',
-      borderColor: 'border-red-200',
-      buttonText: 'Gérer les Pénalités',
-      accent: 'bg-red-500'
+      color: 'text-red-500',
+      hoverColor: 'hover:bg-red-50',
+      bgColor: 'bg-white',
+      borderColor: 'border-gray-200',
+      buttonText: 'Gérer',
+      accent: 'bg-red-100'
     }
   ];
+
+  const renderManagementCards = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {dashboardCards.map((card) => (
+        <motion.div
+          key={card.id}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={`relative overflow-hidden rounded-lg border ${card.borderColor} ${card.bgColor} ${card.hoverColor} transition-all duration-300 shadow-sm`}
+        >
+          <div className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-3">
+                <div className={`p-2 rounded-lg ${card.accent}`}>
+                  <card.icon className={`h-5 w-5 ${card.color}`} />
+                </div>
+                <h3 className="font-medium text-gray-900">{card.title}</h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentView(card.id as View)}
+                className="text-sm font-medium text-gray-600 hover:text-gray-900"
+              >
+                {card.buttonText}
+              </Button>
+            </div>
+            <p className="mt-2 text-sm text-gray-500 line-clamp-2">{card.description}</p>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
 
   const renderStats = () => (
     <div className="space-y-8">
@@ -528,15 +561,7 @@ export const DashboardParent = () => {
   return (
     <div className="flex flex-col space-y-8 mx-[-1.5rem] px-6">
       {/* Management Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-        {dashboardCards.map((card) => (
-          <ManagementCard
-            key={card.id}
-            {...card}
-            onClick={() => setCurrentView(card.id as View)}
-          />
-        ))}
-      </div>
+      {renderManagementCards()}
 
       {/* Managers */}
       <AnimatePresence mode="wait">
