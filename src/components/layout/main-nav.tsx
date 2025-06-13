@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { HomeIcon, UserIcon, LogOutIcon, LogInIcon, ChevronDownIcon, SparklesIcon } from 'lucide-react';
+import { HomeIcon, UserIcon, LogOutIcon, LogInIcon, ChevronDownIcon, SparklesIcon, MenuIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';
@@ -10,6 +10,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerClose,
+} from '@/components/ui/drawer';
 import { motion } from 'framer-motion';
 
 interface Child {
@@ -77,10 +83,57 @@ export function MainNav() {
             </Link>
 
             {user && (
-              <div className="hidden md:flex items-center space-x-4">
-                <Link to="/dashboard/parent">
-                  <motion.div whileHover={{ scale: 1.05 }}>
-                    <Button 
+              <>
+                <div className="md:hidden">
+                  <Drawer>
+                    <DrawerTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Ouvrir le menu"
+                      >
+                        <MenuIcon className="h-5 w-5" />
+                      </Button>
+                    </DrawerTrigger>
+                    <DrawerContent className="pb-6 pt-4 px-4 space-y-2 bg-white/95 backdrop-blur-md border-t">
+                      <nav className="grid gap-2">
+                        <Link to="/dashboard/parent" onClick={() => {}}>
+                          <Button
+                            variant={isActive('/dashboard/parent') ? 'default' : 'ghost'}
+                            className="w-full justify-start"
+                          >
+                            <UserIcon className="h-5 w-5 mr-2" />
+                            Parent Dashboard
+                          </Button>
+                        </Link>
+                        {children.length > 0 && (
+                          <>
+                            {children.map((child) => (
+                              <Link
+                                key={child.id}
+                                to={`/dashboard/child/${encodeURIComponent(child.name)}`}
+                              >
+                                <Button variant="ghost" className="w-full justify-start">
+                                  <UserIcon className="h-5 w-5 mr-2" />
+                                  {child.name}
+                                </Button>
+                              </Link>
+                            ))}
+                          </>
+                        )}
+                      </nav>
+                      <DrawerClose asChild>
+                        <Button variant="ghost" className="mt-2 w-full">
+                          Fermer
+                        </Button>
+                      </DrawerClose>
+                    </DrawerContent>
+                  </Drawer>
+                </div>
+                <div className="hidden md:flex items-center space-x-4">
+                  <Link to="/dashboard/parent">
+                    <motion.div whileHover={{ scale: 1.05 }}>
+                      <Button
                       variant={isActive('/dashboard/parent') ? 'default' : 'ghost'} 
                       className={`${
                         isActive('/dashboard/parent') 
@@ -131,6 +184,7 @@ export function MainNav() {
                   </DropdownMenu>
                 )}
               </div>
+              </>
             )}
           </div>
 

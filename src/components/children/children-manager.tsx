@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { PlusCircleIcon, PencilIcon, TrashIcon, UserIcon, EyeIcon } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
@@ -204,7 +205,13 @@ export function ChildrenManager() {
   };
 
   if (loading) {
-    return <div>Chargement...</div>;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, idx) => (
+          <Skeleton key={idx} className="h-40 w-full rounded-xl" />
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -294,9 +301,9 @@ export function ChildrenManager() {
             <CardHeader className="pb-2">
               <CardTitle className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
+                  <Avatar className="h-12 w-12" style={{ '--child-color': child.custom_color } as React.CSSProperties }>
                     <AvatarImage src={child.avatar_url} alt={child.name} />
-                    <AvatarFallback style={{ backgroundColor: child.custom_color }}>
+                    <AvatarFallback className="bg-[var(--child-color)]">
                       {child.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -342,9 +349,9 @@ export function ChildrenManager() {
             <CardContent>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <div 
-                    className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-                    style={{ backgroundColor: child.custom_color }}
+                  <div
+                    className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-[var(--child-color)]"
+                    style={{ '--child-color': child.custom_color } as React.CSSProperties }
                   />
                   <span className="text-sm text-gray-600">Couleur thème</span>
                 </div>

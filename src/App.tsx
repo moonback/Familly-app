@@ -8,7 +8,6 @@ import AuthPage from '@/pages/auth';
 import DashboardParent from '@/pages/dashboard-parent';
 import DashboardChild from '@/pages/dashboard-child';
 import ChildHome from '@/pages/home';
-import './App.css';
 
 // Composant de protection des routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {

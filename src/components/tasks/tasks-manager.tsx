@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { PlusCircleIcon, PencilIcon, TrashIcon } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
 
 interface Task {
@@ -230,7 +231,13 @@ export function TasksManager() {
   };
 
   if (loading) {
-    return <div>Chargement...</div>;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, idx) => (
+          <Skeleton key={idx} className="h-40 w-full rounded-xl" />
+        ))}
+      </div>
+    );
   }
 
   return (
