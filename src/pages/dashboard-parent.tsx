@@ -120,21 +120,26 @@ const StatCard = ({ title, value, icon, color, isLoading, details, trend, subtit
     whileHover={{ y: -4, scale: 1.02 }}
     transition={{ type: "spring", stiffness: 300, damping: 25 }}
   >
-    <Card className="bg-white/70 backdrop-blur-xl shadow-lg hover:shadow-2xl transition-all duration-500 border-0 rounded-2xl overflow-hidden group relative">
+    <Card className="bg-white/80 backdrop-blur-xl shadow-lg hover:shadow-2xl transition-all duration-500 border-0 rounded-2xl overflow-hidden group relative">
       {/* Gradient border effect */}
       <div className={`absolute inset-0 bg-gradient-to-r ${color} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl`} />
+      
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity duration-300">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,#000_1px,transparent_0)] bg-[size:20px_20px]" />
+      </div>
       
       <CardContent className="p-6 relative">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <p className="text-sm font-medium text-gray-600">{title}</p>
+              <p className="text-sm font-medium text-gray-600 tracking-wide">{title}</p>
               {trend !== undefined && (
                 <motion.div 
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
-                    trend > 0 ? 'bg-green-100 text-green-700' : 
-                    trend < 0 ? 'bg-red-100 text-red-700' : 
-                    'bg-gray-100 text-gray-700'
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${
+                    trend > 0 ? 'bg-green-100/80 text-green-700' : 
+                    trend < 0 ? 'bg-red-100/80 text-red-700' : 
+                    'bg-gray-100/80 text-gray-700'
                   }`}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -151,7 +156,7 @@ const StatCard = ({ title, value, icon, color, isLoading, details, trend, subtit
             ) : (
               <div>
                 <motion.h3 
-                  className="text-3xl font-bold text-gray-800 mb-1"
+                  className="text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-1"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
@@ -159,28 +164,30 @@ const StatCard = ({ title, value, icon, color, isLoading, details, trend, subtit
                   {value.toLocaleString()}
                 </motion.h3>
                 {subtitle && (
-                  <p className="text-xs text-gray-500">{subtitle}</p>
+                  <p className="text-xs text-gray-500 font-medium">{subtitle}</p>
                 )}
               </div>
             )}
           </div>
           
           <motion.div 
-            className={`p-3 rounded-xl bg-gradient-to-br ${color} shadow-lg`}
+            className={`p-3 rounded-xl bg-gradient-to-br ${color} shadow-lg relative overflow-hidden`}
             whileHover={{ scale: 1.1, rotate: 10 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
+            {/* Shine effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
             {icon}
           </motion.div>
         </div>
         
         {details && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-4 pt-4 border-t border-gray-100/50">
             <div className="flex justify-between text-xs">
               {details.map((detail, index) => (
                 <div key={index} className="text-center">
                   <div className="font-semibold text-gray-800">{detail.value}</div>
-                  <div className="text-gray-500">{detail.label}</div>
+                  <div className="text-gray-500 font-medium">{detail.label}</div>
                 </div>
               ))}
             </div>
@@ -799,21 +806,40 @@ export default function DashboardParent() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="bg-white/70 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white/80 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 relative overflow-hidden">
+            {/* Animated background pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,#fff_1px,transparent_0)] bg-[size:20px_20px]" />
+            </div>
+            <div className="flex items-center justify-between relative z-10">
               <div>
-                <CardTitle className="text-2xl font-bold mb-2">🏆 Tableau de Performance</CardTitle>
-                <p className="text-indigo-100">Suivi détaillé des progrès de chaque enfant</p>
+                <CardTitle className="text-2xl font-bold mb-2 flex items-center gap-3">
+                  <Trophy className="h-8 w-8 text-yellow-300 drop-shadow-lg" />
+                  Tableau de Performance
+                </CardTitle>
+                <p className="text-indigo-100/90 font-medium">Suivi détaillé des progrès de chaque enfant</p>
               </div>
-              <Trophy className="h-8 w-8 text-yellow-300" />
+              <div className="flex items-center gap-2">
+                <Select value={period} onValueChange={(value: Period) => setPeriod(value)}>
+                  <SelectTrigger className="w-[180px] bg-white/20 border-0 text-white backdrop-blur-sm">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Sélectionner une période" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="day">Dernières 24h</SelectItem>
+                    <SelectItem value="week">7 derniers jours</SelectItem>
+                    <SelectItem value="month">30 derniers jours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardHeader>
           
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50/80">
+                <thead className="bg-gray-50/80 backdrop-blur-sm">
                   <tr>
                     <th className="text-left py-4 px-6 font-semibold text-gray-700">Enfant</th>
                     <th className="text-center py-4 px-4 font-semibold text-gray-700">Points</th>
@@ -828,7 +854,7 @@ export default function DashboardParent() {
                   {stats.childrenStats.map((child, index) => (
                     <motion.tr 
                       key={child.id} 
-                      className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300"
+                      className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-300"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
@@ -839,30 +865,32 @@ export default function DashboardParent() {
                             whileHover={{ scale: 1.1 }}
                             className="relative"
                           >
-                            <Avatar className="h-10 w-10 ring-2 ring-blue-200">
+                            <Avatar className="h-10 w-10 ring-2 ring-blue-200 shadow-lg">
                               <AvatarImage src={child.avatar_url} />
                               <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white font-bold">
                                 {child.name.substring(0, 2)}
                               </AvatarFallback>
                             </Avatar>
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm" />
                           </motion.div>
                           <div>
                             <span className="font-semibold text-gray-800">{child.name}</span>
                             <div className="flex items-center gap-1 mt-1">
                               <Heart className="h-3 w-3 text-red-500" />
-                              <span className="text-xs text-gray-500">Membre</span>
+                              <span className="text-xs text-gray-500 font-medium">Membre</span>
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="py-4 px-4 text-center">
-                        <span className="font-bold text-lg">{child.points}</span>
+                        <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                          {child.points}
+                        </span>
                       </td>
                       <td className="py-4 px-4 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <Flame className="h-4 w-4 text-orange-500" />
-                          <span className="font-medium">{child.streak}</span>
+                          <span className="font-medium text-orange-600">{child.streak}</span>
                         </div>
                       </td>
                       <td className="py-4 px-4 text-center">
@@ -872,15 +900,17 @@ export default function DashboardParent() {
                         <span className="font-medium text-gray-600">{child.pendingTasks}</span>
                       </td>
                       <td className="py-4 px-4 text-center">
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-gray-500 font-medium">
                           {child.lastActivity ? format(new Date(child.lastActivity), 'dd MMM', { locale: fr }) : 'Jamais'}
                         </span>
                       </td>
                       <td className="py-4 px-4">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div 
-                            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full" 
-                            style={{ width: `${(child.completedTasks / (child.completedTasks + child.pendingTasks)) * 100}%` }}
+                        <div className="w-full bg-gray-200/50 rounded-full h-2.5 overflow-hidden">
+                          <motion.div 
+                            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(child.completedTasks / (child.completedTasks + child.pendingTasks)) * 100}%` }}
+                            transition={{ duration: 1, delay: index * 0.1 }}
                           />
                         </div>
                       </td>

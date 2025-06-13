@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
+import { Label } from '@/components/ui/label';
 
 interface Child {
   id: string;
@@ -70,7 +71,7 @@ export function PenaltyManager() {
 
       if (rulesError) throw rulesError;
 
-      // Récupérer l'historique des pénalités
+      // Récupérer l'historique des pénalités (uniquement les points négatifs et non les récompenses réclamées)
       const { data: historyData, error: historyError } = await supabase
         .from('points_history')
         .select(`
@@ -79,6 +80,7 @@ export function PenaltyManager() {
         `)
         .eq('user_id', user?.id)
         .lt('points', 0)
+        .not('reason', 'ilike', 'Récompense réclamée%')
         .order('created_at', { ascending: false });
 
       if (historyError) throw historyError;
@@ -124,7 +126,7 @@ export function PenaltyManager() {
 
       if (updateError) throw updateError;
 
-      // Enregistrer l'historique des points
+      // Enregistrer l'historique des points (uniquement pour les pénalités)
       const { error: historyError } = await supabase
         .from('points_history')
         .insert([{
@@ -184,25 +186,25 @@ export function PenaltyManager() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Sélectionner un enfant</label>
+                <Label>Enfant</Label>
                 <Select value={selectedChild} onValueChange={setSelectedChild}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choisir un enfant" />
+                    <SelectValue placeholder="Sélectionner un enfant" />
                   </SelectTrigger>
                   <SelectContent>
                     {children.map((child) => (
                       <SelectItem key={child.id} value={child.id}>
-                        {child.name} ({child.points} points)
+                        {child.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Sélectionner une règle</label>
+                <Label>Règle violée</Label>
                 <Select value={selectedRule} onValueChange={setSelectedRule}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choisir une règle" />
+                    <SelectValue placeholder="Sélectionner une règle" />
                   </SelectTrigger>
                   <SelectContent>
                     {rules.map((rule) => (
@@ -213,12 +215,7 @@ export function PenaltyManager() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button 
-                variant="destructive" 
-                className="w-full"
-                onClick={handleApplyPenalty}
-                disabled={!selectedChild || !selectedRule}
-              >
+              <Button onClick={handleApplyPenalty} className="w-full">
                 Appliquer la pénalité
               </Button>
             </div>
@@ -247,8 +244,7 @@ export function PenaltyManager() {
         ))}
       </div>
 
-      {/* Section Historique des Pénalités */}
-      <Card className="bg-white/90 backdrop-blur-md">
+      <Card>
         <CardHeader className="border-b border-gray-100">
           <div className="flex items-center gap-3">
             <History className="h-6 w-6 text-red-500" />
