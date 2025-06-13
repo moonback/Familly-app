@@ -651,6 +651,9 @@ export default function DashboardParent() {
           isLoading={stats.isLoading}
           trend={15}
           subtitle="gagnés par la famille"
+          details={[
+            { label: 'En Euros', value: parseFloat((stats.totalPoints / 100).toFixed(2)) }
+          ]}
         />
       </div>
 

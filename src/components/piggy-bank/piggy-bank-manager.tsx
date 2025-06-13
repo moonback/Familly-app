@@ -18,6 +18,12 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
   const [transactions, setTransactions] = useState<PiggyBankTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ type: 'savings' as 'savings' | 'spending' | 'donation', points: '' });
+  const [euros, setEuros] = useState('');
+  const [points, setPoints] = useState('');
+  const [convertedValue, setConvertedValue] = useState<number | null>(null);
+  const [converterType, setConverterType] = useState<'euro' | 'points' | null>(null);
+
+  const CONVERSION_RATE = 100; // 1€ = 100 points
 
   useEffect(() => {
     if (child) {
@@ -66,6 +72,50 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
     }
   };
 
+  const handleEuroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEuros(value);
+    if (!isNaN(parseFloat(value)) && parseFloat(value) > 0) {
+      setPoints((parseFloat(value) * CONVERSION_RATE).toString());
+      setConvertedValue(null);
+    } else {
+      setPoints('');
+    }
+  };
+
+  const handlePointsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPoints(value);
+    if (!isNaN(parseFloat(value)) && parseFloat(value) > 0) {
+      setEuros((parseFloat(value) / CONVERSION_RATE).toString());
+      setConvertedValue(null);
+    } else {
+      setEuros('');
+    }
+  };
+
+  const convertEuroToPoints = () => {
+    const euroValue = parseFloat(euros);
+    if (!isNaN(euroValue) && euroValue > 0) {
+      setConvertedValue(euroValue * CONVERSION_RATE);
+      setConverterType('points');
+    } else {
+      setConvertedValue(null);
+      setConverterType(null);
+    }
+  };
+
+  const convertPointsToEuro = () => {
+    const pointsValue = parseFloat(points);
+    if (!isNaN(pointsValue) && pointsValue > 0) {
+      setConvertedValue(pointsValue / CONVERSION_RATE);
+      setConverterType('euro');
+    } else {
+      setConvertedValue(null);
+      setConverterType(null);
+    }
+  };
+
   if (loading) return <div>Chargement...</div>;
 
   const getTransactionIcon = (type: string) => {
@@ -110,6 +160,7 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
           <div className="text-right">
             <p className="text-sm text-purple-100">Solde actuel</p>
             <p className="text-2xl font-bold">{child?.points || 0} pts</p>
+            <p className="text-sm text-purple-100">~{((child?.points || 0) / CONVERSION_RATE).toFixed(2)} €</p>
           </div>
         </div>
       </CardHeader>
@@ -149,6 +200,49 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
           </Button>
         </motion.form>
 
+        {/* Convertisseur Euro/Points - Début */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200"
+        >
+          <h3 className="text-lg font-semibold text-blue-800 mb-3">Convertisseur Euro/Points</h3>
+          <p className="text-sm text-blue-700 mb-4">Taux de conversion: 1€ = {CONVERSION_RATE} points</p>
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-2 items-center">
+              <Input
+                type="number"
+                placeholder="Euros"
+                value={euros}
+                onChange={handleEuroChange}
+                className="bg-white"
+              />
+              <Button onClick={convertEuroToPoints} className="bg-blue-600 hover:bg-blue-700 text-white">
+                Convertir en Points
+              </Button>
+            </div>
+            <div className="flex gap-2 items-center">
+              <Input
+                type="number"
+                placeholder="Points"
+                value={points}
+                onChange={handlePointsChange}
+                className="bg-white"
+              />
+              <Button onClick={convertPointsToEuro} className="bg-blue-600 hover:bg-blue-700 text-white">
+                Convertir en Euros
+              </Button>
+            </div>
+            {convertedValue !== null && (converterType === 'points' ? (
+              <p className="text-lg font-bold text-blue-800 mt-2">{convertedValue} points</p>
+            ) : (
+              <p className="text-lg font-bold text-blue-800 mt-2">{convertedValue.toFixed(2)} €</p>
+            ))}
+          </div>
+        </motion.div>
+        {/* Convertisseur Euro/Points - Fin */}
+
         <div className="space-y-3">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Historique des transactions</h3>
           <AnimatePresence>
@@ -166,7 +260,9 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
                     {getTransactionIcon(t.type)}
                   </div>
                   <div>
-                    <p className="font-medium capitalize">{t.type}</p>
+                    <p className="font-medium capitalize">
+                      {t.type === 'savings' ? 'Épargne' : t.type === 'spending' ? 'Dépense' : 'Don'}
+                    </p>
                     <p className="text-sm opacity-75">{new Date(t.created_at).toLocaleDateString('fr-FR')}</p>
                   </div>
                 </div>
