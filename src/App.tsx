@@ -9,6 +9,7 @@ import DashboardParent from '@/pages/dashboard-parent';
 import DashboardChild from '@/pages/dashboard-child';
 import ChildHome from '@/pages/home';
 import { motion, AnimatePresence } from 'framer-motion';
+import SetParentCodePage from '@/pages/set-parent-code';
 
 // Composant de protection des routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -60,6 +61,14 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route 
+                  path="/set-parent-code" 
+                  element={
+                    <ProtectedRoute>
+                      <SetParentCodePage />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route 
                   path="/dashboard/parent" 
                   element={
