@@ -182,7 +182,7 @@ export default function Home() {
           </div>
 
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-            <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
+            <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-lg">
               <CardTitle className="flex items-center">
                 <ListChecksIcon className="mr-3 h-6 w-6" />
                 Mes Missions du Jour

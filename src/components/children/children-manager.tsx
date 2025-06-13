@@ -316,7 +316,12 @@ export function ChildrenManager() {
                 </div>
                 <div className="flex space-x-1">
                   <Link to={`/dashboard/child/${child.id}`}>
-                    <Button variant="ghost" size="icon" title="Voir le dashboard">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Voir le dashboard"
+                      aria-label="Voir le dashboard"
+                    >
                       <EyeIcon className="h-4 w-4" />
                     </Button>
                   </Link>
@@ -325,6 +330,7 @@ export function ChildrenManager() {
                     size="icon"
                     onClick={() => handleEdit(child)}
                     title="Modifier"
+                    aria-label="Modifier l'enfant"
                   >
                     <PencilIcon className="h-4 w-4" />
                   </Button>
@@ -333,6 +339,7 @@ export function ChildrenManager() {
                     size="icon"
                     onClick={() => handleDelete(child.id)}
                     title="Supprimer"
+                    aria-label="Supprimer l'enfant"
                   >
                     <TrashIcon className="h-4 w-4" />
                   </Button>

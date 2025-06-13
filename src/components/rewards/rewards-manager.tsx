@@ -218,6 +218,7 @@ export function RewardsManager() {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleEdit(reward)}
+                    aria-label="Modifier la récompense"
                   >
                     <PencilIcon className="h-4 w-4" />
                   </Button>
@@ -225,6 +226,7 @@ export function RewardsManager() {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDelete(reward.id)}
+                    aria-label="Supprimer la récompense"
                   >
                     <TrashIcon className="h-4 w-4" />
                   </Button>

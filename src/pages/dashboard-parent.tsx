@@ -502,7 +502,7 @@ export default function DashboardParent() {
       title: 'Gérer les Récompenses',
       description: 'Créez des récompenses que vos enfants pourront échanger avec leurs points.',
       icon: Gift,
-      color: 'from-violet-500 to-purple-500',
+      color: 'from-violet-600 to-purple-600',
       hoverColor: 'hover:from-violet-600 hover:to-purple-600',
       bgGradient: 'bg-gradient-to-br from-violet-50 to-purple-100',
       borderColor: 'border-violet-200',
@@ -591,7 +591,7 @@ export default function DashboardParent() {
           title="Récompenses Disponibles"
           value={stats.availableRewards}
           icon={<Gift className="h-6 w-6 text-white" />}
-          color="from-violet-500 to-purple-600"
+          color="from-violet-600 to-purple-700"
           isLoading={stats.isLoading}
           trend={-2}
           subtitle="prêtes à être réclamées"
