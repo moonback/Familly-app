@@ -267,6 +267,7 @@ export default function DashboardChild() {
         .select('*')
         .eq('child_id', childData.id)
         .lt('points', 0)
+        .not('reason', 'ilike', 'Récompense réclamée%')
         .order('created_at', { ascending: false });
 
       if (penaltiesError) throw penaltiesError;
