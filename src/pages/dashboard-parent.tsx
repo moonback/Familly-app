@@ -57,8 +57,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PurchaseHistory } from '@/components/shop/purchase-history';
 import { ShopItemsOverview } from '@/components/shop/shop-items-overview';
+import { ShopManager } from '@/components/shop/shop-manager';
 
-type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | null;
+type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | 'shop' | null;
 type Period = 'day' | 'week' | 'month';
 
 interface DashboardStats {
@@ -522,6 +523,18 @@ export default function DashboardParent() {
       borderColor: 'border-cyan-200',
       buttonText: 'Gérer les Devinettes',
       accent: 'bg-cyan-500'
+    },
+    {
+      id: 'shop',
+      title: 'Gérer la Boutique',
+      description: 'Créez et gérez les articles que vos enfants peuvent acheter avec leurs points.',
+      icon: Gift,
+      color: 'from-violet-600 to-purple-600',
+      hoverColor: 'hover:from-violet-600 hover:to-purple-600',
+      bgGradient: 'bg-gradient-to-br from-violet-50 to-purple-100',
+      borderColor: 'border-violet-200',
+      buttonText: 'Gérer la Boutique',
+      accent: 'bg-violet-500'
     }
   ];
 
@@ -885,6 +898,34 @@ export default function DashboardParent() {
               </CardHeader>
               <CardContent className="p-6">
                 <RiddlesManager />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {currentView === 'shop' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion de la Boutique</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCurrentView(null)}
+                    className="hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <ShopManager />
               </CardContent>
             </Card>
           </motion.div>

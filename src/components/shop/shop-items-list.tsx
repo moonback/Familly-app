@@ -8,9 +8,10 @@ import { Child, ShopItem, Purchase } from '@/types';
 
 interface ShopItemsListProps {
   child: Child | null;
+  onPointsUpdated: () => void;
 }
 
-export function ShopItemsList({ child }: ShopItemsListProps) {
+export function ShopItemsList({ child, onPointsUpdated }: ShopItemsListProps) {
   const [items, setItems] = useState<ShopItem[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,9 +65,13 @@ export function ShopItemsList({ child }: ShopItemsListProps) {
       .update({ points: child.points - item.price })
       .eq('id', child.id);
     if (!updateError) {
-      toast({ title: 'Achat réussi', description: `Vous avez acheté ${item.name}` });
+      toast({
+        title: 'Achat réussi',
+        description: `Vous avez acheté ${item.name}`
+      });
       fetchPurchases();
       fetchItems();
+      onPointsUpdated();
     }
   };
 

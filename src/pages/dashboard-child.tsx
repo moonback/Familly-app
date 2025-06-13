@@ -1088,7 +1088,7 @@ export default function DashboardChild() {
           )}
         </div>
 
-        <ShopItemsList child={child} />
+        <ShopItemsList child={child} onPointsUpdated={fetchChildData} />
 
         {/* Section de la devinette quotidienne améliorée */}
         {currentRiddle && !riddleSolved && (
