@@ -93,7 +93,7 @@ export function ShopItemsList({ child, onPointsUpdated }: ShopItemsListProps) {
       <Card className="bg-white/90 backdrop-blur-md shadow-xl border-0 rounded-2xl overflow-hidden group">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
         <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
-          <CardTitle className="flex items-center gap-3 text-3xl font-bold text-gray-800">
+          <CardTitle className="flex items-center gap-3 text-2xl font-bold text-gray-800">
             <GiftIcon className="h-8 w-8 text-purple-600 drop-shadow-xl" /> Boutique
           </CardTitle>
         </CardHeader>

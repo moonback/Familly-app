@@ -20,6 +20,17 @@ import { ShopItemsList } from '@/components/shop/shop-items-list';
 import { PiggyBankManager } from '@/components/piggy-bank/piggy-bank-manager';
 import { ManualButton, ManualDialog } from '@/components/manual/manual-dialog';
 
+// Import des nouveaux composants
+import { AvatarDisplay } from '@/components/dashboard/AvatarDisplay';
+import { TaskList } from '@/components/dashboard/TaskList';
+import { RewardShop } from '@/components/dashboard/RewardShop';
+import { DailyRiddle } from '@/components/dashboard/DailyRiddle';
+import { SuccessAnimation } from '@/components/dashboard/SuccessAnimation';
+import { LoadingScreen } from '@/components/dashboard/LoadingScreen';
+import { BackgroundDecorations } from '@/components/dashboard/BackgroundDecorations';
+import { Header } from '@/components/dashboard/Header';
+import { ValidatedRewardsList } from '@/components/dashboard/ValidatedRewardsList';
+
 const CONVERSION_RATE = 100; // 100 points = 1 euro
 
 interface Child {
@@ -518,12 +529,11 @@ export default function DashboardChild() {
     }
   };
 
-  const handleRiddleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentRiddle || !riddleAnswer.trim() || !child) return;
+  const handleRiddleSubmit = async (answer: string) => {
+    if (!currentRiddle || !answer.trim() || !child) return;
 
     try {
-      const isCorrect = riddleAnswer.toLowerCase().trim() === currentRiddle.answer.toLowerCase().trim();
+      const isCorrect = answer.toLowerCase().trim() === currentRiddle.answer.toLowerCase().trim();
       
       if (isCorrect) {
         // Mettre à jour le statut de la devinette dans daily_riddles
@@ -574,7 +584,6 @@ export default function DashboardChild() {
           description: `Tu as gagné ${currentRiddle.points} points pour avoir résolu la devinette !`,
         });
       } else {
-        setRiddleAnswer('');
         toast({
           title: '❌ Oups !',
           description: "Ce n'est pas la bonne réponse. Essaie encore !",
@@ -583,6 +592,59 @@ export default function DashboardChild() {
       }
     } catch (error) {
       console.error('Erreur lors de la soumission de la réponse:', error);
+    }
+  };
+
+  const handleHintPurchase = async () => {
+    if (!child || !currentRiddle) return;
+
+    try {
+      // Vérifier si l'enfant a assez de points
+      if (child.points < 10) {
+        toast({
+          title: "Points insuffisants",
+          description: "Il te faut 10 points pour obtenir un indice",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Déduire les points
+      const { error: updateError } = await supabase
+        .from('children')
+        .update({
+          points: child.points - 10
+        })
+        .eq('id', child.id);
+
+      if (updateError) throw updateError;
+
+      // Enregistrer dans l'historique des points
+      const { error: historyError } = await supabase
+        .from('points_history')
+        .insert([{
+          user_id: child.user_id,
+          child_id: child.id,
+          points: -10,
+          reason: 'Achat d\'indice pour la devinette'
+        }]);
+
+      if (historyError) console.error('Erreur historique:', historyError);
+
+      // Mettre à jour l'état local
+      setChild(prev => prev ? { ...prev, points: prev.points - 10 } : null);
+
+      toast({
+        title: "Indice acheté !",
+        description: "10 points ont été déduits de ton compte",
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'achat de l\'indice:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'acheter l'indice",
+        variant: "destructive",
+      });
     }
   };
 
@@ -607,43 +669,7 @@ export default function DashboardChild() {
   };
 
   if (loading || isLoading) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100"
-      >
-        <motion.div className="text-center relative">
-          <motion.div
-            animate={{
-              rotate: 360,
-              scale: [1, 1.2, 1],
-            }}
-            transition={{ 
-              rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-              scale: { duration: 1.5, repeat: Infinity }
-            }}
-            className="rounded-full h-20 w-20 bg-gradient-to-br from-purple-600 to-pink-600 mx-auto mb-6 flex items-center justify-center shadow-2xl"
-          >
-            <SparklesIcon className="h-10 w-10 text-white" />
-          </motion.div>
-          <motion.p 
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
-          >
-            Chargement de ton monde magique...
-          </motion.p>
-          <motion.div
-            animate={{ y: [-5, 5, -5] }}
-            transition={{ duration: 1, repeat: Infinity }}
-            className="text-4xl mt-4"
-          >
-            ✨
-          </motion.div>
-        </motion.div>
-      </motion.div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!user || !child) {
@@ -656,24 +682,6 @@ export default function DashboardChild() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={child?.avatar_url} />
-            <AvatarFallback>{child?.name?.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <div>
-            <h1 className="text-2xl font-bold" style={{ color: child?.custom_color }}>
-              {child?.name}
-            </h1>
-            <p className="text-gray-600">Points : {child?.points}</p>
-          </div>
-        </div>
-        <ManualButton onClick={() => setShowManual(true)} />
-      </div>
-
-      <ManualDialog open={showManual} onOpenChange={setShowManual} />
-
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -686,547 +694,27 @@ export default function DashboardChild() {
             : 'bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100'
         }`}
       >
-        {/* Éléments décoratifs de fond améliorés */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div 
-            animate={{ 
-              x: [0, 100, 0],
-              y: [0, 50, 0],
-              rotate: [0, 180, 360],
-              scale: [1, 1.2, 1]
-            }}
-            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-10 left-10 text-7xl opacity-20 filter blur-[1px]"
-          >
-            ⭐
-          </motion.div>
-          <motion.div 
-            animate={{ 
-              x: [0, -80, 0],
-              y: [0, 30, 0],
-              rotate: [0, -180, -360],
-              scale: [1, 1.3, 1]
-            }}
-            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-20 right-20 text-6xl opacity-20 filter blur-[1px]"
-          >
-            🌟
-          </motion.div>
-          <motion.div 
-            animate={{ 
-              x: [0, 60, 0],
-              y: [0, -40, 0],
-              rotate: [0, 90, 180],
-              scale: [1, 1.1, 1]
-            }}
-            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-20 left-32 text-5xl opacity-20 filter blur-[1px]"
-          >
-            ✨
-          </motion.div>
-          <motion.div 
-            animate={{ 
-              x: [0, -40, 0],
-              y: [0, 60, 0],
-              rotate: [0, -90, -180],
-              scale: [1, 1.2, 1]
-            }}
-            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-32 right-16 text-6xl opacity-20 filter blur-[1px]"
-          >
-            🎈
-          </motion.div>
-        </div>
+        <BackgroundDecorations />
 
-        {/* Animation de confettis améliorée */}
-        <AnimatePresence>
-          {showConfetti && (
-            <div className="fixed inset-0 pointer-events-none z-50">
-              {[...Array(30)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ 
-                    y: -100, 
-                    x: Math.random() * window.innerWidth,
-                    opacity: 1,
-                    scale: 1,
-                    rotate: 0
-                  }}
-                  animate={{ 
-                    y: window.innerHeight + 100,
-                    x: Math.random() * window.innerWidth - window.innerWidth/2,
-                    rotate: 360,
-                    scale: [1, 1.5, 0.5],
-                    opacity: [1, 1, 0]
-                  }}
-                  exit={{ opacity: 0 }}
-                  transition={{ 
-                    duration: 3 + Math.random() * 2,
-                    ease: "easeOut"
-                  }}
-                  className="absolute text-4xl filter drop-shadow-lg"
-                >
-                  {['🎉', '🎊', '⭐', '🌟', '✨', '🎈', '🎁', '🏆'][Math.floor(Math.random() * 8)]}
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </AnimatePresence>
-
-        <motion.div className="relative z-10 p-6">        {/* En-tête avec titre amélioré */}
-          <motion.div 
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 100 }}
-            className="text-center mb-12"
-          >
-            
-            
-            <motion.p 
-              className="text-2xl text-gray-700 font-semibold mb-4"
-              animate={{ 
-                y: [0, -8, 0],
-                scale: [1, 1.05, 1]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              Bonjour {child.name} ! 🦸‍♀️
-            </motion.p>
-            <motion.div 
-              className="inline-flex items-center bg-white/80 backdrop-blur-md rounded-full px-8 py-3 shadow-xl border-2 border-[var(--child-color)]"
-              whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
-              transition={{ type: "spring", stiffness: 400 }}
-            >
-              <CalendarIcon className="h-6 w-6 mr-3 text-[color:var(--child-color)] drop-shadow-xl" />
-              <span className="text-xl font-medium text-gray-800">
-                {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
-              </span>
-            </motion.div>
-          </motion.div>
+        <motion.div className="relative z-10 p-6">
+          <Header 
+            childName={child.name} 
+            onManualClick={() => setShowManual(true)} 
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-12xl mx-auto">
-            {/* Profil de l'enfant amélioré */}
-            <motion.div
-              initial={{ x: -100, opacity: 0, rotateY: -30 }}
-              animate={{ x: 0, opacity: 1, rotateY: 0 }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 100,
-                delay: 0.2 
-              }}
-              className="lg:col-span-3"
-            >
-              <Card className="relative overflow-hidden border-0 shadow-2xl h-full transform hover:scale-[1.02] transition-transform duration-300 group">
-                <div
-                  className="absolute inset-0 bg-gray-500 opacity-90 group-hover:opacity-100 transition-opacity duration-300"
-                />
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMTUiPjxwYXRoIGQ9Ik0yMCAyMGMwIDExLjA0Ni04Ljk1NCAyMC0yMCAyMHYyMGg0MFYyMEgyMHoiLz48L2c+PC9zdmc=')] opacity-30 group-hover:opacity-40 transition-opacity duration-300" />
-                
-                <div className="relative p-8 text-center text-black h-full flex flex-col justify-between">
-                  <div>
-                    <motion.div 
-                      className="relative mb-8"
-                      whileHover={{ 
-                        scale: 1.15,
-                        rotateY: 15,
-                        rotateX: 5
-                      }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-yellow-400 rounded-full blur-xl opacity-50 animate-pulse group-hover:opacity-70 transition-opacity duration-300" />
-                      <Avatar className="relative h-32 w-32 mx-auto border-4 border-white shadow-2xl ring-4 ring-pink-300/50 group-hover:ring-pink-400/70 transition-all duration-300">
-                        <AvatarImage src={child.avatar_url} alt={child.name} />
-                        <AvatarFallback className="text-3xl bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold">
-                          {child.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <motion.div 
-                        className="absolute -top-4 -right-4 text-3xl"
-                        animate={{ rotate: [0, 20, -20, 0] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        👑
-                      </motion.div>
-                    </motion.div>
-                    
-                    <motion.h2 
-                      className="text-4xl font-black mb-3 text-white"
-                      animate={{ 
-                        textShadow: [
-                          '0 0 20px rgba(255,255,255,0.5)',
-                          '0 0 30px rgba(255,255,255,0.8)',
-                          '0 0 20px rgba(255,255,255,0.5)'
-                        ]
-                      }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      {child.name}
-                    </motion.h2>
-                    <motion.p 
-                      className="text-xl opacity-90 mb-4 font-semibold text-white/90"
-                      animate={{ 
-                        scale: [1, 1.05, 1]
-                      }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      🎂 {child.age} ans - Niveau Expert
-                    </motion.p>
-
-                    {/* Streak */}
-                    {streak > 0 && (
-                      <motion.div 
-                        className="bg-white/20 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/30 group-hover:border-white/50 transition-colors duration-300"
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <motion.div
-                            animate={{ rotate: [0, 30, -30, 0] }}
-                            transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
-                          >
-                            <FlameIcon className="h-6 w-6 text-orange-300 drop-shadow-lg" />
-                          </motion.div>
-                          <span className="text-lg font-bold text-white">Série: {streak} jour{streak > 1 ? 's' : ''}</span>
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-                  
-                  <motion.div 
-                    className="bg-white/20 backdrop-blur-md rounded-2xl p-8 border border-white/30 group-hover:border-white/50 transition-colors duration-300"
-                    whileHover={{ 
-                      scale: 1.05,
-                      backgroundColor: 'rgba(255,255,255,0.25)'
-                    }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <div className="flex items-center justify-center mb-4">
-                      <motion.div
-                        animate={{ 
-                          rotate: 360,
-                          scale: [1, 1.2, 1]
-                        }}
-                        transition={{ 
-                          rotate: { duration: 10, repeat: Infinity, ease: "linear" },
-                          scale: { duration: 2, repeat: Infinity }
-                        }}
-                        className="mr-4"
-                      >
-                        <TrophyIcon className="h-10 w-10 text-yellow-300 drop-shadow-lg" />
-                      </motion.div>
-                      <span className="text-base font-semibold text-yellow-100">Points Magiques</span>
-                    </div>
-                    <motion.div
-                      className="text-5xl font-black mb-3 text-yellow-800"
-                      animate={{
-                        scale: [1, 1.1, 1],
-                        textShadow: [
-                          '0 0 20px rgba(255,255,0,0.5)',
-                          '0 0 30px rgba(255,255,0,0.8)',
-                          '0 0 20px rgba(255,255,0,0.5)'
-                        ]
-                      }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      {child.points}
-                      
-                    </motion.div>
-                    <div className="text-sm text-yellow-800 font-medium">
-                    ~{((child?.points || 0) / CONVERSION_RATE).toFixed(2)} €
-                      Continue comme ça ! 🌟
-                    </div>
-                  </motion.div>
-                </div>
-              </Card>
-            </motion.div>
-
-            {/* Section des tâches améliorée */}
-            <motion.div
-              initial={{ y: 100, opacity: 0, scale: 0.9 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 100,
-                delay: 0.4 
-              }}
-              className="lg:col-span-6"
-            >
-              <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
-                <div
-                  className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)] group-hover:opacity-30 transition-opacity duration-300"
-                />
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
-
-                <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
-                  <div className="flex items-center justify-between mb-6">
-                    <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                      <ListChecksIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
-                      Mes Missions
-                    </CardTitle>
-                    <div className="flex items-center gap-3">
-                      <span className="text-base text-gray-600 font-medium">Progression</span>
-                      <Progress value={progressPercentage} className="w-40 h-3 bg-gray-200" />
-                      <span className="text-sm font-medium text-gray-700">
-                        {completedTasks}/{totalTasks}
-                      </span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="relative z-10 p-6">
-                  <div className="space-y-4">
-                    {childTasks.map((childTask) => (
-                      <motion.div
-                        key={childTask.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ scale: 1.02, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
-                        onClick={() => handleTaskToggle(childTask.id, childTask.is_completed)}
-                        className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer ${
-                          childTask.is_completed 
-                            ? 'bg-green-50 border-green-200 opacity-70' 
-                            : 'bg-white border-gray-200 hover:border-[color:var(--child-color)]'
-                        } transition-all duration-300`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={childTask.is_completed}
-                            onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
-                            className={`h-7 w-7 border-2 ${
-                              childTask.is_completed ? 'border-green-500 text-green-500' : 'border-gray-300 text-gray-300'
-                            }`}
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-2xl">{getCategoryIcon(childTask.task.category)}</span>
-                            <Label className={`text-xl font-medium ${
-                              childTask.is_completed ? 'line-through text-gray-500' : 'text-gray-800'
-                            }`}>
-                              {childTask.task.label}
-                            </Label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span 
-                              className={`inline-block px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${getCategoryColor(childTask.task.category)} text-white`}
-                            >
-                              {childTask.task.category}
-                            </span>
-                            <span className={`text-base ${childTask.is_completed ? 'text-gray-500' : 'text-gray-600'}`}>
-                              {childTask.task.points_reward} points
-                            </span>
-                          </div>
-                        </div>
-                        {childTask.is_completed && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                            className="text-green-500"
-                          >
-                            <CheckCircleIcon className="h-7 w-7" />
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    ))}
-
-                    {childTasks.length === 0 && (
-                      <div className="text-center py-12">
-                        <div className="text-6xl mb-4">🎯</div>
-                        <p className="text-xl text-gray-600">Aucune mission pour aujourd'hui !</p>
-                        <p className="text-base text-gray-500 mt-2">Reviens demain pour de nouvelles aventures !</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Section des récompenses améliorée */}
-            <motion.div
-              initial={{ y: 100, opacity: 0, scale: 0.9 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 100,
-                delay: 0.6 
-              }}
-              className="lg:col-span-3"
-            >
-              <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
-                <div
-                  className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)] group-hover:opacity-30 transition-opacity duration-300"
-                />
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
-
-                <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
-                  <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                    <GiftIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
-                    Mes Récompenses
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="relative z-10 p-6">
-                  <div className="space-y-4">
-                    {rewards.map((reward) => (
-                      <motion.div
-                        key={reward.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ scale: 1.03, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
-                        className={`p-5 rounded-xl border-2 cursor-pointer ${
-                          child?.points >= reward.cost
-                            ? 'bg-white border-[color:var(--child-color)] hover:border-[color:var(--child-color)]/70'
-                            : 'bg-gray-50 border-gray-200 opacity-70'
-                        } transition-all duration-300`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="text-lg font-medium text-gray-900">{reward.label}</h4>
-                            <p className="text-base text-gray-500">{reward.cost} points</p>
-                          </div>
-                          <Button
-                            onClick={() => handleRewardClaim(reward.id, reward.cost)}
-                            disabled={!child || child.points < reward.cost}
-                            className={`${
-                              child?.points >= reward.cost
-                                ? 'bg-[var(--child-color)] hover:opacity-80'
-                                : 'bg-gray-400 cursor-not-allowed'
-                            } transition-all duration-300 flex items-center gap-2 px-4 py-2 rounded-lg`}
-                          >
-                            <GiftIcon className="h-5 w-5" />
-                            Obtenir
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
-
-                    {rewards.length === 0 && (
-                      <div className="text-center py-8">
-                        <div className="text-6xl mb-4">🎁</div>
-                        <p className="text-xl text-gray-600">Aucune récompense disponible</p>
-                        <p className="text-base text-gray-500 mt-2">Demandez à vos parents d'en ajouter !</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Section des récompenses réclamées améliorée */}
-            {claimedRewards.length > 0 && (
-              <motion.div
-                initial={{ y: 100, opacity: 0, scale: 0.9 }}
-                animate={{ y: 0, opacity: 1, scale: 1 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 100,
-                  delay: 0.8 
-                }}
-                className="lg:col-span-12 mt-8"
-              >
-                <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
-                  <div
-                    className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)] group-hover:opacity-30 transition-opacity duration-300"
-                  />
-                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
-                  <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
-                    <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                      <TrophyIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
-                      Mes Récompenses Obtenues
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="relative z-10 p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {claimedRewards.map((claimedReward) => (
-                        <motion.div
-                          key={claimedReward.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          whileHover={{ scale: 1.03, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
-                          className="p-6 rounded-xl border-2 bg-white/80 border-[color:var(--child-color)]/20 hover:border-[color:var(--child-color)]/50 transition-all duration-300"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div
-                              className="p-3 rounded-full bg-[color:var(--child-color)/0.12]"
-                            >
-                              <GiftIcon className="h-6 w-6 text-[color:var(--child-color)]" />
-                            </div>
-                            <div>
-                              <h4 className="text-lg font-medium text-gray-900">{claimedReward.reward.label}</h4>
-                              <p className="text-base text-gray-500">
-                                Obtenue le {format(new Date(claimedReward.claimed_at), 'dd MMMM yyyy', { locale: fr })}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* Section des pénalités */}
-            {penalties.length > 0 && (
-              <motion.div
-                initial={{ y: 100, opacity: 0, scale: 0.9 }}
-                animate={{ y: 0, opacity: 1, scale: 1 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 100,
-                  delay: 0.8 
-                }}
-                className="lg:col-span-12 mt-8"
-              >
-                <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
-                  <div
-                    className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,#ef444440,#ef444420)] group-hover:opacity-30 transition-opacity duration-300"
-                  />
-                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PC9zdmc=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
-
-                  <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
-                    <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                      <AlertCircle className="h-8 w-8 text-red-500 drop-shadow-xl" />
-                      Mes Pénalités
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="relative z-10 p-6">
-                    <div className="space-y-4">
-                      {penalties.map((penalty) => (
-                        <motion.div
-                          key={penalty.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          whileHover={{ scale: 1.02, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
-                          className="flex items-center justify-between p-6 rounded-xl border-2 bg-red-50/50 border-red-100 hover:border-red-200 transition-all duration-300 cursor-pointer"
-                        >
-                          <div className="flex items-center gap-4">
-                            <motion.div 
-                              className="p-3 rounded-full bg-red-100"
-                              whileHover={{ scale: 1.1, rotate: 10 }}
-                              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                            >
-                              <AlertCircle className="h-6 w-6 text-red-500" />
-                            </motion.div>
-                            <div>
-                              <p className="text-lg font-medium text-gray-900">{penalty.reason}</p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Clock className="h-4 w-4 text-gray-500" />
-                                <span className="text-sm text-gray-500">
-                                  {format(new Date(penalty.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-red-500">-{Math.abs(penalty.points)} points</p>
-                            <p className="text-sm text-gray-500">Points retirés</p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
+            <AvatarDisplay child={child} streak={streak} />
+            <TaskList 
+              childTasks={childTasks} 
+              onTaskToggle={handleTaskToggle} 
+              childColor={child.custom_color} 
+            />
+            <RewardShop 
+              rewards={rewards} 
+              childPoints={child.points} 
+              onRewardClaim={handleRewardClaim} 
+              childColor={child.custom_color} 
+            />
           </div>
 
           <motion.div
@@ -1246,87 +734,34 @@ export default function DashboardChild() {
               onPointsUpdated={fetchChildData}
               className="transform hover:scale-[1.01] transition-transform duration-300"
             />
+
+            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <TrophyIcon className="w-6 h-6" />
+                Mes Récompenses Validées
+              </h2>
+              <ValidatedRewardsList 
+                claimedRewards={claimedRewards} 
+                childColor={child.custom_color}
+              />
+            </div>
           </motion.div>
 
-          {/* Section de la devinette quotidienne améliorée */}
-          {currentRiddle && !riddleSolved && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-8"
-            >
-              <Card className="bg-white/90 backdrop-blur-md border-2 border-[var(--child-color)] shadow-xl transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
-                <div
-                  className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)] group-hover:opacity-30 transition-opacity duration-300"
-                />
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
-                
-                <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
-                  <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                    <BrainIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
-                    Devinette du Jour
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="relative z-10 p-6">
-                  <form onSubmit={handleRiddleSubmit} className="space-y-4">
-                    <div
-                      className="p-8 rounded-xl border-2 bg-[color:var(--child-color)/0.06] border-[color:var(--child-color)/0.25] shadow-inner"
-                    >
-                      <p className="text-xl font-medium text-gray-800 mb-6">
-                        {currentRiddle.question}
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        <Input
-                          type="text"
-                          value={riddleAnswer}
-                          onChange={(e) => setRiddleAnswer(e.target.value)}
-                          placeholder="Ta réponse..."  
-                          className="flex-1 text-lg p-4 rounded-lg border-2 focus:ring-2 border-[var(--child-color)] focus:ring-[var(--child-color)] shadow-sm"
-                        />
-                        <Button
-                          type="submit"
-                          className="text-lg px-8 py-3 rounded-lg hover:opacity-80 transition-opacity bg-[var(--child-color)] shadow-md"
-                        >
-                          Valider
-                        </Button>
-                      </div>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+          <DailyRiddle 
+            riddle={currentRiddle} 
+            isSolved={riddleSolved} 
+            onRiddleSubmit={handleRiddleSubmit} 
+            childColor={child.custom_color}
+            childPoints={child.points}
+            onHintPurchase={handleHintPurchase}
+          />
 
-          {/* Animation de succès améliorée */}
-          <AnimatePresence>
-            {showSuccess && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.5 }}
-                className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
-              >
-                <div className="bg-white/95 backdrop-blur-md p-10 rounded-3xl shadow-2xl border-2 border-green-200">
-                  <motion.div
-                    animate={{ 
-                      rotate: [0, 360],
-                      scale: [1, 1.2, 1]
-                    }}
-                    transition={{ duration: 1 }}
-                    className="text-7xl mb-6 text-center"
-                  >
-                    🎉
-                  </motion.div>
-                  <h3 className="text-3xl font-bold text-center text-gray-800 mb-3">
-                    Bravo !
-                  </h3>
-                  <p className="text-xl text-gray-600 text-center">
-                    Tu as gagné {currentRiddle?.points} points !
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <SuccessAnimation 
+            show={showSuccess} 
+            points={currentRiddle?.points || 0} 
+          />
+
+          <ManualDialog open={showManual} onOpenChange={setShowManual} />
         </motion.div>
       </motion.div>
     </div>
