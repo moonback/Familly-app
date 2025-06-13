@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
-import { PlusCircleIcon, PencilIcon, TrashIcon, UserIcon, EyeIcon } from 'lucide-react';
+import { PlusCircleIcon, PencilIcon, TrashIcon, UserIcon, EyeIcon, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Link } from 'react-router-dom';
 
@@ -193,6 +193,51 @@ export function ChildrenManager() {
     }
   };
 
+  const handleResetPoints = async (childId: string) => {
+    if (!user) {
+      toast({
+        title: 'Erreur',
+        description: "Vous devez être connecté pour réinitialiser les points",
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('children')
+        .update({ points: 0 })
+        .eq('id', childId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Enregistrer l'historique de la réinitialisation
+      const { error: historyError } = await supabase
+        .from('points_history')
+        .insert([{
+          child_id: childId,
+          points: 0,
+          reason: 'Réinitialisation des points',
+          user_id: user.id
+        }]);
+
+      if (historyError) throw historyError;
+
+      toast({
+        title: 'Succès',
+        description: "Les points ont été réinitialisés avec succès",
+      });
+      fetchChildren();
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: "Impossible de réinitialiser les points",
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getRandomAvatarUrl = () => {
     const avatars = [
       'https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&w=400',
@@ -333,6 +378,15 @@ export function ChildrenManager() {
                     aria-label="Modifier l'enfant"
                   >
                     <PencilIcon className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleResetPoints(child.id)}
+                    title="Réinitialiser les points"
+                    aria-label="Réinitialiser les points"
+                  >
+                    <RefreshCw className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
