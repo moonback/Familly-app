@@ -5,9 +5,9 @@ export async function generateSuggestions(type: 'task' | 'rule' | 'reward'): Pro
   }
 
   const prompts: Record<'task' | 'rule' | 'reward', string> = {
-    task: "Propose cinq exemples de tâches adaptées à un tableau familial. Donne uniquement la liste, une suggestion par ligne.",
-    rule: "Propose cinq exemples de règles de comportement pour des enfants. Donne uniquement la liste, une suggestion par ligne.",
-    reward: "Propose cinq exemples de récompenses pour un système de points familial. Donne uniquement la liste, une suggestion par ligne."
+    task: "Propose cinq exemples de tâches adaptées à un tableau familial. Donne uniquement la liste, une suggestion par ligne.pour 2 enfant de 8 et 13 ans",
+    rule: "Propose cinq exemples de règles de comportement pour des enfants. Donne uniquement la liste, une suggestion par ligne.pour 2 enfant de 8 et 13 ans",
+    reward: "Propose cinq exemples de récompenses pour un système de points familial. Donne uniquement la liste, une suggestion par ligne.pour 2 enfant de 8 et 13 ans"
   };
 
   const response = await fetch(
