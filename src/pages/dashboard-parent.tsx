@@ -55,6 +55,8 @@ import { format, subDays, subWeeks, subMonths, startOfDay, endOfDay, addDays } f
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PurchaseHistory } from '@/components/shop/purchase-history';
+import { ShopItemsOverview } from '@/components/shop/shop-items-overview';
 
 type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | null;
 type Period = 'day' | 'week' | 'month';
@@ -706,6 +708,9 @@ export default function DashboardParent() {
           </CardContent>
         </Card>
       </motion.div>
+
+      <ShopItemsOverview userId={user.id} />
+      <PurchaseHistory userId={user.id} />
     </div>
   );
 
