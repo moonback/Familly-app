@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
 import { BrainIcon, PlusIcon, TrashIcon, EditIcon } from 'lucide-react';
+import { generateRiddle } from '@/lib/ai';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
@@ -28,6 +29,7 @@ export function RiddlesManager() {
     answer: '',
     points: 50
   });
+  const [isGenerating, setIsGenerating] = useState(false);
   const [editingRiddle, setEditingRiddle] = useState<Riddle | null>(null);
 
   useEffect(() => {
@@ -89,6 +91,27 @@ export function RiddlesManager() {
         description: "Impossible de créer la devinette",
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleSuggestRiddle = async () => {
+    try {
+      setIsGenerating(true);
+      const suggestion = await generateRiddle();
+      setNewRiddle(prev => ({ ...prev, ...suggestion }));
+      toast({
+        title: 'Suggestion générée',
+        description: 'Vérifiez et modifiez avant de sauvegarder',
+      });
+    } catch (error) {
+      console.error('Erreur lors de la génération de la devinette:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible de générer la devinette",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -205,6 +228,15 @@ export function RiddlesManager() {
                 className="mt-1"
               />
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSuggestRiddle}
+              disabled={isGenerating}
+              className="w-full"
+            >
+              {isGenerating ? 'Génération...' : 'Suggérer avec l\'IA'}
+            </Button>
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

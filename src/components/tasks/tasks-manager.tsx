@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { PlusCircleIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
+import { generateTask } from '@/lib/ai';
 
 interface Task {
   id: string;
@@ -38,6 +39,7 @@ export function TasksManager() {
     age_max: '18',
     category: 'quotidien' as 'quotidien' | 'scolaire' | 'maison' | 'personnel',
   });
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -64,7 +66,7 @@ export function TasksManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }; 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,6 +164,34 @@ export function TasksManager() {
         description: "Une erreur est survenue lors de l'enregistrement",
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleSuggestTask = async () => {
+    try {
+      setIsGenerating(true);
+      const suggestion = await generateTask();
+      setFormData({
+        label: suggestion.label,
+        points_reward: suggestion.points_reward.toString(),
+        is_daily: suggestion.is_daily,
+        age_min: suggestion.age_min.toString(),
+        age_max: suggestion.age_max.toString(),
+        category: suggestion.category,
+      });
+      toast({
+        title: 'Suggestion générée',
+        description: 'Vérifiez et modifiez avant de sauvegarder',
+      });
+    } catch (error) {
+      console.error('Erreur lors de la génération de la tâche:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible de générer la tâche",
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -325,6 +355,15 @@ export function TasksManager() {
                 />
                 <Label htmlFor="is_daily">Tâche quotidienne</Label>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSuggestTask}
+                disabled={isGenerating}
+                className="w-full"
+              >
+                {isGenerating ? 'Génération...' : 'Suggérer avec l\'IA'}
+              </Button>
               <Button type="submit" className="w-full">
                 {editingTask ? 'Modifier' : 'Ajouter'}
               </Button>
