@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from '@/hooks/use-toast';
 import { PlusCircleIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Reward {
   id: string;
@@ -152,7 +153,13 @@ export function RewardsManager() {
   };
 
   if (loading) {
-    return <div>Chargement...</div>;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, idx) => (
+          <Skeleton key={idx} className="h-40 w-full rounded-xl" />
+        ))}
+      </div>
+    );
   }
 
   return (

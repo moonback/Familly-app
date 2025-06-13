@@ -9,6 +9,7 @@ import { BrainIcon, PlusIcon, TrashIcon, EditIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Riddle {
   id: string;
@@ -150,8 +151,13 @@ export function RiddlesManager() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="space-y-4">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {Array.from({ length: 2 }).map((_, idx) => (
+            <Skeleton key={idx} className="h-32 w-full rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
