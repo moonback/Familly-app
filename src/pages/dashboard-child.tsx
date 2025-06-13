@@ -979,20 +979,28 @@ export default function DashboardChild() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ scale: 1.02, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
-                        className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer ${childTask.is_completed 
+                        onClick={() => handleTaskToggle(childTask.id, childTask.is_completed)}
+                        className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer ${
+                          childTask.is_completed 
                             ? 'bg-green-50 border-green-200 opacity-70' 
                             : 'bg-white border-gray-200 hover:border-[color:var(--child-color)]'
                         } transition-all duration-300`}
                       >
-                        <Checkbox
-                          checked={childTask.is_completed}
-                          onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
-                          className={`h-7 w-7 border-2 ${childTask.is_completed ? 'border-green-500 text-green-500' : 'border-gray-300 text-gray-300'}`}
-                        />
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={childTask.is_completed}
+                            onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
+                            className={`h-7 w-7 border-2 ${
+                              childTask.is_completed ? 'border-green-500 text-green-500' : 'border-gray-300 text-gray-300'
+                            }`}
+                          />
+                        </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-2xl">{getCategoryIcon(childTask.task.category)}</span>
-                            <Label className={`text-xl font-medium ${childTask.is_completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                            <Label className={`text-xl font-medium ${
+                              childTask.is_completed ? 'line-through text-gray-500' : 'text-gray-800'
+                            }`}>
                               {childTask.task.label}
                             </Label>
                           </div>
