@@ -13,7 +13,8 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { GiftIcon, TrophyIcon, ListChecksIcon, CheckCircleIcon, BrainIcon, CalendarIcon, FlameIcon } from 'lucide-react';
+import { GiftIcon, TrophyIcon, ListChecksIcon, CheckCircleIcon, BrainIcon, CalendarIcon, FlameIcon, StarIcon, SparklesIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Child {
   id: string;
