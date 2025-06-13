@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { GiftIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Child, ShopItem } from '@/types';
+import { motion } from 'framer-motion';
 
 interface PurchaseWithItem {
   id: string;
@@ -89,47 +90,76 @@ export function ShopItemsList({ child, onPointsUpdated }: ShopItemsListProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-white/90 backdrop-blur-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-3xl font-bold text-gray-800">
-            <GiftIcon className="h-7 w-7" /> Boutique
+      <Card className="bg-white/90 backdrop-blur-md shadow-xl border-0 rounded-2xl overflow-hidden group">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
+        <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
+          <CardTitle className="flex items-center gap-3 text-3xl font-bold text-gray-800">
+            <GiftIcon className="h-8 w-8 text-purple-600 drop-shadow-xl" /> Boutique
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {items.map((item) => (
-              <div key={item.id} className="p-4 border rounded-lg flex items-center justify-between">
+        <CardContent className="relative z-10 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {items.map((item, index) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
+                whileHover={{ scale: 1.03, boxShadow: "0 8px 16px rgba(0,0,0,0.1)" }}
+                className="p-6 border-2 border-purple-200 rounded-xl flex flex-col items-center text-center space-y-4 bg-white shadow-md"
+              >
+                <GiftIcon className="h-12 w-12 text-purple-500 mb-2" />
                 <div>
-                  <h4 className="font-medium text-gray-900">{item.name}</h4>
-                  <p className="text-sm text-gray-500">{item.price} points</p>
+                  <h4 className="font-bold text-xl text-gray-900 mb-1">{item.name}</h4>
+                  <p className="text-lg text-purple-600 font-semibold">{item.price} points</p>
                 </div>
-                <Button onClick={() => handlePurchase(item)} disabled={!child || child.points < item.price}>
+                <Button 
+                  onClick={() => handlePurchase(item)}
+                  disabled={!child || child.points < item.price}
+                  className={`w-full py-3 text-lg rounded-lg shadow-lg ${
+                    child?.points >= item.price
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700'
+                      : 'bg-gray-400 cursor-not-allowed'
+                  } transition-all duration-300`}
+                >
                   Acheter
                 </Button>
-              </div>
+              </motion.div>
             ))}
-            {items.length === 0 && <p className="text-center w-full">Aucun article disponible</p>}
+            {items.length === 0 && (
+              <div className="text-center py-8 col-span-full">
+                <div className="text-6xl mb-4">🛒</div>
+                <p className="text-xl text-gray-600">La boutique est vide !</p>
+                <p className="text-base text-gray-500 mt-2">Demandez à vos parents d'ajouter des articles.</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
       {purchases.length > 0 && (
-        <Card className="bg-white/90 backdrop-blur-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Historique des achats</CardTitle>
+        <Card className="bg-white/90 backdrop-blur-md shadow-xl border-0 rounded-2xl overflow-hidden group">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
+          <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
+            <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+              <GiftIcon className="h-7 w-7 text-green-600" /> Historique des achats
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {purchases.map((purchase) => (
-                <li
+          <CardContent className="relative z-10 p-6">
+            <ul className="space-y-4">
+              {purchases.map((purchase, index) => (
+                <motion.li
                   key={purchase.id}
-                  className="flex justify-between border-b pb-2 last:border-0 last:pb-0"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-100 shadow-sm"
                 >
-                  <span>{purchase.shop_items[0]?.name}</span>
+                  <span className="font-medium text-gray-800">{purchase.shop_items[0]?.name}</span>
                   <span className="text-sm text-gray-500">
-                    {new Date(purchase.purchased_at).toLocaleDateString('fr-FR')}
+                    {new Date(purchase.purchased_at).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </span>
-                </li>
+                </motion.li>
               ))}
             </ul>
           </CardContent>

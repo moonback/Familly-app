@@ -33,7 +33,7 @@ function App() {
       <Router>
         <AuthProvider>
           <MainNav />
-          <main className="flex-grow">
+          <main className="flex-grow bg-gray-200">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />

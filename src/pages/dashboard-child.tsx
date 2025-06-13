@@ -615,6 +615,7 @@ export default function DashboardChild() {
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
+    
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -780,11 +781,11 @@ export default function DashboardChild() {
             }}
             className="lg:col-span-3"
           >
-            <Card className="relative overflow-hidden border-0 shadow-2xl h-full transform hover:scale-[1.02] transition-transform duration-300">
+            <Card className="relative overflow-hidden border-0 shadow-2xl h-full transform hover:scale-[1.02] transition-transform duration-300 group">
               <div
-                className="absolute inset-0 bg-[linear-gradient(135deg,var(--child-color),var(--child-color)dd)]"
+                className="absolute inset-0 bg-[linear-gradient(135deg,var(--child-color),var(--child-color)dd)] opacity-90 group-hover:opacity-100 transition-opacity duration-300"
               />
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-30" />
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMTUiPjxwYXRoIGQ9Ik0yMCAyMGMwIDExLjA0Ni04Ljk1NCAyMC0yMCAyMHYyMGg0MFYyMEgyMHoiLz48L2c+PC9zdmc=')] opacity-30 group-hover:opacity-40 transition-opacity duration-300" />
               
               <div className="relative p-8 text-center text-white h-full flex flex-col justify-between">
                 <div>
@@ -797,8 +798,8 @@ export default function DashboardChild() {
                     }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <div className="absolute -inset-6 bg-gradient-to-r from-pink-400 to-yellow-400 rounded-full blur-xl opacity-50 animate-pulse" />
-                    <Avatar className="relative h-32 w-32 mx-auto border-4 border-white shadow-2xl ring-4 ring-pink-300/50">
+                    <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-yellow-400 rounded-full blur-xl opacity-50 animate-pulse group-hover:opacity-70 transition-opacity duration-300" />
+                    <Avatar className="relative h-32 w-32 mx-auto border-4 border-white shadow-2xl ring-4 ring-pink-300/50 group-hover:ring-pink-400/70 transition-all duration-300">
                       <AvatarImage src={child.avatar_url} alt={child.name} />
                       <AvatarFallback className="text-3xl bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold">
                         {child.name.substring(0, 2).toUpperCase()}
@@ -814,7 +815,7 @@ export default function DashboardChild() {
                   </motion.div>
                   
                   <motion.h2 
-                    className="text-4xl font-black mb-3"
+                    className="text-4xl font-black mb-3 text-white"
                     animate={{ 
                       textShadow: [
                         '0 0 20px rgba(255,255,255,0.5)',
@@ -827,7 +828,7 @@ export default function DashboardChild() {
                     {child.name}
                   </motion.h2>
                   <motion.p 
-                    className="text-xl opacity-90 mb-4 font-semibold"
+                    className="text-xl opacity-90 mb-4 font-semibold text-white/90"
                     animate={{ 
                       scale: [1, 1.05, 1]
                     }}
@@ -839,19 +840,24 @@ export default function DashboardChild() {
                   {/* Streak */}
                   {streak > 0 && (
                     <motion.div 
-                      className="bg-white/20 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/30"
+                      className="bg-white/20 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/30 group-hover:border-white/50 transition-colors duration-300"
                       whileHover={{ scale: 1.05 }}
                     >
                       <div className="flex items-center justify-center gap-2">
-                        <FlameIcon className="h-6 w-6 text-orange-300" />
-                        <span className="text-lg font-bold">Série: {streak} jour{streak > 1 ? 's' : ''}</span>
+                        <motion.div
+                          animate={{ rotate: [0, 30, -30, 0] }}
+                          transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <FlameIcon className="h-6 w-6 text-orange-300 drop-shadow-lg" />
+                        </motion.div>
+                        <span className="text-lg font-bold text-white">Série: {streak} jour{streak > 1 ? 's' : ''}</span>
                       </div>
                     </motion.div>
                   )}
                 </div>
                 
                 <motion.div 
-                  className="bg-white/20 backdrop-blur-md rounded-2xl p-8 border border-white/30"
+                  className="bg-white/20 backdrop-blur-md rounded-2xl p-8 border border-white/30 group-hover:border-white/50 transition-colors duration-300"
                   whileHover={{ 
                     scale: 1.05,
                     backgroundColor: 'rgba(255,255,255,0.25)'
@@ -907,49 +913,49 @@ export default function DashboardChild() {
             }}
             className="lg:col-span-6"
           >
-            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
-              <div className="relative">
-                <div
-                  className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
-                />
-                <CardHeader className="relative z-10">
+            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
+              <div
+                className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)] group-hover:opacity-30 transition-opacity duration-300"
+              />
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
+
+                <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
                   <div className="flex items-center justify-between mb-6">
                     <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
                       <ListChecksIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
                       Mes Missions
                     </CardTitle>
                     <div className="flex items-center gap-3">
-                      <span className="text-base text-gray-600">Progression</span>
-                      <Progress value={progressPercentage} className="w-40 h-3" />
+                      <span className="text-base text-gray-600 font-medium">Progression</span>
+                      <Progress value={progressPercentage} className="w-40 h-3 bg-gray-200" />
                       <span className="text-sm font-medium text-gray-700">
                         {completedTasks}/{totalTasks}
                       </span>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="relative z-10">
+                <CardContent className="relative z-10 p-6">
                   <div className="space-y-4">
                     {childTasks.map((childTask) => (
                       <motion.div
                         key={childTask.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ scale: 1.02 }}
-                        className={`flex items-center gap-4 p-5 rounded-xl border-2 ${
-                          childTask.is_completed 
-                            ? 'bg-green-50 border-green-200' 
-                            : 'bg-white border-gray-200 hover:border-purple-200'
+                        whileHover={{ scale: 1.02, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
+                        className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer ${childTask.is_completed 
+                            ? 'bg-green-50 border-green-200 opacity-70' 
+                            : 'bg-white border-gray-200 hover:border-[color:var(--child-color)]'
                         } transition-all duration-300`}
                       >
                         <Checkbox
                           checked={childTask.is_completed}
                           onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
-                          className="h-7 w-7 border-2"
+                          className={`h-7 w-7 border-2 ${childTask.is_completed ? 'border-green-500 text-green-500' : 'border-gray-300 text-gray-300'}`}
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-2xl">{getCategoryIcon(childTask.task.category)}</span>
-                            <Label className="text-xl font-medium">
+                            <Label className={`text-xl font-medium ${childTask.is_completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
                               {childTask.task.label}
                             </Label>
                           </div>
@@ -959,7 +965,7 @@ export default function DashboardChild() {
                             >
                               {childTask.task.category}
                             </span>
-                            <span className="text-base text-gray-500">
+                            <span className={`text-base ${childTask.is_completed ? 'text-gray-500' : 'text-gray-600'}`}>
                               {childTask.task.points_reward} points
                             </span>
                           </div>
@@ -968,6 +974,7 @@ export default function DashboardChild() {
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
                             className="text-green-500"
                           >
                             <CheckCircleIcon className="h-7 w-7" />
@@ -985,7 +992,6 @@ export default function DashboardChild() {
                     )}
                   </div>
                 </CardContent>
-              </div>
             </Card>
           </motion.div>
 
@@ -1000,26 +1006,30 @@ export default function DashboardChild() {
             }}
             className="lg:col-span-3"
           >
-            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
-              <CardHeader className="relative">
-                <div
-                  className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
-                />
-                <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
+              <div
+                className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)] group-hover:opacity-30 transition-opacity duration-300"
+              />
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
+
+              <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
+                <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
                   <GiftIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
                   Mes Récompenses
                 </CardTitle>
               </CardHeader>
-              <CardContent className="relative z-10">
+              <CardContent className="relative z-10 p-6">
                 <div className="space-y-4">
                   {rewards.map((reward) => (
                     <motion.div
                       key={reward.id}
-                      whileHover={{ scale: 1.03 }}
-                      className={`p-5 rounded-xl border-2 ${
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      whileHover={{ scale: 1.03, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
+                      className={`p-5 rounded-xl border-2 cursor-pointer ${
                         child?.points >= reward.cost
-                          ? 'bg-white border-purple-200 hover:border-purple-300'
-                          : 'bg-gray-50 border-gray-200'
+                          ? 'bg-white border-[color:var(--child-color)] hover:border-[color:var(--child-color)]/70'
+                          : 'bg-gray-50 border-gray-200 opacity-70'
                       } transition-all duration-300`}
                     >
                       <div className="flex items-center justify-between">
@@ -1033,10 +1043,10 @@ export default function DashboardChild() {
                           className={`${
                             child?.points >= reward.cost
                               ? 'bg-[var(--child-color)] hover:opacity-80'
-                              : 'bg-gray-400'
-                          } transition-all duration-300`}
+                              : 'bg-gray-400 cursor-not-allowed'
+                          } transition-all duration-300 flex items-center gap-2 px-4 py-2 rounded-lg`}
                         >
-                          <GiftIcon className="h-5 w-5 mr-2" />
+                          <GiftIcon className="h-5 w-5" />
                           Obtenir
                         </Button>
                       </div>
@@ -1045,8 +1055,9 @@ export default function DashboardChild() {
 
                   {rewards.length === 0 && (
                     <div className="text-center py-8">
-                      <div className="text-4xl mb-3">🎁</div>
-                      <p className="text-base text-gray-600">Aucune récompense disponible</p>
+                      <div className="text-6xl mb-4">🎁</div>
+                      <p className="text-xl text-gray-600">Aucune récompense disponible</p>
+                      <p className="text-base text-gray-500 mt-2">Demandez à vos parents d'en ajouter !</p>
                     </div>
                   )}
                 </div>
@@ -1066,25 +1077,26 @@ export default function DashboardChild() {
               }}
               className="lg:col-span-12 mt-8"
             >
-              <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
-                <CardHeader className="relative">
-                  <div
-                    className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
-                  />
-                  <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
+              <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
+                <div
+                  className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)] group-hover:opacity-30 transition-opacity duration-300"
+                />
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
+                <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
+                  <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
                     <TrophyIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
                     Mes Récompenses Obtenues
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="relative z-10">
+                <CardContent className="relative z-10 p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {claimedRewards.map((claimedReward) => (
                       <motion.div
                         key={claimedReward.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ scale: 1.03 }}
-                        className="p-6 rounded-xl border-2 bg-white border-purple-200 hover:border-purple-300 transition-all duration-300"
+                        whileHover={{ scale: 1.03, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
+                        className="p-6 rounded-xl border-2 bg-white/80 border-[color:var(--child-color)]/20 hover:border-[color:var(--child-color)]/50 transition-all duration-300"
                       >
                         <div className="flex items-center gap-4">
                           <div
@@ -1119,29 +1131,36 @@ export default function DashboardChild() {
               }}
               className="lg:col-span-12 mt-8"
             >
-              <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
-                <CardHeader className="relative">
-                  <div
-                    className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
-                  />
-                  <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
-                    <AlertCircle className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
+              <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
+                <div
+                  className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,#ef444440,#ef444420)] group-hover:opacity-30 transition-opacity duration-300"
+                />
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PC9zdmc=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
+
+                <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
+                  <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <AlertCircle className="h-8 w-8 text-red-500 drop-shadow-xl" />
                     Mes Pénalités
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="relative z-10">
+                <CardContent className="relative z-10 p-6">
                   <div className="space-y-4">
                     {penalties.map((penalty) => (
                       <motion.div
                         key={penalty.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center justify-between p-6 rounded-xl border-2 bg-red-50/50 border-red-100 hover:border-red-200 transition-all duration-300"
+                        whileHover={{ scale: 1.02, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
+                        className="flex items-center justify-between p-6 rounded-xl border-2 bg-red-50/50 border-red-100 hover:border-red-200 transition-all duration-300 cursor-pointer"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="p-3 rounded-full bg-red-100">
+                          <motion.div 
+                            className="p-3 rounded-full bg-red-100"
+                            whileHover={{ scale: 1.1, rotate: 10 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                          >
                             <AlertCircle className="h-6 w-6 text-red-500" />
-                          </div>
+                          </motion.div>
                           <div>
                             <p className="text-lg font-medium text-gray-900">{penalty.reason}</p>
                             <div className="flex items-center gap-2 mt-1">
@@ -1191,32 +1210,37 @@ export default function DashboardChild() {
             animate={{ opacity: 1, y: 0 }}
             className="mt-8"
           >
-            <Card className="bg-white/90 backdrop-blur-md border-2 border-[var(--child-color)] shadow-xl transform hover:scale-[1.01] transition-transform duration-300">
-              <CardHeader>
+            <Card className="bg-white/90 backdrop-blur-md border-2 border-[var(--child-color)] shadow-xl transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
+              <div
+                className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)] group-hover:opacity-30 transition-opacity duration-300"
+              />
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PC9zdmc=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
+              
+              <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
                 <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
                   <BrainIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
                   Devinette du Jour
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative z-10 p-6">
                 <form onSubmit={handleRiddleSubmit} className="space-y-4">
                   <div
-                    className="p-8 rounded-xl border-2 bg-[color:var(--child-color)/0.06] border-[color:var(--child-color)/0.25]"
+                    className="p-8 rounded-xl border-2 bg-[color:var(--child-color)/0.06] border-[color:var(--child-color)/0.25] shadow-inner"
                   >
                     <p className="text-xl font-medium text-gray-800 mb-6">
                       {currentRiddle.question}
                     </p>
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4">
                       <Input
                         type="text"
                         value={riddleAnswer}
                         onChange={(e) => setRiddleAnswer(e.target.value)}
-                        placeholder="Ta réponse..."
-                        className="flex-1 text-lg p-4 rounded-lg border-2 focus:ring-2 border-[var(--child-color)] focus:ring-[var(--child-color)]"
+                        placeholder="Ta réponse..."  
+                        className="flex-1 text-lg p-4 rounded-lg border-2 focus:ring-2 border-[var(--child-color)] focus:ring-[var(--child-color)] shadow-sm"
                       />
                       <Button
                         type="submit"
-                        className="text-lg px-8 hover:opacity-80 transition-opacity bg-[var(--child-color)]"
+                        className="text-lg px-8 py-3 rounded-lg hover:opacity-80 transition-opacity bg-[var(--child-color)] shadow-md"
                       >
                         Valider
                       </Button>

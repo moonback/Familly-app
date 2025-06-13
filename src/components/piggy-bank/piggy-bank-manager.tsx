@@ -146,8 +146,9 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
   };
 
   return (
-    <Card className="bg-white/90 backdrop-blur-md shadow-xl border-0 rounded-2xl overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-6">
+    <Card className="bg-white/90 backdrop-blur-md shadow-xl border-0 rounded-2xl overflow-hidden group">
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
+      <CardHeader className="relative z-10 bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-xl">
@@ -165,7 +166,7 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent className="relative z-10 p-6">
         <motion.form 
           onSubmit={handleSubmit} 
           className="flex gap-3 mb-6 p-4 bg-gray-50 rounded-xl"
@@ -206,80 +207,105 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200"
+          className="mb-6 p-6 bg-blue-50 rounded-xl border border-blue-200 shadow-md"
         >
-          <h3 className="text-lg font-semibold text-blue-800 mb-3">Convertisseur Euro/Points</h3>
+          <h3 className="text-xl font-bold text-blue-800 mb-3">Convertisseur Euro/Points</h3>
           <p className="text-sm text-blue-700 mb-4">Taux de conversion: 1€ = {CONVERSION_RATE} points</p>
-          <div className="flex flex-col gap-3">
-            <div className="flex gap-2 items-center flex-wrap">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Input
                 type="number"
                 placeholder="Euros"
                 value={euros}
                 onChange={handleEuroChange}
-                className="bg-white flex-1"
+                className="bg-white text-lg p-3 rounded-lg border-2 border-blue-300 focus:ring-2 focus:ring-blue-500"
               />
-              <Button onClick={convertEuroToPoints} className="bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0">
+              <Button 
+                onClick={convertEuroToPoints} 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 rounded-lg shadow"
+              >
                 Convertir en Points
               </Button>
             </div>
-            <div className="flex gap-2 items-center flex-wrap">
+            <div className="space-y-2">
               <Input
                 type="number"
                 placeholder="Points"
                 value={points}
                 onChange={handlePointsChange}
-                className="bg-white flex-1"
+                className="bg-white text-lg p-3 rounded-lg border-2 border-blue-300 focus:ring-2 focus:ring-blue-500"
               />
-              <Button onClick={convertPointsToEuro} className="bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0">
+              <Button 
+                onClick={convertPointsToEuro} 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 rounded-lg shadow"
+              >
                 Convertir en Euros
               </Button>
             </div>
-            {convertedValue !== null && (converterType === 'points' ? (
-              <p className="text-lg font-bold text-blue-800 mt-2">{convertedValue} points</p>
-            ) : (
-              <p className="text-lg font-bold text-blue-800 mt-2">{convertedValue.toFixed(2)} €</p>
-            ))}
           </div>
+          {convertedValue !== null && (converterType === 'points' ? (
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-2xl font-bold text-blue-800 mt-4 text-center p-3 bg-blue-100 rounded-lg"
+            >
+              {convertedValue} points
+            </motion.p>
+          ) : (
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-2xl font-bold text-blue-800 mt-4 text-center p-3 bg-blue-100 rounded-lg"
+            >
+              {convertedValue.toFixed(2)} €
+            </motion.p>
+          ))}
         </motion.div>
         {/* Convertisseur Euro/Points - Fin */}
 
-        <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Historique des transactions</h3>
+        <div className="space-y-4">
+          <h3 className="text-xl font-bold text-gray-800 mb-2">Historique des transactions</h3>
           <AnimatePresence>
-            {transactions.map((t, index) => (
+            {transactions.length > 0 ? (
+              transactions.map((t, index) => (
+                <motion.div
+                  key={t.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`flex items-center justify-between p-5 rounded-xl border-2 shadow-sm ${
+                    getTransactionColor(t.type)
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-full bg-white/50 shadow-inner">
+                      {getTransactionIcon(t.type)}
+                    </div>
+                    <div>
+                      <p className="font-semibold capitalize text-lg">
+                        {t.type === 'savings' ? 'Épargne' : t.type === 'spending' ? 'Dépense' : 'Don'}
+                      </p>
+                      <p className="text-sm opacity-80 text-gray-600">{new Date(t.created_at).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                  </div>
+                  <span className="font-bold text-xl">
+                    {t.type === 'savings' ? '+' : '-'}{Math.abs(t.points)} pts
+                  </span>
+                </motion.div>
+              ))
+            ) : (
               <motion.div
-                key={t.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ delay: index * 0.1 }}
-                className={`flex items-center justify-between p-4 rounded-xl border ${getTransactionColor(t.type)}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-8 text-gray-500"
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/50 rounded-lg">
-                    {getTransactionIcon(t.type)}
-                  </div>
-                  <div>
-                    <p className="font-medium capitalize">
-                      {t.type === 'savings' ? 'Épargne' : t.type === 'spending' ? 'Dépense' : 'Don'}
-                    </p>
-                    <p className="text-sm opacity-75">{new Date(t.created_at).toLocaleDateString('fr-FR')}</p>
-                  </div>
-                </div>
-                <span className="font-bold">{t.points} pts</span>
+                <div className="text-6xl mb-4">💸</div>
+                <p className="text-xl">Aucune transaction enregistrée.</p>
+                <p className="text-base mt-2">Commencez à gérer votre tirelire !</p>
               </motion.div>
-            ))}
+            )}
           </AnimatePresence>
-          {transactions.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-8 text-gray-500"
-            >
-              Aucune transaction
-            </motion.div>
-          )}
         </div>
       </CardContent>
     </Card>
