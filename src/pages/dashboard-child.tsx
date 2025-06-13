@@ -183,6 +183,7 @@ export default function DashboardChild() {
           task:tasks(*)
         `)
         .eq('child_id', childId)
+        .eq('due_date', format(new Date(), 'yyyy-MM-dd'))
         .order('due_date', { ascending: true });
 
       if (tasksError) throw tasksError;
