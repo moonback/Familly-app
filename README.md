@@ -79,6 +79,7 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
    ```env
    VITE_SUPABASE_URL=your_supabase_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_GEMINI_API_KEY=your_google_generative_ai_key
    ```
 
 4. Exécuter les migrations Supabase :

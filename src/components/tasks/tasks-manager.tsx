@@ -8,9 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { PlusCircleIcon, PencilIcon, TrashIcon } from 'lucide-react';
+import { PlusCircleIcon, PencilIcon, TrashIcon, SparklesIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
+import { generateSuggestions } from '@/lib/gemini';
 
 interface Task {
   id: string;
@@ -38,6 +39,9 @@ export function TasksManager() {
     age_max: '18',
     category: 'quotidien' as 'quotidien' | 'scolaire' | 'maison' | 'personnel',
   });
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -210,6 +214,62 @@ export function TasksManager() {
     }
   };
 
+  const loadSuggestions = async () => {
+    setSuggestionsLoading(true);
+    try {
+      const data = await generateSuggestions('task');
+      setSuggestions(data);
+      setSuggestionsOpen(true);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: "Impossible de récupérer les suggestions",
+        variant: 'destructive',
+      });
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
+
+  const handleAddSuggestion = async (label: string) => {
+    if (!user) {
+      toast({
+        title: 'Erreur',
+        description: "Vous devez être connecté pour ajouter une tâche",
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      const { error } = await supabase.from('tasks').insert([
+        {
+          label,
+          points_reward: 10,
+          is_daily: true,
+          age_min: 3,
+          age_max: 18,
+          category: 'quotidien',
+          user_id: user.id,
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Succès',
+        description: 'Tâche ajoutée depuis les suggestions',
+      });
+      setSuggestionsOpen(false);
+      fetchTasks();
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: "Impossible d'ajouter la tâche",
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getCategoryLabel = (category: string) => {
     const labels = {
       quotidien: 'Quotidien',
@@ -244,19 +304,24 @@ export function TasksManager() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestion des Tâches</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircleIcon className="mr-2 h-4 w-4" />
-              Ajouter une tâche
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                {editingTask ? 'Modifier une tâche' : 'Ajouter une tâche'}
-              </DialogTitle>
-            </DialogHeader>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={loadSuggestions}>
+            <SparklesIcon className="mr-2 h-4 w-4" />
+            Suggestions IA
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircleIcon className="mr-2 h-4 w-4" />
+                Ajouter une tâche
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingTask ? 'Modifier une tâche' : 'Ajouter une tâche'}
+                </DialogTitle>
+              </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="label">Description</Label>
@@ -329,6 +394,29 @@ export function TasksManager() {
                 {editingTask ? 'Modifier' : 'Ajouter'}
               </Button>
             </form>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Suggestions IA</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2">
+              {suggestionsLoading ? (
+                <p>Chargement...</p>
+              ) : (
+                suggestions.map((s, idx) => (
+                  <Button
+                    key={idx}
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => handleAddSuggestion(s)}
+                  >
+                    {s}
+                  </Button>
+                ))
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       </div>
