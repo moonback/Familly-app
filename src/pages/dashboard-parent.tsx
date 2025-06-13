@@ -2,6 +2,7 @@ import { useAuth } from '@/context/auth-context';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { PanelCard } from '@/components/ui/panel-card';
 import { Button } from '@/components/ui/button';
 import { 
   Plus, 
@@ -120,7 +121,7 @@ const StatCard = ({ title, value, icon, color, isLoading, details, trend, subtit
     whileHover={{ y: -4, scale: 1.02 }}
     transition={{ type: "spring", stiffness: 300, damping: 25 }}
   >
-    <Card className="bg-white/80 backdrop-blur-xl shadow-lg hover:shadow-2xl transition-all duration-500 border-0 rounded-2xl overflow-hidden group relative">
+    <PanelCard className="bg-white/80 shadow-lg hover:shadow-2xl transition-all duration-500 group relative">
       {/* Gradient border effect */}
       <div className={`absolute inset-0 bg-gradient-to-r ${color} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl`} />
       
@@ -806,7 +807,7 @@ export default function DashboardParent() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="bg-white/80 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+        <PanelCard className="bg-white/80">
           <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 relative overflow-hidden">
             {/* Animated background pattern */}
             <div className="absolute inset-0 opacity-10">
@@ -932,7 +933,7 @@ export default function DashboardParent() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <Card className="bg-white/70 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+        <PanelCard className="bg-white/70">
           <CardHeader className="bg-gradient-to-r from-teal-500 to-green-600 text-white p-6">
             <div className="flex items-center gap-3">
               <Clock className="h-7 w-7" />
@@ -1025,7 +1026,7 @@ export default function DashboardParent() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <PanelCard>
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Enfants</CardTitle>
@@ -1053,7 +1054,7 @@ export default function DashboardParent() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <PanelCard>
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Tâches</CardTitle>
@@ -1081,7 +1082,7 @@ export default function DashboardParent() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <PanelCard>
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Règles</CardTitle>
@@ -1109,7 +1110,7 @@ export default function DashboardParent() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <PanelCard>
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Récompenses</CardTitle>
@@ -1137,7 +1138,7 @@ export default function DashboardParent() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <PanelCard>
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Devinettes</CardTitle>
@@ -1165,7 +1166,7 @@ export default function DashboardParent() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <PanelCard>
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion de la Boutique</CardTitle>
@@ -1193,7 +1194,7 @@ export default function DashboardParent() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <PanelCard>
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Pénalités</CardTitle>

@@ -122,6 +122,10 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
 - **Interface parent** : Professionnelle avec analytics et outils de gestion
 - **Cohérence** : Design unifié mais adapté à chaque utilisateur
 
+### Composants internes
+- **PanelCard** : carte stylisée appliquant `backdrop-blur-xl`, un ombrage doux et des bords arrondis.
+  Utilisez ce composant pour toutes les vues du dashboard afin de garantir l'homogénéité visuelle.
+
 ## 🔒 Sécurité
 
 ### Authentification
