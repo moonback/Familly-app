@@ -486,8 +486,6 @@ export default function DashboardParent() {
         </div>
         <Skeleton className="h-80 w-full rounded-xl" />
       </div>
-
-
     );
   }
 
@@ -883,37 +881,91 @@ export default function DashboardParent() {
 
       <ShopItemsOverview userId={user.id} />
       <PurchaseHistory userId={user.id} />
+
+      {/* Activités Récentes */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <Card className="bg-white/70 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-teal-500 to-green-600 text-white p-6">
+            <div className="flex items-center gap-3">
+              <Clock className="h-7 w-7" />
+              <div>
+                <CardTitle className="text-2xl font-bold">Activités Récentes</CardTitle>
+                <p className="text-teal-100 text-sm">Ce qui s'est passé dernièrement dans la famille</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            {stats.recentActivities.length > 0 ? (
+              <ul className="space-y-4">
+                {stats.recentActivities.map((activity, index) => (
+                  <motion.li
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 shadow-sm"
+                  >
+                    <div className={`p-2 rounded-full ${activity.type === 'task' ? 'bg-emerald-100 text-emerald-600' : activity.type === 'reward' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                      {activity.type === 'task' && <CheckCircle className="h-5 w-5" />}
+                      {activity.type === 'reward' && <Gift className="h-5 w-5" />}
+                      {activity.type === 'points' && <Zap className="h-5 w-5" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">{activity.childName} - {activity.description}</p>
+                      {activity.points && (
+                        <p className="text-sm text-gray-600">({activity.points > 0 ? '+' : ''}{activity.points} pts)</p>
+                      )}
+                    </div>
+                    <span className="text-sm text-gray-500">{format(new Date(activity.timestamp), 'dd MMM HH:mm', { locale: fr })}</span>
+                  </motion.li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center text-gray-500 py-8">Aucune activité récente.</p>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 
   return (
     <div className="flex flex-col space-y-8">
       {/* Boutons de gestion */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         {dashboardCards.map((card) => (
           <motion.div
             key={card.id}
-            whileHover={{ y: -4, scale: 1.02 }}
+            whileHover={{ y: -4, scale: 1.02, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            <Card className={`${card.bgGradient} border-2 ${card.borderColor} shadow-lg hover:shadow-xl transition-all duration-300`}>
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${card.color} shadow-lg`}>
+            <Card className={`${card.bgGradient} border-2 ${card.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 group`}>
+              <CardContent className="p-6 relative overflow-hidden">
+                <div className="flex flex-col items-center text-center space-y-4 relative z-10">
+                  <motion.div 
+                    className={`p-3 rounded-xl bg-gradient-to-br ${card.color} shadow-lg`}
+                    whileHover={{ scale: 1.1, rotate: 10 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                  >
                     <card.icon className="h-8 w-8 text-white" />
-                  </div>
+                  </motion.div>
                   <div>
                     <h3 className="text-xl font-bold text-gray-800 mb-2">{card.title}</h3>
                     <p className="text-sm text-gray-600 mb-4">{card.description}</p>
                     <Button
                       onClick={() => setCurrentView(card.id as View)}
-                      className={`${card.hoverColor} text-white font-medium px-6 py-2 rounded-lg transition-all duration-300`}
-                      style={{ backgroundColor: card.accent }}
+                      className={`bg-gradient-to-r ${card.color} hover:from-purple-600 hover:to-indigo-700 text-white font-medium px-6 py-2 rounded-lg transition-all duration-300 transform group-hover:scale-105`}
                     >
                       {card.buttonText}
                     </Button>
                   </div>
                 </div>
+                {/* Background overlay for hover effect */}
+                <div className={`absolute inset-0 ${card.accent} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl`} />
               </CardContent>
             </Card>
           </motion.div>
