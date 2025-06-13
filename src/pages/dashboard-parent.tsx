@@ -564,6 +564,18 @@ export default function DashboardParent() {
       accent: 'bg-cyan-500'
     },
     {
+      id: 'leaderboard',
+      title: 'Leaderboard',
+      description: 'Classement des enfants par points.',
+      icon: Trophy,
+      color: 'from-blue-500 to-indigo-500',
+      hoverColor: 'hover:from-blue-600 hover:to-indigo-600',
+      bgGradient: 'bg-gradient-to-br from-blue-50 to-indigo-100',
+      borderColor: 'border-blue-200',
+      buttonText: 'Voir le Classement',
+      accent: 'bg-blue-500'
+    },
+    {
       id: 'shop',
       title: 'Gérer la Boutique',
       description: 'Créez et gérez les articles que vos enfants peuvent acheter avec leurs points.',
@@ -1001,7 +1013,11 @@ export default function DashboardParent() {
                     <h3 className="text-xl font-bold text-gray-800 mb-2">{card.title}</h3>
                     <p className="text-sm text-gray-600 mb-4">{card.description}</p>
                     <Button
-                      onClick={() => setCurrentView(card.id as View)}
+                      onClick={() =>
+                        card.id === 'leaderboard'
+                          ? navigate('/leaderboard')
+                          : setCurrentView(card.id as View)
+                      }
                       className={`bg-gradient-to-r ${card.color} hover:from-purple-600 hover:to-indigo-700 text-white font-medium px-6 py-2 rounded-lg transition-all duration-300 transform group-hover:scale-105`}
                     >
                       {card.buttonText}
