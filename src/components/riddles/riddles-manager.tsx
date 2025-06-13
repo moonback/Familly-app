@@ -205,7 +205,7 @@ export function RiddlesManager() {
             >
               <Button
                 onClick={handleCreateRiddle}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
               >
                 <PlusIcon className="mr-2 h-5 w-5" />
                 Créer la devinette

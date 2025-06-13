@@ -347,6 +347,7 @@ export function TasksManager() {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleEdit(task)}
+                    aria-label="Modifier la tâche"
                   >
                     <PencilIcon className="h-4 w-4" />
                   </Button>
@@ -354,6 +355,7 @@ export function TasksManager() {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDelete(task.id)}
+                    aria-label="Supprimer la tâche"
                   >
                     <TrashIcon className="h-4 w-4" />
                   </Button>

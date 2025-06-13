@@ -211,6 +211,7 @@ export function RulesManager() {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleEdit(rule)}
+                    aria-label="Modifier la règle"
                   >
                     <PencilIcon className="h-4 w-4" />
                   </Button>
@@ -218,6 +219,7 @@ export function RulesManager() {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDelete(rule.id)}
+                    aria-label="Supprimer la règle"
                   >
                     <TrashIcon className="h-4 w-4" />
                   </Button>

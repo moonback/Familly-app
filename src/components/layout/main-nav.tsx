@@ -64,7 +64,7 @@ export function MainNav() {
             >
               <motion.div 
                 whileHover={{ scale: 1.1, rotate: 5 }}
-                className="p-3 rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 shadow-lg"
+                className="p-3 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 shadow-lg"
               >
                 <SparklesIcon className="h-7 w-7 text-white" />
               </motion.div>
@@ -84,7 +84,7 @@ export function MainNav() {
                       variant={isActive('/dashboard/parent') ? 'default' : 'ghost'} 
                       className={`${
                         isActive('/dashboard/parent') 
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                           : 'hover:bg-purple-50'
                       } transition-all duration-300`}
                     >
@@ -152,7 +152,7 @@ export function MainNav() {
                 <motion.div whileHover={{ scale: 1.05 }}>
                   <Button 
                     variant="default"
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
                   >
                     <LogInIcon className="h-5 w-5 mr-2" />
                     <span className="hidden md:inline font-medium">Connexion</span>

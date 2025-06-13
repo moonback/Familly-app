@@ -560,7 +560,7 @@ export default function DashboardChild() {
               rotate: { duration: 2, repeat: Infinity, ease: "linear" },
               scale: { duration: 1.5, repeat: Infinity }
             }}
-            className="rounded-full h-20 w-20 bg-gradient-to-br from-purple-500 to-pink-500 mx-auto mb-6 flex items-center justify-center shadow-2xl"
+            className="rounded-full h-20 w-20 bg-gradient-to-br from-purple-600 to-pink-600 mx-auto mb-6 flex items-center justify-center shadow-2xl"
           >
             <SparklesIcon className="h-10 w-10 text-white" />
           </motion.div>
