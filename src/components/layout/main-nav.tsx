@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { UserIcon, LogOutIcon, LogInIcon, ChevronDownIcon, SparklesIcon } from 'lucide-react';
+import { HomeIcon, UserIcon, LogOutIcon, LogInIcon, ChevronDownIcon, SparklesIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';

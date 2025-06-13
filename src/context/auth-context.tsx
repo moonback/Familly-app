@@ -20,7 +20,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     // Correctement déstructurer l'objet retourné par onAuthStateChange
     const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
+      async (event, session) => {
         setUser(session?.user || null);
         setLoading(false);
       }
@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     return { error };
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email, password) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
