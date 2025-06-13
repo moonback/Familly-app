@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { GiftIcon, TrophyIcon, ListChecksIcon, StarIcon, CheckCircleIcon, PartyPopperIcon, BrainIcon, CalendarIcon, FlameIcon } from 'lucide-react';
+import { GiftIcon, TrophyIcon, ListChecksIcon, StarIcon, CheckCircleIcon, PartyPopperIcon, BrainIcon, CalendarIcon, FlameIcon, SparklesIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
@@ -581,7 +581,7 @@ export default function DashboardChild() {
           </motion.div>
 
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -693,8 +693,7 @@ export default function DashboardChild() {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 p-6">
-        {/* En-tête avec titre amélioré */}
+      <motion.div className="relative z-10 p-6">        {/* En-tête avec titre amélioré */}
         <motion.div 
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -716,9 +715,9 @@ export default function DashboardChild() {
           >
             🏰
           </motion.div>
-          <motion.h1
+          <motion.h1 
             className="text-5xl md:text-6xl font-black mb-4 bg-[linear-gradient(45deg,var(--child-color),#667eea,var(--child-color))] bg-clip-text text-transparent [background-size:300%_300%] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.1))]"
-            animate={{
+            animate={{ 
               backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
             }}
             transition={{ duration: 3, repeat: Infinity }}
@@ -735,7 +734,7 @@ export default function DashboardChild() {
           >
             Bonjour Super Héros {child.name} ! 🦸‍♀️
           </motion.p>
-          <motion.div
+          <motion.div 
             className="inline-flex items-center bg-white/80 backdrop-blur-md rounded-full px-8 py-3 shadow-xl border-2 border-[var(--child-color)]"
             whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
             transition={{ type: "spring", stiffness: 400 }}
@@ -1161,7 +1160,7 @@ export default function DashboardChild() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
