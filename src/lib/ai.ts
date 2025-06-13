@@ -10,26 +10,31 @@ interface AIGeneratedRiddle {
 }
 
 export async function generateRiddle(): Promise<AIGeneratedRiddle> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/google/gemini-pro-2.5-preview:generateContent?key=${AI_API_KEY}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${AI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Tu es un assistant qui crée des devinettes courtes pour des enfants. Réponds au format "Q: ...\nA: ..."',
-        },
+      contents: [
         {
           role: 'user',
-          content: 'Génère une devinette adaptée aux enfants avec la réponse.',
+          parts: [
+            {
+              text: 'Tu es un assistant qui crée des devinettes courtes pour des enfants. Réponds au format "Q: ...\nA: ..."\nGénère une devinette adaptée aux enfants avec la réponse.',
+            },
+          ],
         },
       ],
-      max_tokens: 60,
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+      ],
+      generationConfig: {
+        maxOutputTokens: 60,
+      },
     }),
   });
 
@@ -37,7 +42,7 @@ export async function generateRiddle(): Promise<AIGeneratedRiddle> {
     throw new Error('Failed to generate riddle');
   }
   const data = await response.json();
-  const text = data.choices?.[0]?.message?.content as string;
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text as string;
   const [qLine = '', aLine = ''] = text.split('\n');
   return {
     question: qLine.replace(/^Q:\s*/, '').trim(),
@@ -55,27 +60,31 @@ interface AIGeneratedTask {
 }
 
 export async function generateTask(): Promise<AIGeneratedTask> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/google/gemini-pro-2.5-preview:generateContent?key=${AI_API_KEY}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${AI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Tu es un assistant qui propose des exemples de tâches adaptées à la vie de famille. Réponds en JSON.',
-        },
+      contents: [
         {
           role: 'user',
-          content:
-            'Génère une tâche au format {"label":"...","points_reward":30,"is_daily":true,"age_min":3,"age_max":12,"category":"maison"}',
+          parts: [
+            {
+              text: 'Tu es un assistant qui propose des exemples de tâches adaptées à la vie de famille. Réponds en JSON au format {\"label\":\"...\",\"points_reward\":30,\"is_daily\":true,\"age_min\":3,\"age_max\":12,\"category\":\"maison\"}',
+            },
+          ],
         },
       ],
-      max_tokens: 100,
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+      ],
+      generationConfig: {
+        maxOutputTokens: 100,
+      },
     }),
   });
 
@@ -83,7 +92,7 @@ export async function generateTask(): Promise<AIGeneratedTask> {
     throw new Error('Failed to generate task');
   }
   const data = await response.json();
-  const text = data.choices?.[0]?.message?.content as string;
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text as string;
   try {
     const task = JSON.parse(text);
     return task as AIGeneratedTask;
