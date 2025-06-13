@@ -1,7 +1,7 @@
 import { motion, Variants } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { GiftIcon, SparklesIcon, StarIcon } from 'lucide-react';
+import { CoinsIcon, CheckCircleIcon, GiftIcon, SparklesIcon, StarIcon } from 'lucide-react';
 
 interface Reward {
   id: string;
@@ -48,6 +48,8 @@ export const RewardShopModal = ({ isOpen, onClose, rewards, childPoints, onRewar
     }
   };
 
+  const POINTS_TO_EUROS_RATE = 0.010; // Exemple de taux de conversion : 1 point = 0.05 €
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-3xl h-[90vh] max-h-[800px] bg-gradient-to-br from-white/95 to-white/80 backdrop-blur-lg border-0 shadow-2xl p-0 overflow-hidden flex flex-col">
@@ -68,7 +70,7 @@ export const RewardShopModal = ({ isOpen, onClose, rewards, childPoints, onRewar
             <div className="ml-auto flex items-center gap-2 bg-gradient-to-r from-[color:var(--child-color)]/20 to-[color:var(--child-color)]/10 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-[color:var(--child-color)]/30"
                  style={{ '--child-color': childColor } as React.CSSProperties}>
               <StarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[color:var(--child-color)]" style={{ '--child-color': childColor } as React.CSSProperties} />
-              <span className="font-semibold text-gray-700 text-sm sm:text-base">{childPoints} pts</span>
+              <span className="font-semibold text-white text-sm sm:text-base">{childPoints} pts</span>
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -80,12 +82,14 @@ export const RewardShopModal = ({ isOpen, onClose, rewards, childPoints, onRewar
             initial="hidden"
             animate="visible"
           >
-            {rewards.map((reward) => (
+            {rewards.map((reward) => {
+              const convertedValue = reward.cost * POINTS_TO_EUROS_RATE;
+              return (
               <motion.div
                 key={reward.id}
                 variants={rewardVariants}
-                whileHover={{ 
-                  scale: 1.02, 
+                whileHover={{
+                  scale: 1.02,
                   y: -2,
                   boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
                   transition: { type: "spring", stiffness: 400, damping: 30 }
@@ -132,22 +136,34 @@ export const RewardShopModal = ({ isOpen, onClose, rewards, childPoints, onRewar
                       }`} style={{ '--child-color': childColor } as React.CSSProperties} />
                       <h4 className="text-lg sm:text-xl font-semibold text-gray-900">{reward.label}</h4>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-base sm:text-lg font-medium px-3 py-1 rounded-full ${
-                        childPoints >= reward.cost
-                          ? 'bg-[color:var(--child-color)]/10 text-[color:var(--child-color)]'
-                          : 'bg-gray-200 text-gray-500'
-                      }`} style={{ '--child-color': childColor } as React.CSSProperties}>
-                        {reward.cost} points
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                        className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${
+                          childPoints >= reward.cost
+                            ? 'bg-gradient-to-r from-[color:var(--child-color)]/15 to-[color:var(--child-color)]/5 text-[color:var(--child-color)]'
+                            : 'bg-gray-100 text-gray-500'
+                        }`} 
+                        style={{ '--child-color': childColor } as React.CSSProperties}
+                      >
+                        <CoinsIcon className="w-4 h-4" />
+                        <span className="text-base sm:text-lg font-semibold">
+                          {reward.cost} points ({convertedValue.toFixed(2)} €)
+                        </span>
+                      </motion.div>
+                      
                       {childPoints >= reward.cost && (
-                        <motion.span
+                        <motion.div
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium"
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className="flex items-center gap-1.5 bg-gradient-to-r from-green-100 to-emerald-50 text-green-700 px-3 py-1.5 rounded-full font-medium border border-green-200/50"
                         >
-                          Disponible!
-                        </motion.span>
+                          <CheckCircleIcon className="w-4 h-4" />
+                          <span>Disponible!</span>
+                        </motion.div>
                       )}
                     </div>
                   </div>
@@ -173,7 +189,7 @@ export const RewardShopModal = ({ isOpen, onClose, rewards, childPoints, onRewar
                   </motion.div>
                 </div>
               </motion.div>
-            ))}
+            );})}
 
             {rewards.length === 0 && (
               <motion.div
@@ -183,11 +199,11 @@ export const RewardShopModal = ({ isOpen, onClose, rewards, childPoints, onRewar
                 className="text-center py-8 sm:py-12"
               >
                 <motion.div
-                  animate={{ 
+                  animate={{
                     rotate: [0, 10, -10, 0],
                     scale: [1, 1.1, 1]
                   }}
-                  transition={{ 
+                  transition={{
                     duration: 2,
                     repeat: Infinity,
                     repeatDelay: 3
