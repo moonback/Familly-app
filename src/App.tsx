@@ -8,6 +8,7 @@ import AuthPage from '@/pages/auth';
 import DashboardParent from '@/pages/dashboard-parent';
 import DashboardChild from '@/pages/dashboard-child';
 import ChildHome from '@/pages/home';
+import MoodDashboard from '@/pages/mood-dashboard';
 
 // Composant de protection des routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -53,16 +54,24 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/dashboard/child/:childName" 
+              <Route
+                path="/dashboard/child/:childName"
                 element={
                   <ProtectedRoute>
                     <DashboardChild />
                   </ProtectedRoute>
-                } 
+                }
               />
-              <Route 
-                path="/child/:childName" 
+              <Route
+                path="/dashboard/moods"
+                element={
+                  <ProtectedRoute>
+                    <MoodDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/child/:childName"
                 element={
                   <ProtectedRoute>
                     <ChildHome />

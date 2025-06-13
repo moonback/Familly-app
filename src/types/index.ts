@@ -96,6 +96,14 @@ export interface PointsHistory {
   created_at: string;
 }
 
+export interface Mood {
+  id: string;
+  child_id: string;
+  mood: string;
+  date: string;
+  created_at: string;
+}
+
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
