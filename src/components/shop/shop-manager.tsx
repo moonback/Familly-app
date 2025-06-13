@@ -216,6 +216,7 @@ export function ShopManager() {
             </CardHeader>
             <CardContent>
               <p>Prix: {item.price} points</p>
+              <p>~{((item.price / 100).toFixed(2))} €</p>
             </CardContent>
           </Card>
         ))}

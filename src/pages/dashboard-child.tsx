@@ -19,6 +19,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ShopItemsList } from '@/components/shop/shop-items-list';
 import { PiggyBankManager } from '@/components/piggy-bank/piggy-bank-manager';
 
+const CONVERSION_RATE = 100; // 100 points = 1 euro
+
 interface Child {
   id: string;
   name: string;
@@ -783,11 +785,11 @@ export default function DashboardChild() {
           >
             <Card className="relative overflow-hidden border-0 shadow-2xl h-full transform hover:scale-[1.02] transition-transform duration-300 group">
               <div
-                className="absolute inset-0 bg-[linear-gradient(135deg,var(--child-color),var(--child-color)dd)] opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                className="absolute inset-0 bg-gray-500 opacity-90 group-hover:opacity-100 transition-opacity duration-300"
               />
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMTUiPjxwYXRoIGQ9Ik0yMCAyMGMwIDExLjA0Ni04Ljk1NCAyMC0yMCAyMHYyMGg0MFYyMEgyMHoiLz48L2c+PC9zdmc=')] opacity-30 group-hover:opacity-40 transition-opacity duration-300" />
               
-              <div className="relative p-8 text-center text-white h-full flex flex-col justify-between">
+              <div className="relative p-8 text-center text-black h-full flex flex-col justify-between">
                 <div>
                   <motion.div 
                     className="relative mb-8"
@@ -893,9 +895,11 @@ export default function DashboardChild() {
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
                     {child.points}
+                    
                   </motion.div>
                   <div className="text-sm text-yellow-800 font-medium">
-                    Continue comme ça, champion ! 🌟
+                  ~{((child?.points || 0) / CONVERSION_RATE).toFixed(2)} €
+                    Continue comme ça ! 🌟
                   </div>
                 </motion.div>
               </div>

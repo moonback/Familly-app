@@ -111,13 +111,18 @@ export function ShopItemsList({ child, onPointsUpdated }: ShopItemsListProps) {
                 <GiftIcon className="h-12 w-12 text-purple-500 mb-2" />
                 <div>
                   <h4 className="font-bold text-xl text-gray-900 mb-1">{item.name}</h4>
-                  <p className="text-lg text-purple-600 font-semibold">{item.price} points</p>
+                  <p className="text-lg text-purple-600 font-semibold">
+                    {item.price} points
+                    <span className="text-xs text-gray-400 ml-1">
+                      ~{((item.price / 100).toFixed(2))} €
+                    </span>
+                  </p>
                 </div>
                 <Button 
                   onClick={() => handlePurchase(item)}
                   disabled={!child || child.points < item.price}
                   className={`w-full py-3 text-lg rounded-lg shadow-lg ${
-                    child?.points >= item.price
+                    (child?.points || 0) >= item.price
                       ? 'bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700'
                       : 'bg-gray-400 cursor-not-allowed'
                   } transition-all duration-300`}

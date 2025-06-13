@@ -43,7 +43,12 @@ export function ShopItemsOverview({ userId }: ShopItemsOverviewProps) {
           {items.map((item) => (
             <div key={item.id} className="p-3 border rounded-lg">
               <h4 className="font-medium text-gray-900">{item.name}</h4>
-              <p className="text-sm text-gray-500">{item.price} points</p>
+              <p className="text-sm text-gray-500">
+                {item.price} points
+                <span className="text-xs text-gray-400 ml-1">
+                  ~{((item.price / 100).toFixed(2))} €
+                </span>
+              </p>
             </div>
           ))}
         </div>
