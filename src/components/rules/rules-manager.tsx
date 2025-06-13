@@ -215,7 +215,6 @@ export function RulesManager() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Gestion des Règles</h2>
         <div className="flex gap-2">
           <Button variant="outline" onClick={loadSuggestions}>
             <SparklesIcon className="mr-2 h-4 w-4" />
