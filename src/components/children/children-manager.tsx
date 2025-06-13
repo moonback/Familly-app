@@ -193,46 +193,88 @@ export function ChildrenManager() {
     }
   };
 
-  const handleResetPoints = async (childId: string) => {
+  const handleResetChildData = async (childId: string) => {
     if (!user) {
       toast({
         title: 'Erreur',
-        description: "Vous devez être connecté pour réinitialiser les points",
+        description: "Vous devez être connecté pour réinitialiser les données",
         variant: 'destructive',
       });
       return;
     }
 
     try {
-      const { error } = await supabase
+      // Supprimer toutes les tâches complétées
+      const { error: tasksError } = await supabase
+        .from('child_tasks')
+        .delete()
+        .eq('child_id', childId)
+        .eq('is_completed', true);
+
+      if (tasksError) throw tasksError;
+
+      // Supprimer toutes les récompenses réclamées
+      const { error: rewardsError } = await supabase
+        .from('child_rewards_claimed')
+        .delete()
+        .eq('child_id', childId);
+
+      if (rewardsError) throw rewardsError;
+
+      // Supprimer toutes les violations de règles
+      const { error: rulesError } = await supabase
+        .from('child_rules_violations')
+        .delete()
+        .eq('child_id', childId);
+
+      if (rulesError) throw rulesError;
+
+      // Supprimer l'historique des points
+      const { error: pointsError } = await supabase
+        .from('points_history')
+        .delete()
+        .eq('child_id', childId);
+
+      if (pointsError) throw pointsError;
+
+      // Supprimer l'historique de la tirelire
+      const { error: piggyError } = await supabase
+        .from('piggy_bank_transactions')
+        .delete()
+        .eq('child_id', childId);
+
+      if (piggyError) throw piggyError;
+
+      // Supprimer les devinettes quotidiennes
+      const { error: riddlesError } = await supabase
+        .from('daily_riddles')
+        .delete()
+        .eq('child_id', childId);
+
+      if (riddlesError) throw riddlesError;
+
+      // Réinitialiser les points de l'enfant à 0
+      const { error: updateError } = await supabase
         .from('children')
-        .update({ points: 0 })
+        .update({ 
+          points: 0,
+          streak: 0 // Réinitialiser le streak
+        })
         .eq('id', childId)
         .eq('user_id', user.id);
 
-      if (error) throw error;
-
-      // Enregistrer l'historique de la réinitialisation
-      const { error: historyError } = await supabase
-        .from('points_history')
-        .insert([{
-          child_id: childId,
-          points: 0,
-          reason: 'Réinitialisation des points',
-          user_id: user.id
-        }]);
-
-      if (historyError) throw historyError;
+      if (updateError) throw updateError;
 
       toast({
         title: 'Succès',
-        description: "Les points ont été réinitialisés avec succès",
+        description: "Toutes les données de l'enfant ont été réinitialisées avec succès",
       });
       fetchChildren();
     } catch (error) {
+      console.error('Erreur lors de la réinitialisation des données:', error);
       toast({
         title: 'Erreur',
-        description: "Impossible de réinitialiser les points",
+        description: "Impossible de réinitialiser les données de l'enfant",
         variant: 'destructive',
       });
     }
@@ -382,9 +424,9 @@ export function ChildrenManager() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleResetPoints(child.id)}
-                    title="Réinitialiser les points"
-                    aria-label="Réinitialiser les points"
+                    onClick={() => handleResetChildData(child.id)}
+                    title="Réinitialiser les données"
+                    aria-label="Réinitialiser les données"
                   >
                     <RefreshCw className="h-4 w-4" />
                   </Button>
