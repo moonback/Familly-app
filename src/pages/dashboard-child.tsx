@@ -566,15 +566,17 @@ export default function DashboardChild() {
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 relative overflow-hidden"
-      style={{ 
-        background: child.custom_color ? 
-          `linear-gradient(135deg, ${child.custom_color}20, ${child.custom_color}10, #f8fafc)` : 
-          undefined 
-      }}
+      style={{
+        '--child-color': child?.custom_color || '#8B5CF6',
+      } as React.CSSProperties}
+      className={`min-h-screen relative overflow-hidden ${
+        child?.custom_color
+          ? 'bg-[linear-gradient(135deg,var(--child-color)_20,var(--child-color)_10,#f8fafc)]'
+          : 'bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100'
+      }`}
     >
       {/* Éléments décoratifs de fond améliorés */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -686,18 +688,9 @@ export default function DashboardChild() {
           >
             🏰
           </motion.div>
-          <motion.h1 
-            className="text-5xl md:text-6xl font-black mb-4"
-            style={{
-              background: child.custom_color ? 
-                `linear-gradient(45deg, ${child.custom_color}, #667eea, ${child.custom_color})` :
-                'linear-gradient(45deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundSize: '300% 300%',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
-            }}
-            animate={{ 
+          <motion.h1
+            className="text-5xl md:text-6xl font-black mb-4 bg-[linear-gradient(45deg,var(--child-color),#667eea,var(--child-color))] bg-clip-text text-transparent [background-size:300%_300%] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.1))]"
+            animate={{
               backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
             }}
             transition={{ duration: 3, repeat: Infinity }}
@@ -714,13 +707,12 @@ export default function DashboardChild() {
           >
             Bonjour Super Héros {child.name} ! 🦸‍♀️
           </motion.p>
-          <motion.div 
-            className="inline-flex items-center bg-white/80 backdrop-blur-md rounded-full px-8 py-3 shadow-xl border-2"
-            style={{ borderColor: child.custom_color || '#E5E7EB' }}
+          <motion.div
+            className="inline-flex items-center bg-white/80 backdrop-blur-md rounded-full px-8 py-3 shadow-xl border-2 border-[var(--child-color)]"
             whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <CalendarIcon className="h-6 w-6 mr-3" style={{ color: child.custom_color || '#8B5CF6' }} />
+            <CalendarIcon className="h-6 w-6 mr-3 text-[color:var(--child-color)]" />
             <span className="text-xl font-medium text-gray-800">
               {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
             </span>
@@ -740,13 +732,8 @@ export default function DashboardChild() {
             className="lg:col-span-3"
           >
             <Card className="relative overflow-hidden border-0 shadow-2xl h-full transform hover:scale-[1.02] transition-transform duration-300">
-              <div 
-                className="absolute inset-0"
-                style={{ 
-                  background: child.custom_color ? 
-                    `linear-gradient(135deg, ${child.custom_color}, ${child.custom_color}dd)` :
-                    'linear-gradient(135deg, #667eea, #764ba2)'
-                }}
+              <div
+                className="absolute inset-0 bg-[linear-gradient(135deg,var(--child-color),var(--child-color)dd)]"
               />
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-30" />
               
@@ -873,18 +860,13 @@ export default function DashboardChild() {
           >
             <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
               <div className="relative">
-                <div 
-                  className="absolute inset-0 opacity-20"
-                  style={{ 
-                    background: child.custom_color ? 
-                      `linear-gradient(135deg, ${child.custom_color}40, ${child.custom_color}20)` :
-                      'linear-gradient(135deg, #667eea40, #764ba220)'
-                  }}
+                <div
+                  className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
                 />
                 <CardHeader className="relative z-10">
                   <div className="flex items-center justify-between mb-6">
                     <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                      <ListChecksIcon className="h-8 w-8" style={{ color: child.custom_color || '#8B5CF6' }} />
+                      <ListChecksIcon className="h-8 w-8 text-[color:var(--child-color)]" />
                       Mes Missions
                     </CardTitle>
                     <div className="flex items-center gap-3">
@@ -971,16 +953,11 @@ export default function DashboardChild() {
           >
             <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
               <CardHeader className="relative">
-                <div 
-                  className="absolute inset-0 opacity-20"
-                  style={{ 
-                    background: child.custom_color ? 
-                      `linear-gradient(135deg, ${child.custom_color}40, ${child.custom_color}20)` :
-                      'linear-gradient(135deg, #667eea40, #764ba220)'
-                  }}
+                <div
+                  className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
                 />
                 <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
-                  <GiftIcon className="h-8 w-8" style={{ color: child.custom_color || '#8B5CF6' }} />
+                  <GiftIcon className="h-8 w-8 text-[color:var(--child-color)]" />
                   Mes Récompenses
                 </CardTitle>
               </CardHeader>
@@ -1006,14 +983,9 @@ export default function DashboardChild() {
                           disabled={!child || child.points < reward.cost}
                           className={`${
                             child?.points >= reward.cost
-                              ? child.custom_color 
-                                ? `hover:opacity-80`
-                                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
+                              ? 'bg-[var(--child-color)] hover:opacity-80'
                               : 'bg-gray-400'
                           } transition-all duration-300`}
-                          style={{
-                            backgroundColor: child?.points >= reward.cost && child.custom_color ? child.custom_color : undefined
-                          }}
                         >
                           <GiftIcon className="h-5 w-5 mr-2" />
                           Obtenir
@@ -1047,16 +1019,11 @@ export default function DashboardChild() {
             >
               <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
                 <CardHeader className="relative">
-                  <div 
-                    className="absolute inset-0 opacity-20"
-                    style={{ 
-                      background: child.custom_color ? 
-                        `linear-gradient(135deg, ${child.custom_color}40, ${child.custom_color}20)` :
-                        'linear-gradient(135deg, #667eea40, #764ba220)'
-                    }}
+                  <div
+                    className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
                   />
                   <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
-                    <TrophyIcon className="h-8 w-8" style={{ color: child.custom_color || '#8B5CF6' }} />
+                    <TrophyIcon className="h-8 w-8 text-[color:var(--child-color)]" />
                     Mes Récompenses Obtenues
                   </CardTitle>
                 </CardHeader>
@@ -1071,11 +1038,10 @@ export default function DashboardChild() {
                         className="p-6 rounded-xl border-2 bg-white border-purple-200 hover:border-purple-300 transition-all duration-300"
                       >
                         <div className="flex items-center gap-4">
-                          <div 
-                            className="p-3 rounded-full"
-                            style={{ backgroundColor: child.custom_color ? `${child.custom_color}20` : '#F3E8FF' }}
+                          <div
+                            className="p-3 rounded-full bg-[color:var(--child-color)/0.12]"
                           >
-                            <GiftIcon className="h-6 w-6" style={{ color: child.custom_color || '#8B5CF6' }} />
+                            <GiftIcon className="h-6 w-6 text-[color:var(--child-color)]" />
                           </div>
                           <div>
                             <h4 className="text-lg font-medium text-gray-900">{claimedReward.reward.label}</h4>
@@ -1100,22 +1066,17 @@ export default function DashboardChild() {
             animate={{ opacity: 1, y: 0 }}
             className="mt-8"
           >
-            <Card className="bg-white/90 backdrop-blur-md border-2 shadow-xl transform hover:scale-[1.01] transition-transform duration-300"
-                  style={{ borderColor: child.custom_color || '#E5E7EB' }}>
+            <Card className="bg-white/90 backdrop-blur-md border-2 border-[var(--child-color)] shadow-xl transform hover:scale-[1.01] transition-transform duration-300">
               <CardHeader>
                 <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                  <BrainIcon className="h-8 w-8" style={{ color: child.custom_color || '#8B5CF6' }} />
+                  <BrainIcon className="h-8 w-8 text-[color:var(--child-color)]" />
                   Devinette du Jour
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRiddleSubmit} className="space-y-4">
-                  <div 
-                    className="p-8 rounded-xl border-2"
-                    style={{ 
-                      backgroundColor: child.custom_color ? `${child.custom_color}10` : '#F3E8FF',
-                      borderColor: child.custom_color ? `${child.custom_color}40` : '#E5E7EB'
-                    }}
+                  <div
+                    className="p-8 rounded-xl border-2 bg-[color:var(--child-color)/0.06] border-[color:var(--child-color)/0.25]"
                   >
                     <p className="text-xl font-medium text-gray-800 mb-6">
                       {currentRiddle.question}
@@ -1126,16 +1087,11 @@ export default function DashboardChild() {
                         value={riddleAnswer}
                         onChange={(e) => setRiddleAnswer(e.target.value)}
                         placeholder="Ta réponse..."
-                        className="flex-1 text-lg p-4 rounded-lg border-2 focus:ring-2"
-                        style={{ 
-                          borderColor: child.custom_color || '#E5E7EB',
-                          '--tw-ring-color': child.custom_color || '#8B5CF6'
-                        } as React.CSSProperties}
+                        className="flex-1 text-lg p-4 rounded-lg border-2 focus:ring-2 border-[var(--child-color)] focus:ring-[var(--child-color)]"
                       />
-                      <Button 
-                        type="submit" 
-                        className="text-lg px-8 hover:opacity-80 transition-opacity"
-                        style={{ backgroundColor: child.custom_color || '#8B5CF6' }}
+                      <Button
+                        type="submit"
+                        className="text-lg px-8 hover:opacity-80 transition-opacity bg-[var(--child-color)]"
                       >
                         Valider
                       </Button>

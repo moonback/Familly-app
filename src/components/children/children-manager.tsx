@@ -301,9 +301,9 @@ export function ChildrenManager() {
             <CardHeader className="pb-2">
               <CardTitle className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
+                  <Avatar className="h-12 w-12" style={{ '--child-color': child.custom_color } as React.CSSProperties }>
                     <AvatarImage src={child.avatar_url} alt={child.name} />
-                    <AvatarFallback style={{ backgroundColor: child.custom_color }}>
+                    <AvatarFallback className="bg-[var(--child-color)]">
                       {child.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -342,9 +342,9 @@ export function ChildrenManager() {
             <CardContent>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <div 
-                    className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-                    style={{ backgroundColor: child.custom_color }}
+                  <div
+                    className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-[var(--child-color)]"
+                    style={{ '--child-color': child.custom_color } as React.CSSProperties }
                   />
                   <span className="text-sm text-gray-600">Couleur thème</span>
                 </div>
