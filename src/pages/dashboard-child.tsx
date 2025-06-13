@@ -546,14 +546,14 @@ export default function DashboardChild() {
 
   if (loading || isLoading) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100"
       >
-        <div className="text-center relative">
-          <motion.div 
-            animate={{ 
+        <motion.div className="text-center relative">
+          <motion.div
+            animate={{
               rotate: 360,
               scale: [1, 1.2, 1],
             }}
@@ -579,8 +579,7 @@ export default function DashboardChild() {
           >
             ✨
           </motion.div>
-
-        </div>
+        </motion.div>
       </motion.div>
     );
   }
@@ -717,10 +716,11 @@ export default function DashboardChild() {
           </motion.div>
           <motion.h1 
             className="text-5xl md:text-6xl font-black mb-4 bg-[linear-gradient(45deg,var(--child-color),#667eea,var(--child-color))] bg-clip-text text-transparent [background-size:300%_300%] [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.1))]"
-            animate={{ 
+            animate={{
               backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
             }}
             transition={{ duration: 3, repeat: Infinity }}
+            style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}
           >
             Mon Royaume Magique
           </motion.h1>
@@ -739,7 +739,7 @@ export default function DashboardChild() {
             whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <CalendarIcon className="h-6 w-6 mr-3 text-[color:var(--child-color)]" />
+            <CalendarIcon className="h-6 w-6 mr-3 text-[color:var(--child-color)] drop-shadow-xl" />
             <span className="text-xl font-medium text-gray-800">
               {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
             </span>
@@ -853,8 +853,8 @@ export default function DashboardChild() {
                     <span className="text-base font-semibold text-yellow-100">Points Magiques</span>
                   </div>
                   <motion.div
-                    className="text-5xl font-black mb-3"
-                    animate={{ 
+                    className="text-5xl font-black mb-3 text-yellow-800"
+                    animate={{
                       scale: [1, 1.1, 1],
                       textShadow: [
                         '0 0 20px rgba(255,255,0,0.5)',
@@ -866,7 +866,7 @@ export default function DashboardChild() {
                   >
                     {child.points}
                   </motion.div>
-                  <div className="text-sm text-yellow-100 font-medium">
+                  <div className="text-sm text-yellow-800 font-medium">
                     Continue comme ça, champion ! 🌟
                   </div>
                 </motion.div>
@@ -893,7 +893,7 @@ export default function DashboardChild() {
                 <CardHeader className="relative z-10">
                   <div className="flex items-center justify-between mb-6">
                     <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                      <ListChecksIcon className="h-8 w-8 text-[color:var(--child-color)]" />
+                      <ListChecksIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
                       Mes Missions
                     </CardTitle>
                     <div className="flex items-center gap-3">
@@ -984,7 +984,7 @@ export default function DashboardChild() {
                   className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
                 />
                 <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
-                  <GiftIcon className="h-8 w-8 text-[color:var(--child-color)]" />
+                  <GiftIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
                   Mes Récompenses
                 </CardTitle>
               </CardHeader>
@@ -1050,7 +1050,7 @@ export default function DashboardChild() {
                     className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)]"
                   />
                   <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
-                    <TrophyIcon className="h-8 w-8 text-[color:var(--child-color)]" />
+                    <TrophyIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
                     Mes Récompenses Obtenues
                   </CardTitle>
                 </CardHeader>
@@ -1096,7 +1096,7 @@ export default function DashboardChild() {
             <Card className="bg-white/90 backdrop-blur-md border-2 border-[var(--child-color)] shadow-xl transform hover:scale-[1.01] transition-transform duration-300">
               <CardHeader>
                 <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                  <BrainIcon className="h-8 w-8 text-[color:var(--child-color)]" />
+                  <BrainIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" />
                   Devinette du Jour
                 </CardTitle>
               </CardHeader>
