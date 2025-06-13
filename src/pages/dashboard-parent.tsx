@@ -934,7 +934,7 @@ export default function DashboardParent() {
   );
 
   return (
-    <div className="flex flex-col space-y-8">
+    <div className="flex flex-col space-y-8 mx-[-1.5rem] px-6">
       {/* Boutons de gestion */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         {dashboardCards.map((card) => (

@@ -190,11 +190,11 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
             placeholder="Points" 
             value={formData.points} 
             onChange={(e) => setFormData({ ...formData, points: e.target.value })}
-            className="bg-white"
+            className="bg-white flex-1"
           />
           <Button 
             type="submit"
-            className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white"
+            className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white flex-shrink-0"
           >
             Ajouter
           </Button>
@@ -210,27 +210,27 @@ export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerPro
           <h3 className="text-lg font-semibold text-blue-800 mb-3">Convertisseur Euro/Points</h3>
           <p className="text-sm text-blue-700 mb-4">Taux de conversion: 1€ = {CONVERSION_RATE} points</p>
           <div className="flex flex-col gap-3">
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center flex-wrap">
               <Input
                 type="number"
                 placeholder="Euros"
                 value={euros}
                 onChange={handleEuroChange}
-                className="bg-white"
+                className="bg-white flex-1"
               />
-              <Button onClick={convertEuroToPoints} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button onClick={convertEuroToPoints} className="bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0">
                 Convertir en Points
               </Button>
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center flex-wrap">
               <Input
                 type="number"
                 placeholder="Points"
                 value={points}
                 onChange={handlePointsChange}
-                className="bg-white"
+                className="bg-white flex-1"
               />
-              <Button onClick={convertPointsToEuro} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button onClick={convertPointsToEuro} className="bg-blue-600 hover:bg-blue-700 text-white flex-shrink-0">
                 Convertir en Euros
               </Button>
             </div>
