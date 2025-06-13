@@ -594,6 +594,59 @@ export default function DashboardChild() {
     }
   };
 
+  const handleHintPurchase = async () => {
+    if (!child || !currentRiddle) return;
+
+    try {
+      // Vérifier si l'enfant a assez de points
+      if (child.points < 10) {
+        toast({
+          title: "Points insuffisants",
+          description: "Il te faut 10 points pour obtenir un indice",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Déduire les points
+      const { error: updateError } = await supabase
+        .from('children')
+        .update({
+          points: child.points - 10
+        })
+        .eq('id', child.id);
+
+      if (updateError) throw updateError;
+
+      // Enregistrer dans l'historique des points
+      const { error: historyError } = await supabase
+        .from('points_history')
+        .insert([{
+          user_id: child.user_id,
+          child_id: child.id,
+          points: -10,
+          reason: 'Achat d\'indice pour la devinette'
+        }]);
+
+      if (historyError) console.error('Erreur historique:', historyError);
+
+      // Mettre à jour l'état local
+      setChild(prev => prev ? { ...prev, points: prev.points - 10 } : null);
+
+      toast({
+        title: "Indice acheté !",
+        description: "10 points ont été déduits de ton compte",
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'achat de l\'indice:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'acheter l'indice",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'quotidien': return '🌅';
@@ -686,7 +739,9 @@ export default function DashboardChild() {
             riddle={currentRiddle} 
             isSolved={riddleSolved} 
             onRiddleSubmit={handleRiddleSubmit} 
-            childColor={child.custom_color} 
+            childColor={child.custom_color}
+            childPoints={child.points}
+            onHintPurchase={handleHintPurchase}
           />
 
           <SuccessAnimation 

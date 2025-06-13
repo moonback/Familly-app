@@ -2,14 +2,16 @@ import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { BrainIcon } from 'lucide-react';
+import { BrainIcon, LightbulbIcon } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 interface Riddle {
   id: string;
   question: string;
   answer: string;
   points: number;
+  hint?: string;
 }
 
 interface DailyRiddleProps {
@@ -17,10 +19,20 @@ interface DailyRiddleProps {
   isSolved: boolean;
   onRiddleSubmit: (answer: string) => void;
   childColor: string;
+  childPoints: number;
+  onHintPurchase: () => void;
 }
 
-export const DailyRiddle = ({ riddle, isSolved, onRiddleSubmit, childColor }: DailyRiddleProps) => {
+export const DailyRiddle = ({ 
+  riddle, 
+  isSolved, 
+  onRiddleSubmit, 
+  childColor,
+  childPoints,
+  onHintPurchase 
+}: DailyRiddleProps) => {
   const [answer, setAnswer] = useState('');
+  const [showHint, setShowHint] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +40,20 @@ export const DailyRiddle = ({ riddle, isSolved, onRiddleSubmit, childColor }: Da
       onRiddleSubmit(answer);
       setAnswer('');
     }
+  };
+
+  const handleHintClick = () => {
+    if (childPoints < 10) {
+      toast({
+        title: "Points insuffisants",
+        description: "Il te faut 10 points pour obtenir un indice",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    onHintPurchase();
+    setShowHint(true);
   };
 
   if (!riddle || isSolved) return null;
@@ -60,6 +86,22 @@ export const DailyRiddle = ({ riddle, isSolved, onRiddleSubmit, childColor }: Da
               <p className="text-xl font-medium text-gray-800 mb-6">
                 {riddle.question}
               </p>
+              
+              {showHint && riddle.hint && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 p-4 rounded-lg bg-[color:var(--child-color)/0.1] border border-[color:var(--child-color)/0.2]"
+                  style={{ '--child-color': childColor } as React.CSSProperties}
+                >
+                  <div className="flex items-center gap-2 text-[color:var(--child-color)] mb-2">
+                    <LightbulbIcon className="h-5 w-5" />
+                    <span className="font-medium">Indice</span>
+                  </div>
+                  <p className="text-gray-700">{riddle.hint}</p>
+                </motion.div>
+              )}
+
               <div className="flex flex-col sm:flex-row gap-4">
                 <Input
                   type="text"
@@ -69,13 +111,27 @@ export const DailyRiddle = ({ riddle, isSolved, onRiddleSubmit, childColor }: Da
                   className="flex-1 text-lg p-4 rounded-lg border-2 focus:ring-2 border-[var(--child-color)] focus:ring-[var(--child-color)] shadow-sm"
                   style={{ '--child-color': childColor } as React.CSSProperties}
                 />
-                <Button
-                  type="submit"
-                  className="text-lg px-8 py-3 rounded-lg hover:opacity-80 transition-opacity bg-[var(--child-color)] shadow-md"
-                  style={{ '--child-color': childColor } as React.CSSProperties}
-                >
-                  Valider
-                </Button>
+                <div className="flex gap-2">
+                  {!showHint && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleHintClick}
+                      className="text-lg px-4 py-3 rounded-lg hover:opacity-80 transition-opacity border-[var(--child-color)] text-[var(--child-color)]"
+                      style={{ '--child-color': childColor } as React.CSSProperties}
+                    >
+                      <LightbulbIcon className="h-5 w-5 mr-2" />
+                      Indice (10 pts)
+                    </Button>
+                  )}
+                  <Button
+                    type="submit"
+                    className="text-lg px-8 py-3 rounded-lg hover:opacity-80 transition-opacity bg-[var(--child-color)] shadow-md"
+                    style={{ '--child-color': childColor } as React.CSSProperties}
+                  >
+                    Valider
+                  </Button>
+                </div>
               </div>
             </div>
           </form>
