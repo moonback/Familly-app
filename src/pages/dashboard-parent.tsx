@@ -950,7 +950,7 @@ export default function DashboardParent() {
   return (
     <div className="flex flex-col space-y-8 mx-[-1.5rem] px-6">
       {/* Boutons de gestion */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
         {dashboardCards.map((card) => (
           <motion.div
             key={card.id}
