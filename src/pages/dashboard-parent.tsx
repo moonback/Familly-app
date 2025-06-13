@@ -12,7 +12,6 @@ import {
   ArrowLeft,
   Sparkles,
   Info,
-  Loader2,
   RefreshCw,
   Calendar,
   ChevronDown,
@@ -55,6 +54,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import { format, subDays, subWeeks, subMonths, startOfDay, endOfDay, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | null;
 type Period = 'day' | 'week' | 'month';
@@ -137,15 +137,7 @@ const StatCard = ({ title, value, icon, color, isLoading, details, trend, subtit
             </div>
             
             {isLoading ? (
-              <div className="flex items-center gap-3 mt-2">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                >
-                  <Loader2 className="h-5 w-5 text-gray-400" />
-                </motion.div>
-                <span className="text-sm text-gray-500">Chargement...</span>
-              </div>
+              <Skeleton className="h-8 w-24 mt-2" />
             ) : (
               <div>
                 <motion.h3 
@@ -451,46 +443,15 @@ export default function DashboardParent() {
     fetchStats();
   }, [user, period]);
 
-  if (loading) {
+  if (loading || stats.isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
-        <motion.div 
-          className="text-center"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <motion.div
-            animate={{ 
-              rotate: 360,
-              scale: [1, 1.2, 1]
-            }}
-            transition={{ 
-              rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-              scale: { duration: 1, repeat: Infinity }
-            }}
-            className="relative mx-auto mb-8"
-          >
-            <div className="w-16 h-16 rounded-full border-4 border-white/20" />
-            <div className="absolute top-0 left-0 w-16 h-16 rounded-full border-4 border-white border-t-transparent animate-spin" />
-          </motion.div>
-          <motion.h2 
-            className="text-2xl font-bold text-white mb-2"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            Chargement de votre espace
-          </motion.h2>
-          <motion.p 
-            className="text-white/80"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            Préparation du tableau de bord parent...
-          </motion.p>
-        </motion.div>
+      <div className="p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <Skeleton key={idx} className="h-32 w-full rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-80 w-full rounded-xl" />
       </div>
     );
   }
