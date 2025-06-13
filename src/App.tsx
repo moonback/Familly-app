@@ -55,7 +55,7 @@ function App() {
                 } 
               />
               <Route 
-                path="/dashboard/child/:childId" 
+                path="/dashboard/child/:childName" 
                 element={
                   <ProtectedRoute>
                     <DashboardChild />
@@ -63,7 +63,7 @@ function App() {
                 } 
               />
               <Route 
-                path="/child/:childId" 
+                path="/child/:childName" 
                 element={
                   <ProtectedRoute>
                     <ChildHome />

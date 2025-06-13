@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { GiftIcon, TrophyIcon, ListChecksIcon, StarIcon, SparklesIcon, CheckCircleIcon, PartyPopperIcon, BrainIcon, CalendarIcon } from 'lucide-react';
+import { GiftIcon, TrophyIcon, ListChecksIcon, StarIcon, SparklesIcon, CheckCircleIcon, PartyPopperIcon, BrainIcon, CalendarIcon, FlameIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
@@ -87,7 +87,7 @@ const generateAgeAppropriateTasks = async (child: Child) => {
       const { data: ageAppropriateTasks, error: tasksError } = await supabase
         .from('tasks')
         .select('*')
-        .eq('user_id', child.user_id) // Utiliser le user_id du parent
+        .eq('user_id', child.user_id)
         .lte('age_min', child.age)
         .gte('age_max', child.age);
 
@@ -119,8 +119,6 @@ const generateAgeAppropriateTasks = async (child: Child) => {
             console.error('Erreur lors de la création de la tâche:', insertError);
           }
         }
-      } else {
-        console.log('Aucune tâche appropriée trouvée pour cet âge');
       }
     }
   } catch (error) {
@@ -131,34 +129,72 @@ const generateAgeAppropriateTasks = async (child: Child) => {
 export default function DashboardChild() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const { childId } = useParams();
+  const { childName } = useParams();
   const [child, setChild] = useState<Child | null>(null);
   const [childTasks, setChildTasks] = useState<ChildTask[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [completedTasksAnimation, setCompletedTasksAnimation] = useState<string[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [hoveredReward, setHoveredReward] = useState<string | null>(null);
   const [currentRiddle, setCurrentRiddle] = useState<Riddle | null>(null);
   const [riddleAnswer, setRiddleAnswer] = useState('');
   const [showRiddleSuccess, setShowRiddleSuccess] = useState(false);
   const [riddleSolved, setRiddleSolved] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [claimedRewards, setClaimedRewards] = useState<ChildRewardClaimed[]>([]);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
-    } else if (user && childId) {
+    } else if (user && childName) {
       fetchChildData();
     }
-  }, [user, loading, navigate, childId]);
+  }, [user, loading, navigate, childName]);
 
   useEffect(() => {
     if (child?.user_id) {
       fetchDailyRiddle();
+      calculateStreak();
     }
   }, [child?.user_id]);
+
+  const calculateStreak = async () => {
+    if (!childName) return;
+
+    try {
+      // Récupérer les tâches complétées des 30 derniers jours
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const { data: completedTasks, error } = await supabase
+        .from('child_tasks')
+        .select('completed_at, due_date')
+        .eq('child_id', child?.id)
+        .eq('is_completed', true)
+        .gte('completed_at', thirtyDaysAgo.toISOString())
+        .order('completed_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Calculer le streak
+      let currentStreak = 0;
+      let currentDate = new Date();
+      const completedDates = new Set(
+        completedTasks?.map(task => format(new Date(task.completed_at), 'yyyy-MM-dd')) || []
+      );
+
+      // Vérifier les jours consécutifs en remontant dans le temps
+      while (completedDates.has(format(currentDate, 'yyyy-MM-dd'))) {
+        currentStreak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      }
+
+      setStreak(currentStreak);
+    } catch (error) {
+      console.error('Erreur lors du calcul du streak:', error);
+    }
+  };
 
   const fetchChildData = async () => {
     try {
@@ -166,7 +202,7 @@ export default function DashboardChild() {
       const { data: childData, error: childError } = await supabase
         .from('children')
         .select('*')
-        .eq('id', childId)
+        .eq('name', childName)
         .single();
 
       if (childError) throw childError;
@@ -182,7 +218,7 @@ export default function DashboardChild() {
           *,
           task:tasks(*)
         `)
-        .eq('child_id', childId)
+        .eq('child_id', childData.id)
         .eq('due_date', format(new Date(), 'yyyy-MM-dd'))
         .order('due_date', { ascending: true });
 
@@ -205,7 +241,7 @@ export default function DashboardChild() {
           *,
           reward:rewards(*)
         `)
-        .eq('child_id', childId)
+        .eq('child_id', childData.id)
         .order('claimed_at', { ascending: false });
 
       if (claimedRewardsError) throw claimedRewardsError;
@@ -228,7 +264,7 @@ export default function DashboardChild() {
       const { data: existingRiddle, error: checkError } = await supabase
         .from('daily_riddles')
         .select('*, riddles(*)')
-        .eq('child_id', childId)
+        .eq('child_id', child?.id)
         .eq('date', format(new Date(), 'yyyy-MM-dd'))
         .single();
 
@@ -245,27 +281,27 @@ export default function DashboardChild() {
       }
 
       // Si aucune devinette n'existe pour aujourd'hui, en créer une nouvelle
-      const { data: riddle, error: riddleError } = await supabase
+      const { data: riddles, error: riddleError } = await supabase
         .from('riddles')
         .select('*')
-        .eq('user_id', child?.user_id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .eq('user_id', child?.user_id);
 
       if (riddleError) {
-        console.error('Erreur lors de la récupération de la devinette:', riddleError);
+        console.error('Erreur lors de la récupération des devinettes:', riddleError);
         return;
       }
 
-      if (riddle) {
+      if (riddles && riddles.length > 0) {
+        // Sélectionner une devinette aléatoire
+        const randomRiddle = riddles[Math.floor(Math.random() * riddles.length)];
+
         // Créer une nouvelle entrée dans daily_riddles
         const { data: dailyRiddle, error: insertError } = await supabase
           .from('daily_riddles')
           .insert([
             {
-              child_id: childId,
-              riddle_id: riddle.id,
+              child_id: child?.id,
+              riddle_id: randomRiddle.id,
               date: format(new Date(), 'yyyy-MM-dd'),
               is_solved: false
             }
@@ -278,7 +314,7 @@ export default function DashboardChild() {
           return;
         }
 
-        setCurrentRiddle(riddle);
+        setCurrentRiddle(randomRiddle);
         setRiddleSolved(false);
       }
     } catch (error) {
@@ -301,14 +337,28 @@ export default function DashboardChild() {
       if (!isCompleted) {
         const childTask = childTasks.find(ct => ct.id === childTaskId);
         if (childTask) {
+          // Mettre à jour les points de l'enfant
           const { error: updateError } = await supabase
             .from('children')
             .update({
               points: (child?.points || 0) + childTask.task.points_reward
             })
-            .eq('id', childId);
+            .eq('id', child?.id);
 
           if (updateError) throw updateError;
+
+          // Enregistrer dans l'historique des points
+          const { error: historyError } = await supabase
+            .from('points_history')
+            .insert([{
+              user_id: child?.user_id,
+              child_id: child?.id,
+              points: childTask.task.points_reward,
+              reason: `Tâche complétée: ${childTask.task.label}`
+            }]);
+
+          if (historyError) console.error('Erreur historique:', historyError);
+
           setChild(prev => prev ? { ...prev, points: prev.points + childTask.task.points_reward } : null);
           
           // Animation améliorée
@@ -325,6 +375,9 @@ export default function DashboardChild() {
             description: `Tu as gagné ${childTask.task.points_reward} points !`,
             duration: 3000,
           });
+
+          // Recalculer le streak
+          calculateStreak();
         }
       }
 
@@ -356,7 +409,7 @@ export default function DashboardChild() {
       const { error: claimError } = await supabase
         .from('child_rewards_claimed')
         .insert([{
-          child_id: childId,
+          child_id: child.id,
           reward_id: rewardId,
           claimed_at: new Date().toISOString()
         }]);
@@ -369,9 +422,22 @@ export default function DashboardChild() {
         .update({
           points: child.points - cost
         })
-        .eq('id', childId);
+        .eq('id', child.id);
 
       if (updateError) throw updateError;
+
+      // Enregistrer dans l'historique des points
+      const reward = rewards.find(r => r.id === rewardId);
+      const { error: historyError } = await supabase
+        .from('points_history')
+        .insert([{
+          user_id: child.user_id,
+          child_id: child.id,
+          points: -cost,
+          reason: `Récompense réclamée: ${reward?.label}`
+        }]);
+
+      if (historyError) console.error('Erreur historique:', historyError);
 
       toast({
         title: '🎉 Félicitations !',
@@ -391,7 +457,7 @@ export default function DashboardChild() {
 
   const handleRiddleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentRiddle || !riddleAnswer.trim()) return;
+    if (!currentRiddle || !riddleAnswer.trim() || !child) return;
 
     try {
       const isCorrect = riddleAnswer.toLowerCase().trim() === currentRiddle.answer.toLowerCase().trim();
@@ -401,7 +467,7 @@ export default function DashboardChild() {
         const { error: updateError } = await supabase
           .from('daily_riddles')
           .update({ is_solved: true })
-          .eq('child_id', childId)
+          .eq('child_id', child.id)
           .eq('date', format(new Date(), 'yyyy-MM-dd'));
 
         if (updateError) {
@@ -415,18 +481,35 @@ export default function DashboardChild() {
           .update({
             points: (child?.points || 0) + currentRiddle.points
           })
-          .eq('id', childId);
+          .eq('id', child.id);
 
         if (pointsError) {
           console.error('Erreur lors de l\'ajout des points:', pointsError);
           return;
         }
 
+        // Enregistrer dans l'historique des points
+        const { error: historyError } = await supabase
+          .from('points_history')
+          .insert([{
+            user_id: child.user_id,
+            child_id: child.id,
+            points: currentRiddle.points,
+            reason: 'Devinette résolue'
+          }]);
+
+        if (historyError) console.error('Erreur historique:', historyError);
+
         setRiddleSolved(true);
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
         setRiddleAnswer('');
         fetchChildData();
+
+        toast({
+          title: '🧠 Excellent !',
+          description: `Tu as gagné ${currentRiddle.points} points pour avoir résolu la devinette !`,
+        });
       } else {
         setRiddleAnswer('');
         toast({
@@ -437,6 +520,26 @@ export default function DashboardChild() {
       }
     } catch (error) {
       console.error('Erreur lors de la soumission de la réponse:', error);
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'quotidien': return '🌅';
+      case 'scolaire': return '📚';
+      case 'maison': return '🏠';
+      case 'personnel': return '🌟';
+      default: return '✅';
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'quotidien': return 'from-blue-400 to-blue-600';
+      case 'scolaire': return 'from-green-400 to-green-600';
+      case 'maison': return 'from-orange-400 to-orange-600';
+      case 'personnel': return 'from-purple-400 to-purple-600';
+      default: return 'from-gray-400 to-gray-600';
     }
   };
 
@@ -493,6 +596,11 @@ export default function DashboardChild() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 relative overflow-hidden"
+      style={{ 
+        background: child.custom_color ? 
+          `linear-gradient(135deg, ${child.custom_color}20, ${child.custom_color}10, #f8fafc)` : 
+          undefined 
+      }}
     >
       {/* Éléments décoratifs de fond améliorés */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -607,7 +715,9 @@ export default function DashboardChild() {
           <motion.h1 
             className="text-5xl md:text-6xl font-black mb-4"
             style={{
-              background: 'linear-gradient(45deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
+              background: child.custom_color ? 
+                `linear-gradient(45deg, ${child.custom_color}, #667eea, ${child.custom_color})` :
+                'linear-gradient(45deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundSize: '300% 300%',
@@ -631,11 +741,12 @@ export default function DashboardChild() {
             Bonjour Super Héros {child.name} ! 🦸‍♀️
           </motion.p>
           <motion.div 
-            className="inline-flex items-center bg-white/80 backdrop-blur-md rounded-full px-8 py-3 shadow-xl border-2 border-purple-200"
+            className="inline-flex items-center bg-white/80 backdrop-blur-md rounded-full px-8 py-3 shadow-xl border-2"
+            style={{ borderColor: child.custom_color || '#E5E7EB' }}
             whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <CalendarIcon className="h-6 w-6 mr-3 text-purple-600" />
+            <CalendarIcon className="h-6 w-6 mr-3" style={{ color: child.custom_color || '#8B5CF6' }} />
             <span className="text-xl font-medium text-gray-800">
               {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
             </span>
@@ -655,7 +766,14 @@ export default function DashboardChild() {
             className="lg:col-span-3"
           >
             <Card className="relative overflow-hidden border-0 shadow-2xl h-full transform hover:scale-[1.02] transition-transform duration-300">
-              <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600" />
+              <div 
+                className="absolute inset-0"
+                style={{ 
+                  background: child.custom_color ? 
+                    `linear-gradient(135deg, ${child.custom_color}, ${child.custom_color}dd)` :
+                    'linear-gradient(135deg, #667eea, #764ba2)'
+                }}
+              />
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-30" />
               
               <div className="relative p-8 text-center text-white h-full flex flex-col justify-between">
@@ -699,7 +817,7 @@ export default function DashboardChild() {
                     {child.name}
                   </motion.h2>
                   <motion.p 
-                    className="text-xl opacity-90 mb-8 font-semibold"
+                    className="text-xl opacity-90 mb-4 font-semibold"
                     animate={{ 
                       scale: [1, 1.05, 1]
                     }}
@@ -707,6 +825,19 @@ export default function DashboardChild() {
                   >
                     🎂 {child.age} ans - Niveau Expert
                   </motion.p>
+
+                  {/* Streak */}
+                  {streak > 0 && (
+                    <motion.div 
+                      className="bg-white/20 backdrop-blur-md rounded-xl p-4 mb-4 border border-white/30"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <FlameIcon className="h-6 w-6 text-orange-300" />
+                        <span className="text-lg font-bold">Série: {streak} jour{streak > 1 ? 's' : ''}</span>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
                 
                 <motion.div 
@@ -768,13 +899,26 @@ export default function DashboardChild() {
           >
             <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20" />
+                <div 
+                  className="absolute inset-0 opacity-20"
+                  style={{ 
+                    background: child.custom_color ? 
+                      `linear-gradient(135deg, ${child.custom_color}40, ${child.custom_color}20)` :
+                      'linear-gradient(135deg, #667eea40, #764ba220)'
+                  }}
+                />
                 <CardHeader className="relative z-10">
                   <div className="flex items-center justify-between mb-6">
-                    <CardTitle className="text-3xl font-bold text-gray-800">Mes Tâches</CardTitle>
+                    <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                      <ListChecksIcon className="h-8 w-8" style={{ color: child.custom_color || '#8B5CF6' }} />
+                      Mes Missions
+                    </CardTitle>
                     <div className="flex items-center gap-3">
                       <span className="text-base text-gray-600">Progression</span>
                       <Progress value={progressPercentage} className="w-40 h-3" />
+                      <span className="text-sm font-medium text-gray-700">
+                        {completedTasks}/{totalTasks}
+                      </span>
                     </div>
                   </div>
                 </CardHeader>
@@ -798,12 +942,22 @@ export default function DashboardChild() {
                           className="h-7 w-7 border-2"
                         />
                         <div className="flex-1">
-                          <Label className="text-xl font-medium">
-                            {childTask.task.label}
-                          </Label>
-                          <p className="text-base text-gray-500">
-                            {childTask.task.points_reward} points
-                          </p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-2xl">{getCategoryIcon(childTask.task.category)}</span>
+                            <Label className="text-xl font-medium">
+                              {childTask.task.label}
+                            </Label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span 
+                              className={`inline-block px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${getCategoryColor(childTask.task.category)} text-white`}
+                            >
+                              {childTask.task.category}
+                            </span>
+                            <span className="text-base text-gray-500">
+                              {childTask.task.points_reward} points
+                            </span>
+                          </div>
                         </div>
                         {childTask.is_completed && (
                           <motion.div
@@ -816,6 +970,14 @@ export default function DashboardChild() {
                         )}
                       </motion.div>
                     ))}
+
+                    {childTasks.length === 0 && (
+                      <div className="text-center py-12">
+                        <div className="text-6xl mb-4">🎯</div>
+                        <p className="text-xl text-gray-600">Aucune mission pour aujourd'hui !</p>
+                        <p className="text-base text-gray-500 mt-2">Reviens demain pour de nouvelles aventures !</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </div>
@@ -835,8 +997,16 @@ export default function DashboardChild() {
           >
             <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
               <CardHeader className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20" />
-                <CardTitle className="relative z-10 text-3xl font-bold text-gray-800">
+                <div 
+                  className="absolute inset-0 opacity-20"
+                  style={{ 
+                    background: child.custom_color ? 
+                      `linear-gradient(135deg, ${child.custom_color}40, ${child.custom_color}20)` :
+                      'linear-gradient(135deg, #667eea40, #764ba220)'
+                  }}
+                />
+                <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
+                  <GiftIcon className="h-8 w-8" style={{ color: child.custom_color || '#8B5CF6' }} />
                   Mes Récompenses
                 </CardTitle>
               </CardHeader>
@@ -862,9 +1032,14 @@ export default function DashboardChild() {
                           disabled={!child || child.points < reward.cost}
                           className={`${
                             child?.points >= reward.cost
-                              ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
+                              ? child.custom_color 
+                                ? `hover:opacity-80`
+                                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
                               : 'bg-gray-400'
                           } transition-all duration-300`}
+                          style={{
+                            backgroundColor: child?.points >= reward.cost && child.custom_color ? child.custom_color : undefined
+                          }}
                         >
                           <GiftIcon className="h-5 w-5 mr-2" />
                           Obtenir
@@ -872,32 +1047,46 @@ export default function DashboardChild() {
                       </div>
                     </motion.div>
                   ))}
+
+                  {rewards.length === 0 && (
+                    <div className="text-center py-8">
+                      <div className="text-4xl mb-3">🎁</div>
+                      <p className="text-base text-gray-600">Aucune récompense disponible</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
           {/* Section des récompenses réclamées améliorée */}
-          <motion.div
-            initial={{ y: 100, opacity: 0, scale: 0.9 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 100,
-              delay: 0.8 
-            }}
-            className="lg:col-span-12 mt-8"
-          >
-            <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
-              <CardHeader className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20" />
-                <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
-                  <TrophyIcon className="h-8 w-8 text-purple-600" />
-                  Mes Récompenses Obtenues
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="relative z-10">
-                {claimedRewards.length > 0 ? (
+          {claimedRewards.length > 0 && (
+            <motion.div
+              initial={{ y: 100, opacity: 0, scale: 0.9 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 100,
+                delay: 0.8 
+              }}
+              className="lg:col-span-12 mt-8"
+            >
+              <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
+                <CardHeader className="relative">
+                  <div 
+                    className="absolute inset-0 opacity-20"
+                    style={{ 
+                      background: child.custom_color ? 
+                        `linear-gradient(135deg, ${child.custom_color}40, ${child.custom_color}20)` :
+                        'linear-gradient(135deg, #667eea40, #764ba220)'
+                    }}
+                  />
+                  <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <TrophyIcon className="h-8 w-8" style={{ color: child.custom_color || '#8B5CF6' }} />
+                    Mes Récompenses Obtenues
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="relative z-10">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {claimedRewards.map((claimedReward) => (
                       <motion.div
@@ -908,8 +1097,11 @@ export default function DashboardChild() {
                         className="p-6 rounded-xl border-2 bg-white border-purple-200 hover:border-purple-300 transition-all duration-300"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="p-3 rounded-full bg-purple-100">
-                            <GiftIcon className="h-6 w-6 text-purple-600" />
+                          <div 
+                            className="p-3 rounded-full"
+                            style={{ backgroundColor: child.custom_color ? `${child.custom_color}20` : '#F3E8FF' }}
+                          >
+                            <GiftIcon className="h-6 w-6" style={{ color: child.custom_color || '#8B5CF6' }} />
                           </div>
                           <div>
                             <h4 className="text-lg font-medium text-gray-900">{claimedReward.reward.label}</h4>
@@ -921,15 +1113,10 @@ export default function DashboardChild() {
                       </motion.div>
                     ))}
                   </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-xl text-gray-500">Tu n'as pas encore obtenu de récompenses.</p>
-                    <p className="text-base text-gray-400 mt-3">Continue à accomplir tes tâches pour gagner des points !</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
         </div>
 
         {/* Section de la devinette quotidienne améliorée */}
@@ -939,16 +1126,23 @@ export default function DashboardChild() {
             animate={{ opacity: 1, y: 0 }}
             className="mt-8"
           >
-            <Card className="bg-white/90 backdrop-blur-md border-2 border-purple-200 shadow-xl transform hover:scale-[1.01] transition-transform duration-300">
+            <Card className="bg-white/90 backdrop-blur-md border-2 shadow-xl transform hover:scale-[1.01] transition-transform duration-300"
+                  style={{ borderColor: child.custom_color || '#E5E7EB' }}>
               <CardHeader>
                 <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                  <BrainIcon className="h-8 w-8 text-purple-600" />
+                  <BrainIcon className="h-8 w-8" style={{ color: child.custom_color || '#8B5CF6' }} />
                   Devinette du Jour
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRiddleSubmit} className="space-y-4">
-                  <div className="bg-purple-50 p-8 rounded-xl border-2 border-purple-100">
+                  <div 
+                    className="p-8 rounded-xl border-2"
+                    style={{ 
+                      backgroundColor: child.custom_color ? `${child.custom_color}10` : '#F3E8FF',
+                      borderColor: child.custom_color ? `${child.custom_color}40` : '#E5E7EB'
+                    }}
+                  >
                     <p className="text-xl font-medium text-gray-800 mb-6">
                       {currentRiddle.question}
                     </p>
@@ -958,11 +1152,16 @@ export default function DashboardChild() {
                         value={riddleAnswer}
                         onChange={(e) => setRiddleAnswer(e.target.value)}
                         placeholder="Ta réponse..."
-                        className="flex-1 text-lg p-4 rounded-lg border-2 border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200"
+                        className="flex-1 text-lg p-4 rounded-lg border-2 focus:ring-2"
+                        style={{ 
+                          borderColor: child.custom_color || '#E5E7EB',
+                          '--tw-ring-color': child.custom_color || '#8B5CF6'
+                        } as React.CSSProperties}
                       />
                       <Button 
                         type="submit" 
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg px-8"
+                        className="text-lg px-8 hover:opacity-80 transition-opacity"
+                        style={{ backgroundColor: child.custom_color || '#8B5CF6' }}
                       >
                         Valider
                       </Button>
