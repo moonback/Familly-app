@@ -1,8 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { HomeIcon, UserIcon, SettingsIcon, LogOutIcon, LogInIcon, ChevronDownIcon } from 'lucide-react';
+import { HomeIcon, UserIcon, LogOutIcon, LogInIcon, ChevronDownIcon, SparklesIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
-import { ModeToggle } from '@/components/layout/mode-toggle';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -11,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { motion } from 'framer-motion';
 
 interface Child {
   id: string;
@@ -49,62 +49,82 @@ export function MainNav() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border shadow-sm">
+    <motion.nav 
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-purple-100 shadow-lg"
+    >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Logo et titre */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
             <Link 
               to="/" 
-              className="flex items-center space-x-2 group transition-all duration-300 hover:scale-105"
+              className="flex items-center space-x-3 group"
             >
-              <div className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 group-hover:from-purple-600 group-hover:to-pink-600 transition-all duration-300">
-                <HomeIcon className="h-6 w-6 text-white" />
-              </div>
-              <span className="font-bold text-lg bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <motion.div 
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="p-3 rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 shadow-lg"
+              >
+                <SparklesIcon className="h-7 w-7 text-white" />
+              </motion.div>
+              <motion.span 
+                className="font-black text-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent"
+                whileHover={{ scale: 1.05 }}
+              >
                 Family
-              </span>
+              </motion.span>
             </Link>
 
             {user && (
-              <div className="hidden md:flex items-center space-x-2">
+              <div className="hidden md:flex items-center space-x-4">
                 <Link to="/dashboard/parent">
-                  <Button 
-                    variant={isActive('/dashboard/parent') ? 'secondary' : 'ghost'} 
-                    className="transition-all duration-300 hover:scale-105"
-                  >
-                    <UserIcon className="h-4 w-4 mr-2" /> 
-                    Parent Dashboard
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.05 }}>
+                    <Button 
+                      variant={isActive('/dashboard/parent') ? 'default' : 'ghost'} 
+                      className={`${
+                        isActive('/dashboard/parent') 
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
+                          : 'hover:bg-purple-50'
+                      } transition-all duration-300`}
+                    >
+                      <UserIcon className="h-5 w-5 mr-2" /> 
+                      Parent Dashboard
+                    </Button>
+                  </motion.div>
                 </Link>
 
                 {children.length > 0 && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="transition-all duration-300 hover:scale-105">
-                        <UserIcon className="h-4 w-4 mr-2" />
-                        Enfants
-                        <ChevronDownIcon className="h-4 w-4 ml-2" />
-                      </Button>
+                      <motion.div whileHover={{ scale: 1.05 }}>
+                        <Button 
+                          variant="ghost" 
+                          className="hover:bg-purple-50 transition-all duration-300"
+                        >
+                          <UserIcon className="h-5 w-5 mr-2" />
+                          Enfants
+                          <ChevronDownIcon className="h-4 w-4 ml-2" />
+                        </Button>
+                      </motion.div>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-56">
+                    <DropdownMenuContent align="start" className="w-64 p-2 bg-white/95 backdrop-blur-md border-purple-100 shadow-xl">
                       {children.map((child) => (
                         <div key={child.id} className="p-1">
                           <DropdownMenuItem asChild>
                             <Link 
                               to={`/dashboard/child/${child.id}`}
-                              className="flex items-center justify-between w-full cursor-pointer"
+                              className="flex items-center justify-between w-full cursor-pointer p-2 rounded-lg hover:bg-purple-50 transition-colors"
                             >
                               <span className="flex items-center">
-                                <UserIcon className="h-4 w-4 mr-2" />
-                                {child.name}
+                                <UserIcon className="h-5 w-5 mr-3 text-purple-500" />
+                                <span className="font-medium text-gray-700">{child.name}</span>
                               </span>
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-600">
                                 Dashboard
                               </span>
                             </Link>
                           </DropdownMenuItem>
-                          
                         </div>
                       ))}
                     </DropdownMenuContent>
@@ -116,30 +136,33 @@ export function MainNav() {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
-            <ModeToggle />
             {user ? (
-              <Button 
-                variant="ghost" 
-                onClick={handleSignOut}
-                className="transition-all duration-300 hover:scale-105 hover:text-red-500"
-              >
-                <LogOutIcon className="h-4 w-4 mr-2" />
-                <span className="hidden md:inline">Déconnexion</span>
-              </Button>
+              <motion.div whileHover={{ scale: 1.05 }}>
+                <Button 
+                  variant="ghost" 
+                  onClick={handleSignOut}
+                  className="hover:bg-red-50 hover:text-red-500 transition-all duration-300"
+                >
+                  <LogOutIcon className="h-5 w-5 mr-2" />
+                  <span className="hidden md:inline font-medium">Déconnexion</span>
+                </Button>
+              </motion.div>
             ) : (
               <Link to="/auth">
-                <Button 
-                  variant="ghost"
-                  className="transition-all duration-300 hover:scale-105 hover:text-purple-500"
-                >
-                  <LogInIcon className="h-4 w-4 mr-2" />
-                  <span className="hidden md:inline">Connexion</span>
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }}>
+                  <Button 
+                    variant="default"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
+                  >
+                    <LogInIcon className="h-5 w-5 mr-2" />
+                    <span className="hidden md:inline font-medium">Connexion</span>
+                  </Button>
+                </motion.div>
               </Link>
             )}
           </div>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
