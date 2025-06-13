@@ -146,12 +146,20 @@ export const AvatarDisplay = ({ child, streak }: AvatarDisplayProps) => {
                 </div>
               </div>
               
-              <div className={`text-6xl font-black mb-4 bg-gradient-to-r from-yellow-300 via-yellow-400 to-orange-400 bg-clip-text text-transparent transition-all duration-500 ${isHovered ? 'scale-110' : ''}`}
+              <div className={`text-6xl font-black mb-4 text-white transition-all duration-500 ${isHovered ? 'scale-110 animate-pulse' : ''}`}
                    style={{ 
-                     filter: 'drop-shadow(0 4px 8px rgba(255,193,7,0.3))' 
+                     filter: 'drop-shadow(0 4px 8px rgba(255,255,255,0.3))',
+                     animation: isHovered ? 'glow 2s ease-in-out infinite' : 'none'
                    }}>
                 {child.points.toLocaleString()}
               </div>
+              <style >{`
+                @keyframes glow {
+                  0% { filter: drop-shadow(0 4px 8px rgba(255,255,255,0.3)); }
+                  50% { filter: drop-shadow(0 4px 12px rgba(255,255,255,0.6)); }
+                  100% { filter: drop-shadow(0 4px 8px rgba(255,255,255,0.3)); }
+                }
+              `}</style>
               
               <div className="space-y-2">
                 <div className="text-lg text-yellow-200 font-semibold">
