@@ -10,7 +10,7 @@ import { GiftIcon, TrophyIcon, ListChecksIcon, StarIcon, SparklesIcon, CheckCirc
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
@@ -128,6 +128,7 @@ const generateAgeAppropriateTasks = async (child: Child) => {
 
 export default function DashboardChild() {
   const { user, loading } = useAuth();
+  const shouldReduceMotion = useReducedMotion();
   const navigate = useNavigate();
   const { childName } = useParams();
   const [child, setChild] = useState<Child | null>(null);
@@ -551,12 +552,12 @@ export default function DashboardChild() {
         className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100"
       >
         <div className="text-center relative">
-          <motion.div 
-            animate={{ 
+          <motion.div
+            animate={shouldReduceMotion ? { rotate: 0, scale: 1 } : {
               rotate: 360,
               scale: [1, 1.2, 1],
             }}
-            transition={{ 
+            transition={shouldReduceMotion ? undefined : {
               rotate: { duration: 2, repeat: Infinity, ease: "linear" },
               scale: { duration: 1.5, repeat: Infinity }
             }}
@@ -564,16 +565,16 @@ export default function DashboardChild() {
           >
             <SparklesIcon className="h-10 w-10 text-white" />
           </motion.div>
-          <motion.p 
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
+          <motion.p
+            animate={shouldReduceMotion ? { opacity: 1 } : { opacity: [0.5, 1, 0.5] }}
+            transition={shouldReduceMotion ? undefined : { duration: 2, repeat: Infinity }}
             className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
           >
             Chargement de ton monde magique...
           </motion.p>
           <motion.div
-            animate={{ y: [-5, 5, -5] }}
-            transition={{ duration: 1, repeat: Infinity }}
+            animate={shouldReduceMotion ? {} : { y: [-5, 5, -5] }}
+            transition={shouldReduceMotion ? undefined : { duration: 1, repeat: Infinity }}
             className="text-4xl mt-4"
           >
             ✨
@@ -604,50 +605,50 @@ export default function DashboardChild() {
     >
       {/* Éléments décoratifs de fond améliorés */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
-          animate={{ 
+        <motion.div
+          animate={shouldReduceMotion ? {} : {
             x: [0, 100, 0],
             y: [0, 50, 0],
             rotate: [0, 180, 360],
             scale: [1, 1.2, 1]
           }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          transition={shouldReduceMotion ? undefined : { duration: 20, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-10 left-10 text-7xl opacity-20 filter blur-[1px]"
         >
           ⭐
         </motion.div>
-        <motion.div 
-          animate={{ 
+        <motion.div
+          animate={shouldReduceMotion ? {} : {
             x: [0, -80, 0],
             y: [0, 30, 0],
             rotate: [0, -180, -360],
             scale: [1, 1.3, 1]
           }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+          transition={shouldReduceMotion ? undefined : { duration: 25, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-20 right-20 text-6xl opacity-20 filter blur-[1px]"
         >
           🌟
         </motion.div>
-        <motion.div 
-          animate={{ 
+        <motion.div
+          animate={shouldReduceMotion ? {} : {
             x: [0, 60, 0],
             y: [0, -40, 0],
             rotate: [0, 90, 180],
             scale: [1, 1.1, 1]
           }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          transition={shouldReduceMotion ? undefined : { duration: 15, repeat: Infinity, ease: "easeInOut" }}
           className="absolute bottom-20 left-32 text-5xl opacity-20 filter blur-[1px]"
         >
           ✨
         </motion.div>
-        <motion.div 
-          animate={{ 
+        <motion.div
+          animate={shouldReduceMotion ? {} : {
             x: [0, -40, 0],
             y: [0, 60, 0],
             rotate: [0, -90, -180],
             scale: [1, 1.2, 1]
           }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          transition={shouldReduceMotion ? undefined : { duration: 18, repeat: Infinity, ease: "easeInOut" }}
           className="absolute bottom-32 right-16 text-6xl opacity-20 filter blur-[1px]"
         >
           🎈
@@ -656,7 +657,7 @@ export default function DashboardChild() {
 
       {/* Animation de confettis améliorée */}
       <AnimatePresence>
-        {showConfetti && (
+        {showConfetti && !shouldReduceMotion && (
           <div className="fixed inset-0 pointer-events-none z-50">
             {[...Array(30)].map((_, i) => (
               <motion.div
@@ -698,12 +699,12 @@ export default function DashboardChild() {
           className="text-center mb-12"
         >
           <motion.div
-            animate={{ 
+            animate={shouldReduceMotion ? {} : {
               rotateY: [0, 360],
               scale: [1, 1.2, 1],
               y: [0, -10, 0]
             }}
-            transition={{ 
+            transition={shouldReduceMotion ? undefined : {
               rotateY: { duration: 4, repeat: Infinity },
               scale: { duration: 2, repeat: Infinity },
               y: { duration: 2, repeat: Infinity }
@@ -723,20 +724,20 @@ export default function DashboardChild() {
               backgroundSize: '300% 300%',
               filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
             }}
-            animate={{ 
+            animate={shouldReduceMotion ? {} : {
               backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
             }}
-            transition={{ duration: 3, repeat: Infinity }}
+            transition={shouldReduceMotion ? undefined : { duration: 3, repeat: Infinity }}
           >
             Mon Royaume Magique
           </motion.h1>
-          <motion.p 
+          <motion.p
             className="text-2xl text-gray-700 font-semibold mb-4"
-            animate={{ 
+            animate={shouldReduceMotion ? {} : {
               y: [0, -8, 0],
               scale: [1, 1.05, 1]
             }}
-            transition={{ duration: 2, repeat: Infinity }}
+            transition={shouldReduceMotion ? undefined : { duration: 2, repeat: Infinity }}
           >
             Bonjour Super Héros {child.name} ! 🦸‍♀️
           </motion.p>
@@ -1184,11 +1185,11 @@ export default function DashboardChild() {
             >
               <div className="bg-white/95 backdrop-blur-md p-10 rounded-3xl shadow-2xl border-2 border-green-200">
                 <motion.div
-                  animate={{ 
+                  animate={shouldReduceMotion ? {} : {
                     rotate: [0, 360],
                     scale: [1, 1.2, 1]
                   }}
-                  transition={{ duration: 1 }}
+                  transition={shouldReduceMotion ? undefined : { duration: 1 }}
                   className="text-7xl mb-6 text-center"
                 >
                   🎉

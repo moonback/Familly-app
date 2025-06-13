@@ -49,7 +49,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { supabase } from '@/lib/supabase';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar } from 'recharts';
 import { format, subDays, subWeeks, subMonths, startOfDay, endOfDay, addDays } from 'date-fns';
@@ -139,8 +139,8 @@ const StatCard = ({ title, value, icon, color, isLoading, details, trend, subtit
             {isLoading ? (
               <div className="flex items-center gap-3 mt-2">
                 <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  animate={shouldReduceMotion ? { rotate: 0 } : { rotate: 360 }}
+                  transition={shouldReduceMotion ? undefined : { duration: 1, repeat: Infinity, ease: "linear" }}
                 >
                   <Loader2 className="h-5 w-5 text-gray-400" />
                 </motion.div>
@@ -191,6 +191,7 @@ const StatCard = ({ title, value, icon, color, isLoading, details, trend, subtit
 
 export default function DashboardParent() {
   const { user, loading } = useAuth();
+  const shouldReduceMotion = useReducedMotion();
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<View>(null);
   const [period, setPeriod] = useState<Period>('week');
@@ -461,11 +462,11 @@ export default function DashboardParent() {
           transition={{ duration: 0.5 }}
         >
           <motion.div
-            animate={{ 
+            animate={shouldReduceMotion ? { rotate: 0, scale: 1 } : {
               rotate: 360,
               scale: [1, 1.2, 1]
             }}
-            transition={{ 
+            transition={shouldReduceMotion ? undefined : {
               rotate: { duration: 2, repeat: Infinity, ease: "linear" },
               scale: { duration: 1, repeat: Infinity }
             }}
