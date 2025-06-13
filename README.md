@@ -85,7 +85,11 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
 4. Exécuter les migrations Supabase :
    - `create_initial_schema.sql`
    - `add_updated_at_columns.sql`
-   - `add_age_constraints_and_riddles.sql`
+   - `20250613104538_shrill_snow.sql`
+   - `20250613110000_add_shop_items.sql`
+   - `20250613113000_add_piggy_bank_transactions.sql`
+   
+   Ces migrations ajoutent les contraintes d'âge, les devinettes, les articles de boutique et la table de transactions de la tirelire.
 
 5. Démarrer l'application :
    ```bash
