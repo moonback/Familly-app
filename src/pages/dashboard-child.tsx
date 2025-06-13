@@ -16,6 +16,7 @@ import { fr } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MoodTracker } from '@/components/mood/mood-tracker';
 
 interface Child {
   id: string;
@@ -874,14 +875,28 @@ export default function DashboardChild() {
             </Card>
           </motion.div>
 
+          {/* Section de l'humeur du jour */}
+          <motion.div
+            initial={{ x: 100, opacity: 0, rotateY: 30 }}
+            animate={{ x: 0, opacity: 1, rotateY: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 100,
+              delay: 0.3
+            }}
+            className="lg:col-span-4"
+          >
+            <MoodTracker childId={child.id} />
+          </motion.div>
+
           {/* Section des tâches améliorée */}
           <motion.div
             initial={{ y: 100, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            transition={{ 
-              type: "spring", 
+            transition={{
+              type: "spring",
               stiffness: 100,
-              delay: 0.4 
+              delay: 0.4
             }}
             className="lg:col-span-6"
           >

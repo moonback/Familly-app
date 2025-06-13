@@ -106,6 +106,15 @@ export function MainNav() {
                             Parent Dashboard
                           </Button>
                         </Link>
+                        <Link to="/dashboard/moods" onClick={() => {}}>
+                          <Button
+                            variant={isActive('/dashboard/moods') ? 'default' : 'ghost'}
+                            className="w-full justify-start"
+                          >
+                            <SparklesIcon className="h-5 w-5 mr-2" />
+                            Tableau de Bord des Humeurs
+                          </Button>
+                        </Link>
                         {children.length > 0 && (
                           <>
                             {children.map((child) => (
@@ -143,6 +152,21 @@ export function MainNav() {
                     >
                       <UserIcon className="h-5 w-5 mr-2" /> 
                       Parent Dashboard
+                    </Button>
+                  </motion.div>
+                </Link>
+                <Link to="/dashboard/moods">
+                  <motion.div whileHover={{ scale: 1.05 }}>
+                    <Button
+                      variant={isActive('/dashboard/moods') ? 'default' : 'ghost'}
+                      className={`${
+                        isActive('/dashboard/moods')
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                          : 'hover:bg-purple-50'
+                      } transition-all duration-300`}
+                    >
+                      <SparklesIcon className="h-5 w-5 mr-2" />
+                      Tableau de Bord des Humeurs
                     </Button>
                   </motion.div>
                 </Link>
