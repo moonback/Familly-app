@@ -10,8 +10,8 @@ interface PurchaseHistoryProps {
 interface HistoryItem {
   id: string;
   purchased_at: string;
-  children: { name: string };
-  shop_items: { name: string; price: number };
+  children: { name: string }[];
+  shop_items: { name: string; price: number }[];
 }
 
 export function PurchaseHistory({ userId }: PurchaseHistoryProps) {
@@ -50,7 +50,7 @@ export function PurchaseHistory({ userId }: PurchaseHistoryProps) {
           {items.map((item) => (
             <li key={item.id} className="flex justify-between border-b pb-2 last:border-0 last:pb-0">
               <span>
-                {item.children.name} - {item.shop_items.name}
+                {item.children[0]?.name} - {item.shop_items[0]?.name}
               </span>
               <span className="text-sm text-gray-500">
                 {new Date(item.purchased_at).toLocaleDateString('fr-FR')}

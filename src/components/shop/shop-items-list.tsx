@@ -4,7 +4,14 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GiftIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { Child, ShopItem, Purchase } from '@/types';
+import { Child, ShopItem } from '@/types';
+
+interface PurchaseWithItem {
+  id: string;
+  item_id: string;
+  purchased_at: string;
+  shop_items: { name: string; price: number }[];
+}
 
 interface ShopItemsListProps {
   child: Child | null;
@@ -13,7 +20,7 @@ interface ShopItemsListProps {
 
 export function ShopItemsList({ child, onPointsUpdated }: ShopItemsListProps) {
   const [items, setItems] = useState<ShopItem[]>([]);
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [purchases, setPurchases] = useState<PurchaseWithItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -113,8 +120,11 @@ export function ShopItemsList({ child, onPointsUpdated }: ShopItemsListProps) {
           <CardContent>
             <ul className="space-y-2">
               {purchases.map((purchase) => (
-                <li key={purchase.id} className="flex justify-between border-b pb-2 last:border-0 last:pb-0">
-                  <span>{purchase.shop_items?.name}</span>
+                <li
+                  key={purchase.id}
+                  className="flex justify-between border-b pb-2 last:border-0 last:pb-0"
+                >
+                  <span>{purchase.shop_items[0]?.name}</span>
                   <span className="text-sm text-gray-500">
                     {new Date(purchase.purchased_at).toLocaleDateString('fr-FR')}
                   </span>
