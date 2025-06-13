@@ -52,6 +52,21 @@ export interface Riddle {
   created_at: string;
 }
 
+export interface ShopItem {
+  id: string;
+  user_id: string;
+  name: string;
+  price: number;
+  created_at: string;
+}
+
+export interface Purchase {
+  id: string;
+  child_id: string;
+  item_id: string;
+  purchased_at: string;
+}
+
 export interface ChildTask {
   id: string;
   child_id: string;

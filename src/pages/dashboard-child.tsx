@@ -16,6 +16,7 @@ import { fr } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ShopItemsList } from '@/components/shop/shop-items-list';
 
 interface Child {
   id: string;
@@ -25,6 +26,7 @@ interface Child {
   avatar_url: string;
   custom_color: string;
   user_id: string;
+  created_at: string;
 }
 
 interface Task {
@@ -1085,6 +1087,8 @@ export default function DashboardChild() {
             </motion.div>
           )}
         </div>
+
+        <ShopItemsList child={child} onPointsUpdated={fetchChildData} />
 
         {/* Section de la devinette quotidienne améliorée */}
         {currentRiddle && !riddleSolved && (
