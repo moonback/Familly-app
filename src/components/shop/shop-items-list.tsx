@@ -16,6 +16,7 @@ interface PurchaseWithItem {
 interface ShopItemsListProps {
   child: Child | null;
   onPointsUpdated: () => void;
+  className?: string;
 }
 
 export function ShopItemsList({ child, onPointsUpdated }: ShopItemsListProps) {

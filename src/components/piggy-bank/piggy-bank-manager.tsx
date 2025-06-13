@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface PiggyBankManagerProps {
   child: Child | null;
   onPointsUpdated: () => void;
+  className?: string;
 }
 
 export function PiggyBankManager({ child, onPointsUpdated }: PiggyBankManagerProps) {

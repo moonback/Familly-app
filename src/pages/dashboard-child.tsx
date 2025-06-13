@@ -768,7 +768,7 @@ export default function DashboardChild() {
           </motion.div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-12xl mx-auto">
           {/* Profil de l'enfant amélioré */}
           <motion.div
             initial={{ x: -100, opacity: 0, rotateY: -30 }}
@@ -1165,9 +1165,24 @@ export default function DashboardChild() {
           )}
         </div>
 
-        <ShopItemsList child={child} onPointsUpdated={fetchChildData} />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-8"
+        >
+          <ShopItemsList 
+            child={child} 
+            onPointsUpdated={fetchChildData}
+            className="transform hover:scale-[1.01] transition-transform duration-300" 
+          />
 
-        <PiggyBankManager child={child} onPointsUpdated={fetchChildData} />
+          <PiggyBankManager 
+            child={child} 
+            onPointsUpdated={fetchChildData}
+            className="transform hover:scale-[1.01] transition-transform duration-300"
+          />
+        </motion.div>
 
         {/* Section de la devinette quotidienne améliorée */}
         {currentRiddle && !riddleSolved && (
