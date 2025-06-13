@@ -129,7 +129,7 @@ const generateAgeAppropriateTasks = async (child: Child) => {
 export default function DashboardChild() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const { childId } = useParams();
+  const { childName } = useParams();
   const [child, setChild] = useState<Child | null>(null);
   const [childTasks, setChildTasks] = useState<ChildTask[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
@@ -147,10 +147,10 @@ export default function DashboardChild() {
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
-    } else if (user && childId) {
+    } else if (user && childName) {
       fetchChildData();
     }
-  }, [user, loading, navigate, childId]);
+  }, [user, loading, navigate, childName]);
 
   useEffect(() => {
     if (child?.user_id) {
@@ -160,7 +160,7 @@ export default function DashboardChild() {
   }, [child?.user_id]);
 
   const calculateStreak = async () => {
-    if (!childId) return;
+    if (!childName) return;
 
     try {
       // Récupérer les tâches complétées des 30 derniers jours
@@ -170,7 +170,7 @@ export default function DashboardChild() {
       const { data: completedTasks, error } = await supabase
         .from('child_tasks')
         .select('completed_at, due_date')
-        .eq('child_id', childId)
+        .eq('child_id', child?.id)
         .eq('is_completed', true)
         .gte('completed_at', thirtyDaysAgo.toISOString())
         .order('completed_at', { ascending: false });
@@ -202,7 +202,7 @@ export default function DashboardChild() {
       const { data: childData, error: childError } = await supabase
         .from('children')
         .select('*')
-        .eq('id', childId)
+        .eq('name', childName)
         .single();
 
       if (childError) throw childError;
@@ -218,7 +218,7 @@ export default function DashboardChild() {
           *,
           task:tasks(*)
         `)
-        .eq('child_id', childId)
+        .eq('child_id', childData.id)
         .eq('due_date', format(new Date(), 'yyyy-MM-dd'))
         .order('due_date', { ascending: true });
 
@@ -241,7 +241,7 @@ export default function DashboardChild() {
           *,
           reward:rewards(*)
         `)
-        .eq('child_id', childId)
+        .eq('child_id', childData.id)
         .order('claimed_at', { ascending: false });
 
       if (claimedRewardsError) throw claimedRewardsError;
@@ -264,7 +264,7 @@ export default function DashboardChild() {
       const { data: existingRiddle, error: checkError } = await supabase
         .from('daily_riddles')
         .select('*, riddles(*)')
-        .eq('child_id', childId)
+        .eq('child_id', child?.id)
         .eq('date', format(new Date(), 'yyyy-MM-dd'))
         .single();
 
@@ -300,7 +300,7 @@ export default function DashboardChild() {
           .from('daily_riddles')
           .insert([
             {
-              child_id: childId,
+              child_id: child?.id,
               riddle_id: randomRiddle.id,
               date: format(new Date(), 'yyyy-MM-dd'),
               is_solved: false
@@ -343,7 +343,7 @@ export default function DashboardChild() {
             .update({
               points: (child?.points || 0) + childTask.task.points_reward
             })
-            .eq('id', childId);
+            .eq('id', child?.id);
 
           if (updateError) throw updateError;
 
@@ -352,7 +352,7 @@ export default function DashboardChild() {
             .from('points_history')
             .insert([{
               user_id: child?.user_id,
-              child_id: childId,
+              child_id: child?.id,
               points: childTask.task.points_reward,
               reason: `Tâche complétée: ${childTask.task.label}`
             }]);
@@ -409,7 +409,7 @@ export default function DashboardChild() {
       const { error: claimError } = await supabase
         .from('child_rewards_claimed')
         .insert([{
-          child_id: childId,
+          child_id: child.id,
           reward_id: rewardId,
           claimed_at: new Date().toISOString()
         }]);
@@ -422,7 +422,7 @@ export default function DashboardChild() {
         .update({
           points: child.points - cost
         })
-        .eq('id', childId);
+        .eq('id', child.id);
 
       if (updateError) throw updateError;
 
@@ -432,7 +432,7 @@ export default function DashboardChild() {
         .from('points_history')
         .insert([{
           user_id: child.user_id,
-          child_id: childId,
+          child_id: child.id,
           points: -cost,
           reason: `Récompense réclamée: ${reward?.label}`
         }]);
@@ -457,7 +457,7 @@ export default function DashboardChild() {
 
   const handleRiddleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentRiddle || !riddleAnswer.trim()) return;
+    if (!currentRiddle || !riddleAnswer.trim() || !child) return;
 
     try {
       const isCorrect = riddleAnswer.toLowerCase().trim() === currentRiddle.answer.toLowerCase().trim();
@@ -467,7 +467,7 @@ export default function DashboardChild() {
         const { error: updateError } = await supabase
           .from('daily_riddles')
           .update({ is_solved: true })
-          .eq('child_id', childId)
+          .eq('child_id', child.id)
           .eq('date', format(new Date(), 'yyyy-MM-dd'));
 
         if (updateError) {
@@ -481,7 +481,7 @@ export default function DashboardChild() {
           .update({
             points: (child?.points || 0) + currentRiddle.points
           })
-          .eq('id', childId);
+          .eq('id', child.id);
 
         if (pointsError) {
           console.error('Erreur lors de l\'ajout des points:', pointsError);
@@ -492,8 +492,8 @@ export default function DashboardChild() {
         const { error: historyError } = await supabase
           .from('points_history')
           .insert([{
-            user_id: child?.user_id,
-            child_id: childId,
+            user_id: child.user_id,
+            child_id: child.id,
             points: currentRiddle.points,
             reason: 'Devinette résolue'
           }]);
