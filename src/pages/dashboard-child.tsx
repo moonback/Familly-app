@@ -494,16 +494,17 @@ export default function DashboardChild() {
       animate={{ opacity: 1 }}
       className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 relative overflow-hidden"
     >
-      {/* Éléments décoratifs de fond */}
+      {/* Éléments décoratifs de fond améliorés */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div 
           animate={{ 
             x: [0, 100, 0],
             y: [0, 50, 0],
-            rotate: [0, 180, 360]
+            rotate: [0, 180, 360],
+            scale: [1, 1.2, 1]
           }}
-          transition={{ duration: 20, repeat: Infinity }}
-          className="absolute top-10 left-10 text-6xl opacity-20"
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-10 left-10 text-7xl opacity-20 filter blur-[1px]"
         >
           ⭐
         </motion.div>
@@ -511,10 +512,11 @@ export default function DashboardChild() {
           animate={{ 
             x: [0, -80, 0],
             y: [0, 30, 0],
-            rotate: [0, -180, -360]
+            rotate: [0, -180, -360],
+            scale: [1, 1.3, 1]
           }}
-          transition={{ duration: 25, repeat: Infinity }}
-          className="absolute top-20 right-20 text-5xl opacity-20"
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-20 right-20 text-6xl opacity-20 filter blur-[1px]"
         >
           🌟
         </motion.div>
@@ -522,10 +524,11 @@ export default function DashboardChild() {
           animate={{ 
             x: [0, 60, 0],
             y: [0, -40, 0],
-            rotate: [0, 90, 180]
+            rotate: [0, 90, 180],
+            scale: [1, 1.1, 1]
           }}
-          transition={{ duration: 15, repeat: Infinity }}
-          className="absolute bottom-20 left-32 text-4xl opacity-20"
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-20 left-32 text-5xl opacity-20 filter blur-[1px]"
         >
           ✨
         </motion.div>
@@ -533,41 +536,45 @@ export default function DashboardChild() {
           animate={{ 
             x: [0, -40, 0],
             y: [0, 60, 0],
-            rotate: [0, -90, -180]
+            rotate: [0, -90, -180],
+            scale: [1, 1.2, 1]
           }}
-          transition={{ duration: 18, repeat: Infinity }}
-          className="absolute bottom-32 right-16 text-5xl opacity-20"
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-32 right-16 text-6xl opacity-20 filter blur-[1px]"
         >
           🎈
         </motion.div>
       </div>
 
-      {/* Animation de confettis */}
+      {/* Animation de confettis améliorée */}
       <AnimatePresence>
         {showConfetti && (
           <div className="fixed inset-0 pointer-events-none z-50">
-            {[...Array(20)].map((_, i) => (
+            {[...Array(30)].map((_, i) => (
               <motion.div
                 key={i}
                 initial={{ 
                   y: -100, 
                   x: Math.random() * window.innerWidth,
                   opacity: 1,
-                  scale: 1
+                  scale: 1,
+                  rotate: 0
                 }}
                 animate={{ 
                   y: window.innerHeight + 100,
+                  x: Math.random() * window.innerWidth - window.innerWidth/2,
                   rotate: 360,
-                  scale: [1, 1.5, 0.5]
+                  scale: [1, 1.5, 0.5],
+                  opacity: [1, 1, 0]
                 }}
                 exit={{ opacity: 0 }}
                 transition={{ 
                   duration: 3 + Math.random() * 2,
                   ease: "easeOut"
                 }}
-                className="absolute text-3xl"
+                className="absolute text-4xl filter drop-shadow-lg"
               >
-                {['🎉', '🎊', '⭐', '🌟', '✨', '🎈'][Math.floor(Math.random() * 6)]}
+                {['🎉', '🎊', '⭐', '🌟', '✨', '🎈', '🎁', '🏆'][Math.floor(Math.random() * 8)]}
               </motion.div>
             ))}
           </div>
@@ -580,28 +587,31 @@ export default function DashboardChild() {
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 100 }}
-          className="text-center mb-8"
+          className="text-center mb-12"
         >
           <motion.div
             animate={{ 
               rotateY: [0, 360],
-              scale: [1, 1.1, 1]
+              scale: [1, 1.2, 1],
+              y: [0, -10, 0]
             }}
             transition={{ 
               rotateY: { duration: 4, repeat: Infinity },
-              scale: { duration: 2, repeat: Infinity }
+              scale: { duration: 2, repeat: Infinity },
+              y: { duration: 2, repeat: Infinity }
             }}
-            className="text-6xl mb-4"
+            className="text-7xl mb-6 filter drop-shadow-lg"
           >
             🏰
           </motion.div>
           <motion.h1 
-            className="text-4xl md:text-5xl font-black mb-3"
+            className="text-5xl md:text-6xl font-black mb-4"
             style={{
               background: 'linear-gradient(45deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundSize: '300% 300%',
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
             }}
             animate={{ 
               backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
@@ -611,28 +621,29 @@ export default function DashboardChild() {
             Mon Royaume Magique
           </motion.h1>
           <motion.p 
-            className="text-xl text-gray-700 font-semibold mb-2"
+            className="text-2xl text-gray-700 font-semibold mb-4"
             animate={{ 
               y: [0, -8, 0],
+              scale: [1, 1.05, 1]
             }}
             transition={{ duration: 2, repeat: Infinity }}
           >
             Bonjour Super Héros {child.name} ! 🦸‍♀️
           </motion.p>
           <motion.div 
-            className="inline-flex items-center bg-white/70 backdrop-blur-sm rounded-full px-6 py-2 shadow-lg border border-purple-200"
-            whileHover={{ scale: 1.05 }}
+            className="inline-flex items-center bg-white/80 backdrop-blur-md rounded-full px-8 py-3 shadow-xl border-2 border-purple-200"
+            whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <CalendarIcon className="h-5 w-5 mr-2 text-purple-600" />
-            <span className="text-lg font-medium text-gray-800">
+            <CalendarIcon className="h-6 w-6 mr-3 text-purple-600" />
+            <span className="text-xl font-medium text-gray-800">
               {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
             </span>
           </motion.div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto">
-          {/* Profil de l'enfant */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto">
+          {/* Profil de l'enfant amélioré */}
           <motion.div
             initial={{ x: -100, opacity: 0, rotateY: -30 }}
             animate={{ x: 0, opacity: 1, rotateY: 0 }}
@@ -643,14 +654,14 @@ export default function DashboardChild() {
             }}
             className="lg:col-span-3"
           >
-            <Card className="relative overflow-hidden border-0 shadow-2xl h-full">
+            <Card className="relative overflow-hidden border-0 shadow-2xl h-full transform hover:scale-[1.02] transition-transform duration-300">
               <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600" />
               <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-30" />
               
-              <div className="relative p-6 text-center text-white h-full flex flex-col justify-between">
+              <div className="relative p-8 text-center text-white h-full flex flex-col justify-between">
                 <div>
                   <motion.div 
-                    className="relative mb-6"
+                    className="relative mb-8"
                     whileHover={{ 
                       scale: 1.15,
                       rotateY: 15,
@@ -658,15 +669,15 @@ export default function DashboardChild() {
                     }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <div className="absolute -inset-4 bg-gradient-to-r from-pink-400 to-yellow-400 rounded-full blur-lg opacity-50 animate-pulse" />
-                    <Avatar className="relative h-28 w-28 mx-auto border-4 border-white shadow-2xl ring-4 ring-pink-300/50">
+                    <div className="absolute -inset-6 bg-gradient-to-r from-pink-400 to-yellow-400 rounded-full blur-xl opacity-50 animate-pulse" />
+                    <Avatar className="relative h-32 w-32 mx-auto border-4 border-white shadow-2xl ring-4 ring-pink-300/50">
                       <AvatarImage src={child.avatar_url} alt={child.name} />
-                      <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold">
+                      <AvatarFallback className="text-3xl bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold">
                         {child.name.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <motion.div 
-                      className="absolute -top-2 -right-2 text-2xl"
+                      className="absolute -top-4 -right-4 text-3xl"
                       animate={{ rotate: [0, 20, -20, 0] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
@@ -675,7 +686,7 @@ export default function DashboardChild() {
                   </motion.div>
                   
                   <motion.h2 
-                    className="text-3xl font-black mb-2"
+                    className="text-4xl font-black mb-3"
                     animate={{ 
                       textShadow: [
                         '0 0 20px rgba(255,255,255,0.5)',
@@ -688,7 +699,7 @@ export default function DashboardChild() {
                     {child.name}
                   </motion.h2>
                   <motion.p 
-                    className="text-lg opacity-90 mb-6 font-semibold"
+                    className="text-xl opacity-90 mb-8 font-semibold"
                     animate={{ 
                       scale: [1, 1.05, 1]
                     }}
@@ -699,14 +710,14 @@ export default function DashboardChild() {
                 </div>
                 
                 <motion.div 
-                  className="bg-white/20 backdrop-blur-md rounded-2xl p-6 border border-white/30"
+                  className="bg-white/20 backdrop-blur-md rounded-2xl p-8 border border-white/30"
                   whileHover={{ 
                     scale: 1.05,
                     backgroundColor: 'rgba(255,255,255,0.25)'
                   }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  <div className="flex items-center justify-center mb-3">
+                  <div className="flex items-center justify-center mb-4">
                     <motion.div
                       animate={{ 
                         rotate: 360,
@@ -716,14 +727,14 @@ export default function DashboardChild() {
                         rotate: { duration: 10, repeat: Infinity, ease: "linear" },
                         scale: { duration: 2, repeat: Infinity }
                       }}
-                      className="mr-3"
+                      className="mr-4"
                     >
-                      <TrophyIcon className="h-8 w-8 text-yellow-300 drop-shadow-lg" />
+                      <TrophyIcon className="h-10 w-10 text-yellow-300 drop-shadow-lg" />
                     </motion.div>
-                    <span className="text-sm font-semibold text-yellow-100">Points Magiques</span>
+                    <span className="text-base font-semibold text-yellow-100">Points Magiques</span>
                   </div>
                   <motion.div
-                    className="text-4xl font-black mb-2"
+                    className="text-5xl font-black mb-3"
                     animate={{ 
                       scale: [1, 1.1, 1],
                       textShadow: [
@@ -736,7 +747,7 @@ export default function DashboardChild() {
                   >
                     {child.points}
                   </motion.div>
-                  <div className="text-xs text-yellow-100 font-medium">
+                  <div className="text-sm text-yellow-100 font-medium">
                     Continue comme ça, champion ! 🌟
                   </div>
                 </motion.div>
@@ -744,7 +755,7 @@ export default function DashboardChild() {
             </Card>
           </motion.div>
 
-          {/* Section des tâches */}
+          {/* Section des tâches améliorée */}
           <motion.div
             initial={{ y: 100, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -755,15 +766,15 @@ export default function DashboardChild() {
             }}
             className="lg:col-span-6"
           >
-            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/80 backdrop-blur-sm">
+            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20" />
                 <CardHeader className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <CardTitle className="text-2xl font-bold text-gray-800">Mes Tâches</CardTitle>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">Progression</span>
-                      <Progress value={progressPercentage} className="w-32" />
+                  <div className="flex items-center justify-between mb-6">
+                    <CardTitle className="text-3xl font-bold text-gray-800">Mes Tâches</CardTitle>
+                    <div className="flex items-center gap-3">
+                      <span className="text-base text-gray-600">Progression</span>
+                      <Progress value={progressPercentage} className="w-40 h-3" />
                     </div>
                   </div>
                 </CardHeader>
@@ -774,22 +785,23 @@ export default function DashboardChild() {
                         key={childTask.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`flex items-center gap-4 p-4 rounded-lg border-2 ${
+                        whileHover={{ scale: 1.02 }}
+                        className={`flex items-center gap-4 p-5 rounded-xl border-2 ${
                           childTask.is_completed 
                             ? 'bg-green-50 border-green-200' 
-                            : 'bg-white border-gray-200'
-                        }`}
+                            : 'bg-white border-gray-200 hover:border-purple-200'
+                        } transition-all duration-300`}
                       >
                         <Checkbox
                           checked={childTask.is_completed}
                           onCheckedChange={() => handleTaskToggle(childTask.id, childTask.is_completed)}
-                          className="h-6 w-6"
+                          className="h-7 w-7 border-2"
                         />
                         <div className="flex-1">
-                          <Label className="text-lg font-medium">
+                          <Label className="text-xl font-medium">
                             {childTask.task.label}
                           </Label>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-base text-gray-500">
                             {childTask.task.points_reward} points
                           </p>
                         </div>
@@ -799,7 +811,7 @@ export default function DashboardChild() {
                             animate={{ scale: 1 }}
                             className="text-green-500"
                           >
-                            <CheckCircleIcon className="h-6 w-6" />
+                            <CheckCircleIcon className="h-7 w-7" />
                           </motion.div>
                         )}
                       </motion.div>
@@ -810,7 +822,7 @@ export default function DashboardChild() {
             </Card>
           </motion.div>
 
-          {/* Section des récompenses */}
+          {/* Section des récompenses améliorée */}
           <motion.div
             initial={{ y: 100, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -821,10 +833,10 @@ export default function DashboardChild() {
             }}
             className="lg:col-span-3"
           >
-            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/80 backdrop-blur-sm">
+            <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
               <CardHeader className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20" />
-                <CardTitle className="relative z-10 text-2xl font-bold text-gray-800">
+                <CardTitle className="relative z-10 text-3xl font-bold text-gray-800">
                   Mes Récompenses
                 </CardTitle>
               </CardHeader>
@@ -833,28 +845,28 @@ export default function DashboardChild() {
                   {rewards.map((reward) => (
                     <motion.div
                       key={reward.id}
-                      whileHover={{ scale: 1.02 }}
-                      className={`p-4 rounded-lg border-2 ${
+                      whileHover={{ scale: 1.03 }}
+                      className={`p-5 rounded-xl border-2 ${
                         child?.points >= reward.cost
-                          ? 'bg-white border-purple-200'
+                          ? 'bg-white border-purple-200 hover:border-purple-300'
                           : 'bg-gray-50 border-gray-200'
-                      }`}
+                      } transition-all duration-300`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <h4 className="font-medium text-gray-900">{reward.label}</h4>
-                          <p className="text-sm text-gray-500">{reward.cost} points</p>
+                          <h4 className="text-lg font-medium text-gray-900">{reward.label}</h4>
+                          <p className="text-base text-gray-500">{reward.cost} points</p>
                         </div>
                         <Button
                           onClick={() => handleRewardClaim(reward.id, reward.cost)}
                           disabled={!child || child.points < reward.cost}
                           className={`${
                             child?.points >= reward.cost
-                              ? 'bg-purple-600 hover:bg-purple-700'
+                              ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
                               : 'bg-gray-400'
-                          }`}
+                          } transition-all duration-300`}
                         >
-                          <GiftIcon className="h-4 w-4 mr-2" />
+                          <GiftIcon className="h-5 w-5 mr-2" />
                           Obtenir
                         </Button>
                       </div>
@@ -865,7 +877,7 @@ export default function DashboardChild() {
             </Card>
           </motion.div>
 
-          {/* Section des récompenses réclamées */}
+          {/* Section des récompenses réclamées améliorée */}
           <motion.div
             initial={{ y: 100, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -874,33 +886,34 @@ export default function DashboardChild() {
               stiffness: 100,
               delay: 0.8 
             }}
-            className="lg:col-span-12 mt-6"
+            className="lg:col-span-12 mt-8"
           >
-            <Card className="shadow-2xl border-0 overflow-hidden bg-white/80 backdrop-blur-sm">
+            <Card className="shadow-2xl border-0 overflow-hidden bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300">
               <CardHeader className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20" />
-                <CardTitle className="relative z-10 text-2xl font-bold text-gray-800 flex items-center gap-2">
-                  <TrophyIcon className="h-6 w-6 text-purple-600" />
+                <CardTitle className="relative z-10 text-3xl font-bold text-gray-800 flex items-center gap-3">
+                  <TrophyIcon className="h-8 w-8 text-purple-600" />
                   Mes Récompenses Obtenues
                 </CardTitle>
               </CardHeader>
               <CardContent className="relative z-10">
                 {claimedRewards.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {claimedRewards.map((claimedReward) => (
                       <motion.div
                         key={claimedReward.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-4 rounded-lg border-2 bg-white border-purple-200"
+                        whileHover={{ scale: 1.03 }}
+                        className="p-6 rounded-xl border-2 bg-white border-purple-200 hover:border-purple-300 transition-all duration-300"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-full bg-purple-100">
-                            <GiftIcon className="h-5 w-5 text-purple-600" />
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-full bg-purple-100">
+                            <GiftIcon className="h-6 w-6 text-purple-600" />
                           </div>
                           <div>
-                            <h4 className="font-medium text-gray-900">{claimedReward.reward.label}</h4>
-                            <p className="text-sm text-gray-500">
+                            <h4 className="text-lg font-medium text-gray-900">{claimedReward.reward.label}</h4>
+                            <p className="text-base text-gray-500">
                               Obtenue le {format(new Date(claimedReward.claimed_at), 'dd MMMM yyyy', { locale: fr })}
                             </p>
                           </div>
@@ -909,9 +922,9 @@ export default function DashboardChild() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">Tu n'as pas encore obtenu de récompenses.</p>
-                    <p className="text-sm text-gray-400 mt-2">Continue à accomplir tes tâches pour gagner des points !</p>
+                  <div className="text-center py-12">
+                    <p className="text-xl text-gray-500">Tu n'as pas encore obtenu de récompenses.</p>
+                    <p className="text-base text-gray-400 mt-3">Continue à accomplir tes tâches pour gagner des points !</p>
                   </div>
                 )}
               </CardContent>
@@ -919,24 +932,24 @@ export default function DashboardChild() {
           </motion.div>
         </div>
 
-        {/* Section de la devinette quotidienne */}
+        {/* Section de la devinette quotidienne améliorée */}
         {currentRiddle && !riddleSolved && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-8"
           >
-            <Card className="bg-white/80 backdrop-blur-sm border-2 border-purple-200 shadow-xl">
+            <Card className="bg-white/90 backdrop-blur-md border-2 border-purple-200 shadow-xl transform hover:scale-[1.01] transition-transform duration-300">
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                  <BrainIcon className="h-6 w-6 text-purple-600" />
+                <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                  <BrainIcon className="h-8 w-8 text-purple-600" />
                   Devinette du Jour
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRiddleSubmit} className="space-y-4">
-                  <div className="bg-purple-50 p-6 rounded-lg border-2 border-purple-100">
-                    <p className="text-lg font-medium text-gray-800 mb-4">
+                  <div className="bg-purple-50 p-8 rounded-xl border-2 border-purple-100">
+                    <p className="text-xl font-medium text-gray-800 mb-6">
                       {currentRiddle.question}
                     </p>
                     <div className="flex gap-4">
@@ -945,9 +958,12 @@ export default function DashboardChild() {
                         value={riddleAnswer}
                         onChange={(e) => setRiddleAnswer(e.target.value)}
                         placeholder="Ta réponse..."
-                        className="flex-1"
+                        className="flex-1 text-lg p-4 rounded-lg border-2 border-purple-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-200"
                       />
-                      <Button type="submit" className="bg-purple-600 hover:bg-purple-700">
+                      <Button 
+                        type="submit" 
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg px-8"
+                      >
                         Valider
                       </Button>
                     </div>
@@ -958,7 +974,7 @@ export default function DashboardChild() {
           </motion.div>
         )}
 
-        {/* Animation de succès */}
+        {/* Animation de succès améliorée */}
         <AnimatePresence>
           {showSuccess && (
             <motion.div
@@ -967,21 +983,21 @@ export default function DashboardChild() {
               exit={{ opacity: 0, scale: 0.5 }}
               className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
             >
-              <div className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border-2 border-green-200">
+              <div className="bg-white/95 backdrop-blur-md p-10 rounded-3xl shadow-2xl border-2 border-green-200">
                 <motion.div
                   animate={{ 
                     rotate: [0, 360],
                     scale: [1, 1.2, 1]
                   }}
                   transition={{ duration: 1 }}
-                  className="text-6xl mb-4 text-center"
+                  className="text-7xl mb-6 text-center"
                 >
                   🎉
                 </motion.div>
-                <h3 className="text-2xl font-bold text-center text-gray-800 mb-2">
+                <h3 className="text-3xl font-bold text-center text-gray-800 mb-3">
                   Bravo !
                 </h3>
-                <p className="text-gray-600 text-center">
+                <p className="text-xl text-gray-600 text-center">
                   Tu as gagné {currentRiddle?.points} points !
                 </p>
               </div>
