@@ -22,6 +22,18 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
 - **Personnalisation** : Couleurs et avatars personnalisés
 - **Système de streaks** : Motivation par les séries de jours consécutifs
 
+### 🛒 Boutique et achats
+Gestion d'une boutique interne où les parents ajoutent des articles dans `shop_items`. Les enfants peuvent dépenser leurs points pour les acheter. Chaque opération est enregistrée dans la table `purchases`.
+
+### 🐷 Tirelire
+Les enfants disposent d'une tirelire virtuelle pour épargner ou dépenser leurs points. La conversion est fixée à **100 points = 1 €** fictif et toutes les opérations sont historisées dans `piggy_bank_transactions`.
+
+### 📘 Manuel pour enfants
+Un manuel simplifié est intégré à l'interface afin d'aider les plus jeunes à comprendre le fonctionnement de l'application. Il est disponible dans le fichier `public/manuel.md` et consultable depuis le tableau de bord.
+
+### 🤖 Suggestions automatiques
+L'application propose des idées de tâches, de règles et de récompenses grâce à l'API Google Gemini pour simplifier la configuration par les parents.
+
 ## 🛠️ Technologies Utilisées
 
 ### Frontend
@@ -53,6 +65,9 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
 - `rules` : Règles de comportement
 - `rewards` : Catalogue de récompenses
 - `riddles` : Devinettes créées par les parents
+- `shop_items` : Articles disponibles dans la boutique
+- `purchases` : Achats effectués par les enfants
+- `piggy_bank_transactions` : Mouvements de points de la tirelire
 
 ### Tables de liaison
 - `child_tasks` : Tâches assignées aux enfants
@@ -81,6 +96,7 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    VITE_GEMINI_API_KEY=your_google_generative_ai_key
    ```
+   La clé `VITE_GEMINI_API_KEY` est utilisée pour contacter l'API Google Gemini afin de générer automatiquement des suggestions de tâches, règles ou récompenses.
 
 4. Exécuter les migrations Supabase :
    - `create_initial_schema.sql`
