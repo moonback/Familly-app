@@ -103,7 +103,8 @@ const generateAgeAppropriateTasks = async (child: Child) => {
         .select('*')
         .eq('user_id', child.user_id)
         .lte('age_min', child.age)
-        .gte('age_max', child.age);
+        .gte('age_max', child.age)
+        .order('points_reward', { ascending: false });
 
       if (tasksError) {
         console.error('Erreur lors de la récupération des tâches:', tasksError);
@@ -133,10 +134,22 @@ const generateAgeAppropriateTasks = async (child: Child) => {
             console.error('Erreur lors de la création de la tâche:', insertError);
           }
         }
+      } else {
+        console.log('Aucune tâche appropriée trouvée pour l\'âge de l\'enfant');
+        toast({
+          title: 'Information',
+          description: "Aucune tâche n'est disponible pour l'âge de l'enfant",
+          variant: 'default',
+        });
       }
     }
   } catch (error) {
     console.error('Erreur lors de la génération des tâches:', error);
+    toast({
+      title: 'Erreur',
+      description: "Impossible de générer les tâches",
+      variant: 'destructive',
+    });
   }
 };
 
@@ -352,6 +365,28 @@ export default function DashboardChild() {
 
   const handleTaskToggle = async (childTaskId: string, isCompleted: boolean) => {
     try {
+      // Vérifier si la tâche a déjà été complétée aujourd'hui
+      const { data: existingCompletion, error: checkError } = await supabase
+        .from('child_tasks')
+        .select('completed_at')
+        .eq('id', childTaskId)
+        .eq('due_date', format(new Date(), 'yyyy-MM-dd'))
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      // Si la tâche a déjà été complétée aujourd'hui, afficher un message
+      if (existingCompletion?.completed_at) {
+        toast({
+          title: 'Information',
+          description: "Cette tâche a déjà été complétée aujourd'hui",
+          variant: 'default',
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('child_tasks')
         .update({
@@ -1012,7 +1047,7 @@ export default function DashboardChild() {
                 <div
                   className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)] group-hover:opacity-30 transition-opacity duration-300"
                 />
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
 
                 <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
                   <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
@@ -1216,7 +1251,7 @@ export default function DashboardChild() {
                 <div
                   className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)] group-hover:opacity-30 transition-opacity duration-300"
                 />
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PC9zdmc=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZ24+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
                 
                 <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
                   <CardTitle className="text-3xl font-bold text-gray-800 flex items-center gap-3">
