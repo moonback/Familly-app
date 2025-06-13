@@ -717,7 +717,7 @@ export default function DashboardChild() {
         className={`min-h-screen relative overflow-hidden ${
           child?.custom_color
             ? 'bg-[linear-gradient(135deg,var(--child-color)_20,var(--child-color)_10,#f8fafc)]'
-            : 'bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100'
+            : 'bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900'
         }`}
       >
         <BackgroundDecorations />
@@ -761,7 +761,7 @@ export default function DashboardChild() {
               className="transform hover:scale-[1.01] transition-transform duration-300"
             />
 
-            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+            <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-lg">
               <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                 <TrophyIcon className="w-6 h-6" />
                 Mes Récompenses Validées

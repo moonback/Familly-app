@@ -31,7 +31,7 @@ export const StatCard = ({
     whileHover={{ y: -4, scale: 1.02 }}
     transition={{ type: "spring", stiffness: 300, damping: 25 }}
   >
-    <Card className="bg-white/80 backdrop-blur-xl shadow-lg hover:shadow-2xl transition-all duration-500 border-0 rounded-2xl overflow-hidden group relative">
+    <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-lg hover:shadow-2xl transition-all duration-500 border-0 rounded-2xl overflow-hidden group relative">
       <div className={`absolute inset-0 bg-gradient-to-r ${color} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl`} />
       
       <div className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity duration-300">

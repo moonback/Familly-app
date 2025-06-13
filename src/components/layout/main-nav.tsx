@@ -16,6 +16,7 @@ import {
   DrawerTrigger,
   DrawerClose,
 } from '@/components/ui/drawer';
+import { ModeToggle } from './mode-toggle';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Child {
@@ -65,13 +66,13 @@ export function MainNav() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <motion.nav 
+    <motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       className={`sticky top-0 z-50 backdrop-blur-md transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/90 shadow-lg border-b border-purple-100' 
-          : 'bg-white/80 border-b border-purple-50'
+        isScrolled
+          ? 'bg-white/90 dark:bg-gray-900/90 shadow-lg border-b border-purple-100 dark:border-gray-700'
+          : 'bg-white/80 dark:bg-gray-900/80 border-b border-purple-50 dark:border-gray-700'
       }`}
     >
       <div className="container mx-auto px-4">
@@ -212,12 +213,13 @@ export function MainNav() {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
+            <ModeToggle />
             {user ? (
               <motion.div whileHover={{ scale: 1.05 }}>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   onClick={handleSignOut}
-                  className="hover:bg-red-50 hover:text-red-500 transition-all duration-300"
+                  className="hover:bg-red-50 dark:hover:bg-red-900 hover:text-red-500 transition-all duration-300"
                 >
                   <LogOutIcon className="h-5 w-5 mr-2" />
                   <span className="hidden md:inline font-medium">Déconnexion</span>
@@ -226,7 +228,7 @@ export function MainNav() {
             ) : (
               <Link to="/auth">
                 <motion.div whileHover={{ scale: 1.05 }}>
-                  <Button 
+                  <Button
                     variant="default"
                     className="bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
                   >

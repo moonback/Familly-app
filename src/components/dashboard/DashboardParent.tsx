@@ -465,7 +465,7 @@ export const DashboardParent = () => {
           animate={{ opacity: 1, x: 0 }}
         >
           <Select value={period} onValueChange={(value: Period) => setPeriod(value)}>
-            <SelectTrigger className="w-[180px] bg-white/80 backdrop-blur-sm border-2 hover:bg-white transition-colors">
+            <SelectTrigger className="w-[180px] bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-2 hover:bg-white dark:hover:bg-gray-700 transition-colors">
               <Calendar className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Sélectionner une période" />
             </SelectTrigger>
@@ -484,7 +484,7 @@ export const DashboardParent = () => {
               variant="outline"
               size="icon"
               onClick={fetchStats}
-              className="hover:bg-white/80 backdrop-blur-sm border-2 transition-all duration-300"
+              className="hover:bg-white/80 dark:hover:bg-gray-700 backdrop-blur-sm border-2 transition-all duration-300"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -572,7 +572,7 @@ export const DashboardParent = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Enfants</CardTitle>
@@ -600,7 +600,7 @@ export const DashboardParent = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Tâches</CardTitle>
@@ -628,7 +628,7 @@ export const DashboardParent = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Règles</CardTitle>
@@ -656,7 +656,7 @@ export const DashboardParent = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Récompenses</CardTitle>
@@ -684,7 +684,7 @@ export const DashboardParent = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Devinettes</CardTitle>
@@ -712,7 +712,7 @@ export const DashboardParent = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion de la Boutique</CardTitle>
@@ -740,7 +740,7 @@ export const DashboardParent = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
               <CardHeader className="border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Pénalités</CardTitle>

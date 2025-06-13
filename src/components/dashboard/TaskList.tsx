@@ -59,14 +59,14 @@ export const TaskList = ({ childTasks, onTaskToggle, childColor }: TaskListProps
       transition={{ type: "spring", stiffness: 100, delay: 0.4 }}
       className="lg:col-span-6"
     >
-      <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
+      <Card className="shadow-2xl border-0 overflow-hidden h-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group relative z-10">
         <div
           className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,var(--child-color)40,var(--child-color)20)] group-hover:opacity-30 transition-opacity duration-300"
           style={{ '--child-color': childColor } as React.CSSProperties}
         />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSI+PHBhdGggZD0iTTIwIDIwYzAgMTEuMDQ2LTguOTU0IDIwLTIwIDIwdjIwaDQwVjIwSDIweiIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-15 transition-opacity duration-300" />
 
-        <CardHeader className="relative z-10 p-6 bg-white/50 backdrop-blur-sm">
+        <CardHeader className="relative z-10 p-6 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-6">
             <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-3">
               <ListChecksIcon className="h-8 w-8 text-[color:var(--child-color)] drop-shadow-xl" style={{ '--child-color': childColor } as React.CSSProperties} />
@@ -93,7 +93,7 @@ export const TaskList = ({ childTasks, onTaskToggle, childColor }: TaskListProps
                 className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer ${
                   childTask.is_completed 
                     ? 'bg-green-50 border-green-200 opacity-70' 
-                    : 'bg-white border-gray-200 hover:border-[color:var(--child-color)]'
+                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-[color:var(--child-color)]'
                 } transition-all duration-300`}
                 style={{ '--child-color': childColor } as React.CSSProperties}
               >

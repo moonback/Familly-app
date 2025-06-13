@@ -158,7 +158,7 @@ export default function Home() {
   const progress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-800">
       <div className="container mx-auto p-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
@@ -181,7 +181,7 @@ export default function Home() {
             </div>
           </div>
 
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-lg">
               <CardTitle className="flex items-center">
                 <ListChecksIcon className="mr-3 h-6 w-6" />
@@ -208,7 +208,7 @@ export default function Home() {
                     className={`relative flex items-center space-x-4 p-4 rounded-xl border-2 transition-all duration-300 ${
                       childTask.is_completed 
                         ? 'bg-green-50 border-green-200 shadow-md' 
-                        : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-lg'
+                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-purple-300 hover:shadow-lg'
                     } ${completedTasksAnimation.includes(childTask.id) ? 'animate-pulse bg-yellow-100' : ''}`}
                   >
                     {completedTasksAnimation.includes(childTask.id) && (
