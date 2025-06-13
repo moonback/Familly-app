@@ -92,6 +92,11 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
    npm run dev
    ```
 
+6. Exécuter les tests :
+   ```bash
+   npm run test
+   ```
+
 ## 📱 Utilisation
 
 ### Pour commencer

@@ -115,7 +115,7 @@ interface StatCardProps {
   subtitle?: string;
 }
 
-const StatCard = ({ title, value, icon, color, isLoading, details, trend, subtitle }: StatCardProps) => (
+export const StatCard = ({ title, value, icon, color, isLoading, details, trend, subtitle }: StatCardProps) => (
   <motion.div
     whileHover={{ y: -4, scale: 1.02 }}
     transition={{ type: "spring", stiffness: 300, damping: 25 }}
