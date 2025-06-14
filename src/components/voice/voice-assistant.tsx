@@ -751,6 +751,132 @@ Assistant:`;
     return processedResponse;
   };
 
+  const validateTask = async (taskName: string): Promise<{ success: boolean; message: string }> => {
+    if (!activeChild || !user) {
+      return { success: false, message: `Impossible de valider la tâche : ${activeChild?.name || 'enfant'} non sélectionné` };
+    }
+
+    try {
+      // Nettoyer le nom de la tâche
+      const cleanTaskName = taskName
+        .toLowerCase()
+        .replace(/^(de |la |le |les |l'|du |des )/i, '')
+        .trim();
+
+      console.log('🔍 Recherche de la tâche:', cleanTaskName);
+
+      // Vérifier si c'est une énigme
+      if (cleanTaskName.includes('énigme') || cleanTaskName.includes('riddle')) {
+        const { data: riddleData, error: riddleError } = await supabase
+          .from('daily_riddles')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_completed', false)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (riddleError || !riddleData) {
+          return { success: false, message: `${activeChild.name}, il n'y a pas d'énigme disponible pour le moment.` };
+        }
+
+        // Mettre à jour le statut de l'énigme
+        const { error: updateError } = await supabase
+          .from('daily_riddles')
+          .update({ is_completed: true, completed_at: new Date().toISOString() })
+          .eq('id', riddleData.id);
+
+        if (updateError) {
+          return { success: false, message: `${activeChild.name}, il y a eu une erreur lors de la validation de l'énigme.` };
+        }
+
+        // Mettre à jour les points de l'enfant
+        const pointsToAdd = riddleData.points_reward || 10;
+        const { error: pointsError } = await supabase
+          .from('children')
+          .update({ points: (activeChild.points || 0) + pointsToAdd })
+          .eq('id', activeChild.id);
+
+        if (pointsError) {
+          return { success: false, message: `${activeChild.name}, il y a eu une erreur lors de la mise à jour de tes points.` };
+        }
+
+        // Mettre à jour le contexte local
+        setActiveChild(prev => prev ? { ...prev, points: (prev.points || 0) + pointsToAdd } : null);
+
+        return { 
+          success: true, 
+          message: `Félicitations ${activeChild.name} ! Tu as résolu l'énigme du jour et gagné ${pointsToAdd} points !` 
+        };
+      }
+
+      // Rechercher la tâche dans les tâches en attente
+      const { data: taskData, error: taskError } = await supabase
+        .from('child_tasks')
+        .select(`
+          id,
+          tasks (
+            label,
+            points_reward
+          )
+        `)
+        .eq('child_id', activeChild.id)
+        .eq('is_completed', false)
+        .or(`tasks.label.ilike.%${cleanTaskName}%,tasks.label.ilike.%${cleanTaskName}.%`)
+        .single();
+
+      if (taskError || !taskData) {
+        console.log('❌ Tâche non trouvée:', cleanTaskName);
+        // Afficher les tâches disponibles pour le débogage
+        const { data: availableTasks } = await supabase
+          .from('child_tasks')
+          .select('tasks(label)')
+          .eq('child_id', activeChild.id)
+          .eq('is_completed', false);
+        console.log('📋 Tâches disponibles:', availableTasks?.map(t => t.tasks[0].label));
+        return { success: false, message: `${activeChild.name}, je n'ai pas trouvé cette tâche dans ta liste.` };
+      }
+
+      // Mettre à jour le statut de la tâche
+      const { error: updateError } = await supabase
+        .from('child_tasks')
+        .update({ is_completed: true, completed_at: new Date().toISOString() })
+        .eq('id', taskData.id);
+
+      if (updateError) {
+        return { success: false, message: `${activeChild.name}, il y a eu une erreur lors de la mise à jour de la tâche.` };
+      }
+
+      // Mettre à jour les points de l'enfant
+      const pointsToAdd = taskData.tasks[0].points_reward;
+      const { error: pointsError } = await supabase
+        .from('children')
+        .update({ points: (activeChild.points || 0) + pointsToAdd })
+        .eq('id', activeChild.id);
+
+      if (pointsError) {
+        return { success: false, message: `${activeChild.name}, il y a eu une erreur lors de la mise à jour de tes points.` };
+      }
+
+      // Mettre à jour le contexte local
+      setActiveChild(prev => prev ? { ...prev, points: (prev.points || 0) + pointsToAdd } : null);
+      setConversationContext(prev => ({
+        ...prev,
+        pendingTasks: prev.pendingTasks?.filter(t => t !== cleanTaskName) || [],
+        completedTasks: [...(prev.completedTasks || []), cleanTaskName],
+        lastTaskCompletion: new Date()
+      }));
+
+      return { 
+        success: true, 
+        message: `Félicitations ${activeChild.name} ! La tâche "${cleanTaskName}" a été validée. Tu as gagné ${pointsToAdd} points !` 
+      };
+    } catch (error) {
+      console.error('❌ Erreur lors de la validation de la tâche:', error);
+      return { success: false, message: `${activeChild.name}, une erreur est survenue lors de la validation de la tâche.` };
+    }
+  };
+
   useEffect(() => {
     console.log('🔄 Initialisation de la reconnaissance vocale');
     const SpeechRecognition =
