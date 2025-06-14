@@ -187,6 +187,9 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
       // Récupérer le prompt personnalisé
       const systemPrompt = localStorage.getItem('voiceAssistantPrompt') || `Tu es un assistant vocal familial nommé "FamilleIA". Réponds de manière naturelle et conversationnelle en français.`;
 
+      // Remplacer les variables prédéfinies
+      const replacedPrompt = await replacePredefinedVariables(systemPrompt);
+
       console.log('🔄 Appel de l\'API Gemini...');
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
@@ -196,7 +199,7 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: `${systemPrompt}
+                text: `${replacedPrompt}
 
 Utilisateur: ${text}
 Assistant:`
@@ -231,6 +234,33 @@ Assistant:`
     } catch (error) {
       console.error('❌ Erreur lors de la génération de réponse:', error);
       return "Désolé, j'ai rencontré une erreur lors de notre conversation.";
+    }
+  };
+
+  // Fonction pour remplacer les variables prédéfinies
+  const replacePredefinedVariables = async (prompt: string): Promise<string> => {
+    try {
+      // Récupérer les données nécessaires
+      const familyData = await fetch('/api/family/data').then(res => res.json());
+      const tasks = await fetch('/api/tasks').then(res => res.json());
+      const rewards = await fetch('/api/rewards').then(res => res.json());
+      const rules = await fetch('/api/rules').then(res => res.json());
+      const dailyRiddle = await fetch('/api/daily-riddle').then(res => res.json());
+      const sanctions = await fetch('/api/sanctions').then(res => res.json());
+
+      // Remplacer les variables
+      return prompt
+        .replace('{POINTS_TOTAUX}', familyData.totalPoints.toString())
+        .replace('{POINTS_ENFANT}', (childName: string) => familyData.children[childName]?.points.toString() || '0')
+        .replace('{TACHES_EN_COURS}', tasks.filter((t: any) => !t.completed).map((t: any) => t.name).join(', '))
+        .replace('{TACHES_TERMINEES}', tasks.filter((t: any) => t.completed).map((t: any) => t.name).join(', '))
+        .replace('{RECOMPENSES_DISPONIBLES}', rewards.filter((r: any) => r.available).map((r: any) => r.name).join(', '))
+        .replace('{REGLE_SPECIFIQUE}', (ruleName: string) => rules.find((r: any) => r.name === ruleName)?.description || 'Règle non trouvée')
+        .replace('{ENIGME_DU_JOUR}', dailyRiddle.question)
+        .replace('{SANCTIONS_ACTIVES}', sanctions.filter((s: any) => s.active).map((s: any) => s.description).join(', '));
+    } catch (error) {
+      console.error('❌ Erreur lors du remplacement des variables:', error);
+      return prompt;
     }
   };
 
