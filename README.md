@@ -92,11 +92,12 @@ L'application propose des idées de tâches, de règles et de récompenses grâc
 
 3. Configurer les variables d'environnement dans `.env` :
    ```env
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   VITE_GEMINI_API_KEY=your_google_generative_ai_key
-   ```
-   La clé `VITE_GEMINI_API_KEY` est utilisée pour contacter l'API Google Gemini afin de générer automatiquement des suggestions de tâches, règles ou récompenses.
+  VITE_SUPABASE_URL=your_supabase_url
+  VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+  VITE_API_BASE_URL=
+  GEMINI_API_KEY=your_google_generative_ai_key
+  ```
+  La clé `GEMINI_API_KEY` est utilisée côté serveur pour contacter l'API Google Gemini. `VITE_API_BASE_URL` permet éventuellement de spécifier l'URL du backend exposant les routes `/api/riddle` et `/api/suggestions`.
 
 4. Exécuter les migrations Supabase :
    - `create_initial_schema.sql`
