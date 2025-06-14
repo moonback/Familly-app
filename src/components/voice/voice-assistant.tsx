@@ -60,6 +60,19 @@ interface ConversationContext {
   lastTaskCompletion?: Date;
 }
 
+interface Task {
+  label: string;
+  points_reward: number;
+  category: string;
+}
+
+interface ChildTask {
+  id: string;
+  is_completed: boolean;
+  due_date: string;
+  tasks: Task;
+}
+
 export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
   const { enabled } = useVoiceAssistantSettings();
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -101,41 +114,52 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
           console.log('👶 Enfant actif chargé:', childData.name);
           setActiveChild(childData);
 
-          // Charger les tâches de l'enfant
-          const { data: tasksData } = await supabase
+          // Charger les tâches de l'enfant pour aujourd'hui
+          const today = new Date().toISOString().split('T')[0];
+          console.log('📅 Date du jour:', today);
+          console.log('🔍 Recherche des tâches pour:', childData.id);
+
+          const { data: tasksData, error: tasksError } = await supabase
             .from('child_tasks')
             .select(`
-              *,
-              task:task_id (
-                name,
+              id,
+              is_completed,
+              due_date,
+              tasks (
+                label,
                 points_reward,
                 category
               )
             `)
             .eq('child_id', childData.id)
-            .eq('is_completed', false);
+            .eq('is_completed', false)
+            .eq('due_date', today) as { data: ChildTask[] | null, error: any };
 
-          // Calculer le streak
-          const { data: completedTasks } = await supabase
-            .from('child_tasks')
-            .select('completed_at')
-            .eq('child_id', childData.id)
-            .eq('is_completed', true)
-            .order('completed_at', { ascending: false })
-            .limit(7);
+          if (tasksError) {
+            console.error('❌ Erreur lors de la récupération des tâches:', tasksError);
+          }
 
-          const streak = calculateStreak(completedTasks || []);
+          console.log('📋 Tâches chargées:', tasksData);
+          console.log('🔍 Détail des tâches:', tasksData?.map(t => ({
+            id: t.id,
+            taskName: t.tasks?.label,
+            dueDate: t.due_date,
+            isCompleted: t.is_completed
+          })));
 
-          // Mettre à jour le contexte avec toutes les informations
+          // Mettre à jour le contexte avec les tâches
+          const pendingTasks = tasksData?.map(t => t.tasks?.label).filter(Boolean) || [];
+          console.log('📝 Tâches en attente:', pendingTasks);
+
           setConversationContext(prev => ({
             ...prev,
             childId: childData.id,
             lastInteraction: new Date(),
             messageHistory: [],
             childAge: childData.age,
-            pendingTasks: tasksData?.map(t => t.task.name) || [],
-            streak: streak,
-            lastTaskCompletion: completedTasks?.[0]?.completed_at ? new Date(completedTasks[0].completed_at) : undefined
+            pendingTasks: pendingTasks,
+            streak: prev.streak,
+            lastTaskCompletion: prev.lastTaskCompletion
           }));
         }
       } catch (error) {
@@ -448,6 +472,14 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
         .map((msg, i) => `Message précédent ${i + 1}: ${msg}`)
         .join('\n');
 
+      // Formater les tâches en attente
+      const pendingTasks = conversationContext.pendingTasks || [];
+      const tasksList = pendingTasks.length > 0 
+        ? `Tâches en attente : ${pendingTasks.join(', ')}`
+        : 'Aucune tâche en attente';
+
+      console.log('📋 Tâches à inclure dans le contexte:', pendingTasks);
+
       // Ajouter des instructions spécifiques pour la personnalisation
       const enhancedPrompt = `${replacedPrompt}
 
@@ -461,9 +493,11 @@ Instructions importantes :
 - Fais des suggestions basées sur les tâches en cours
 - Encourage les bonnes habitudes et la persévérance
 
+${tasksList}
+
 Exemples de réponses correctes :
-- "Bonjour ${activeChild?.name || 'l\'enfant'} ! Comment puis-je t'aider aujourd'hui ?"
-- "${activeChild?.name || 'l\'enfant'}, tu as ${conversationContext.pendingTasks?.length || 0} tâches à faire"
+- "Bonjour ${activeChild?.name || 'l\'enfant'} ! Voici tes tâches pour aujourd'hui : ${pendingTasks.join(', ')}"
+- "${activeChild?.name || 'l\'enfant'}, tu as ${pendingTasks.length} tâches à faire : ${pendingTasks.join(', ')}"
 - "Je vois que ${activeChild?.name || 'l\'enfant'} a bien travaillé aujourd'hui !"
 
 ${conversationHistory ? `Historique de la conversation:\n${conversationHistory}\n\n` : ''}
@@ -471,7 +505,12 @@ ${generateTaskSuggestions() ? `Suggestions actuelles :\n${generateTaskSuggestion
 Utilisateur: ${text}
 Assistant:`;
 
-      console.log('🔄 Appel de l\'API Gemini...');
+      console.log('🔄 Appel de l\'API Gemini avec le contexte:', {
+        pendingTasks,
+        childName: activeChild?.name,
+        childAge: conversationContext.childAge
+      });
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
