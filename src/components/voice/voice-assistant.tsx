@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Mic, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { detectIntent, DetectedIntent } from '@/lib/gemini';
 import { useVoiceAssistantSettings } from '@/context/voice-assistant-context';
 import { toast } from '@/hooks/use-toast';
@@ -81,6 +87,7 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
   const MAX_RETRIES = 3;
   const [hasRequestedPermission, setHasRequestedPermission] = useState(false);
   const [isMicrophoneAvailable, setIsMicrophoneAvailable] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(true);
   const streamRef = useRef<MediaStream | null>(null);
   const { user } = useAuth();
   const { childName } = useParams();
@@ -907,10 +914,12 @@ Assistant:`;
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       console.error('❌ La reconnaissance vocale n\'est pas supportée par ce navigateur');
+      setSpeechSupported(false);
       toast({
-        title: "Navigateur non supporté",
-        description: "Votre navigateur ne supporte pas la reconnaissance vocale",
-        variant: "destructive"
+        title: 'Reconnaissance vocale non disponible',
+        description:
+          'Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez le mode manuel ou un navigateur compatible.',
+        variant: 'destructive',
       });
       return;
     }
@@ -959,6 +968,15 @@ Assistant:`;
   }, []);
 
   const toggle = async () => {
+    if (!speechSupported) {
+      toast({
+        title: 'Reconnaissance vocale non disponible',
+        description:
+          'Utilisez le mode manuel ou un navigateur compatible pour parler avec l\'assistant.',
+        variant: 'destructive',
+      });
+      return;
+    }
     if (!recognitionRef.current) {
       console.error('❌ La reconnaissance vocale n\'est pas initialisée');
       return;
@@ -986,14 +1004,26 @@ Assistant:`;
   }
 
   return (
-    <Button 
-      variant="outline" 
-      size="icon" 
-      onClick={toggle} 
-      className="ml-2"
-      data-child-name={childName}
-    >
-      {listening ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-    </Button>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggle}
+            className="ml-2"
+            data-child-name={childName}
+            disabled={!speechSupported}
+          >
+            {listening ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
+        </TooltipTrigger>
+        {!speechSupported && (
+          <TooltipContent>
+            La reconnaissance vocale est indisponible. Utilisez le mode manuel ou un navigateur compatible.
+          </TooltipContent>
+        )}
+      </Tooltip>
+    </TooltipProvider>
   );
 };
