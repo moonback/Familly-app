@@ -52,6 +52,9 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
   const [listening, setListening] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 3;
+  const [hasRequestedPermission, setHasRequestedPermission] = useState(false);
+  const [isMicrophoneAvailable, setIsMicrophoneAvailable] = useState(false);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const speak = (text: string) => {
     console.log('🔊 Synthèse vocale:', text);
@@ -63,10 +66,85 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
     window.speechSynthesis.speak(utterance);
   };
 
+  const checkMicrophoneAvailability = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioDevices = devices.filter(device => device.kind === 'audioinput');
+      console.log('🎤 Périphériques audio disponibles:', audioDevices);
+      return audioDevices.length > 0;
+    } catch (error) {
+      console.error('❌ Erreur lors de la vérification des périphériques:', error);
+      return false;
+    }
+  };
+
+  const requestMicrophonePermission = async () => {
+    try {
+      console.log('🎤 Demande d\'accès au microphone...');
+      
+      // Vérifier d'abord si des microphones sont disponibles
+      const hasMicrophone = await checkMicrophoneAvailability();
+      if (!hasMicrophone) {
+        toast({
+          title: "Aucun microphone détecté",
+          description: "Veuillez connecter un microphone et réessayer",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Demander la permission
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      // Garder une référence au stream
+      streamRef.current = stream;
+      console.log('✅ Permission microphone accordée');
+      setHasRequestedPermission(true);
+      setIsMicrophoneAvailable(true);
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur lors de la demande de permission:', error);
+      setIsMicrophoneAvailable(false);
+      toast({
+        title: "Accès au microphone refusé",
+        description: "Veuillez autoriser l'accès au microphone dans les paramètres de votre navigateur",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const stopMicrophone = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  };
+
   const handleError = (error: string, message: string) => {
     console.error('❌ Erreur de reconnaissance vocale:', error, message);
     
-    if (error === 'no-speech') {
+    if (error === 'audio-capture') {
+      setIsMicrophoneAvailable(false);
+      stopMicrophone();
+      
+      if (!hasRequestedPermission) {
+        requestMicrophonePermission();
+      } else {
+        toast({
+          title: "Problème avec le microphone",
+          description: "Veuillez vérifier que votre microphone est bien connecté et autorisé",
+          variant: "destructive"
+        });
+      }
+      setListening(false);
+    } else if (error === 'no-speech') {
       if (retryCount < MAX_RETRIES) {
         setRetryCount(prev => prev + 1);
         toast({
@@ -74,9 +152,8 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
           description: "Veuillez parler plus fort ou vérifier votre microphone",
           variant: "destructive"
         });
-        // Redémarrer l'écoute après un court délai
         setTimeout(() => {
-          if (recognitionRef.current) {
+          if (recognitionRef.current && isMicrophoneAvailable) {
             recognitionRef.current.start();
           }
         }, 1000);
@@ -96,6 +173,60 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
         description: "Une erreur est survenue. Veuillez réessayer.",
         variant: "destructive"
       });
+    }
+  };
+
+  const getResponse = async (text: string) => {
+    try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        console.error('❌ Clé API Gemini manquante');
+        throw new Error('Clé API Gemini manquante');
+      }
+
+      console.log('🔄 Appel de l\'API Gemini...');
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Tu es un assistant vocal amical et serviable. Réponds de manière naturelle et conversationnelle en français.
+Utilisateur: ${text}
+Assistant:`
+              }]
+            }],
+            generationConfig: {
+              temperature: 0.7,
+              topK: 40,
+              topP: 0.95,
+              maxOutputTokens: 1024,
+            }
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Réponse API non-OK:', response.status, errorText);
+        throw new Error(`Erreur API: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Réponse API reçue:', data);
+      
+      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!generatedText) {
+        console.error('❌ Pas de texte généré dans la réponse:', data);
+        return "Désolé, je n'ai pas pu générer une réponse.";
+      }
+
+      return generatedText;
+    } catch (error) {
+      console.error('❌ Erreur lors de la génération de réponse:', error);
+      return "Désolé, j'ai rencontré une erreur lors de notre conversation.";
     }
   };
 
@@ -140,36 +271,33 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
         .map((r) => r[0].transcript)
         .join(' ');
       console.log('🎤 Texte reconnu:', transcript);
-      setRetryCount(0); // Réinitialiser le compteur en cas de succès
-      
-      try {
-        const intent = await detectIntent(transcript);
-        console.log('🎯 Intention détectée:', intent);
-        onIntent(intent);
-        
-        // Répondre vocalement à l'utilisateur
-        if (intent.intent === 'complete_task' && intent.task) {
-          speak(`J'ai marqué la tâche "${intent.task}" comme terminée`);
-        } else if (intent.intent === 'get_points') {
-          speak('Je vais vérifier tes points');
-        } else {
-          speak("Désolé, je n'ai pas compris ta demande");
-        }
-      } catch (error) {
-        console.error('❌ Erreur lors de la détection d\'intention:', error);
-        speak("Désolé, j'ai rencontré une erreur");
-      }
+      setRetryCount(0);
+
+      // Obtenir une réponse conversationnelle
+      const response = await getResponse(transcript);
+      speak(response);
     };
 
     recognitionRef.current = recognition;
     console.log('✅ Reconnaissance vocale initialisée');
-  }, [onIntent]);
 
-  const toggle = () => {
+    // Nettoyage lors du démontage du composant
+    return () => {
+      stopMicrophone();
+    };
+  }, []);
+
+  const toggle = async () => {
     if (!recognitionRef.current) {
       console.error('❌ La reconnaissance vocale n\'est pas initialisée');
       return;
     }
+
+    if (!hasRequestedPermission || !isMicrophoneAvailable) {
+      const permissionGranted = await requestMicrophonePermission();
+      if (!permissionGranted) return;
+    }
+
     if (listening) {
       console.log('🛑 Arrêt de l\'écoute');
       recognitionRef.current.stop();
