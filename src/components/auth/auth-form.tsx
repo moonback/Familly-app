@@ -7,6 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import {
+  validateEmail,
+  validatePassword,
+  validateConfirmPassword,
+} from '@/utils/authValidation';
+import { PasswordStrengthIndicator } from './password-strength-indicator';
 
 export function AuthForm() {
   const [email, setEmail] = useState('');
@@ -29,29 +35,20 @@ export function AuthForm() {
   const validateForm = () => {
     const errors: typeof validationErrors = {};
 
-    // Validation email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-      errors.email = 'L\'email est requis';
-    } else if (!emailRegex.test(email)) {
-      errors.email = 'Format d\'email invalide';
+    const emailError = validateEmail(email);
+    if (emailError) {
+      errors.email = emailError;
     }
 
-    // Validation mot de passe
-    if (!password) {
-      errors.password = 'Le mot de passe est requis';
-    } else if (password.length < 8) {
-      errors.password = 'Le mot de passe doit contenir au moins 8 caractères';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      errors.password = 'Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre';
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      errors.password = passwordError;
     }
 
-    // Validation confirmation mot de passe (uniquement pour l'inscription)
     if (isSignUp) {
-      if (!confirmPassword) {
-        errors.confirmPassword = 'La confirmation du mot de passe est requise';
-      } else if (password !== confirmPassword) {
-        errors.confirmPassword = 'Les mots de passe ne correspondent pas';
+      const confirmError = validateConfirmPassword(password, confirmPassword);
+      if (confirmError) {
+        errors.confirmPassword = confirmError;
       }
     }
 
@@ -109,19 +106,6 @@ export function AuthForm() {
     setPassword('');
   };
 
-  const getPasswordStrength = (pwd: string) => {
-    let strength = 0;
-    if (pwd.length >= 8) strength++;
-    if (/[a-z]/.test(pwd)) strength++;
-    if (/[A-Z]/.test(pwd)) strength++;
-    if (/\d/.test(pwd)) strength++;
-    if (/[^a-zA-Z\d]/.test(pwd)) strength++;
-    return strength;
-  };
-
-  const passwordStrength = getPasswordStrength(password);
-  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
-  const strengthLabels = ['Très faible', 'Faible', 'Moyen', 'Fort', 'Très fort'];
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -207,22 +191,8 @@ export function AuthForm() {
             )}
             
             {/* Indicateur de force du mot de passe pour l'inscription */}
-            {isSignUp && password && (
-              <div className="space-y-2" role="status" aria-label={`Force du mot de passe: ${strengthLabels[passwordStrength - 1] || 'Aucune'}`}>
-                <div className="flex space-x-1">
-                  {[...Array(5)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`h-2 w-full rounded ${
-                        i < passwordStrength ? strengthColors[passwordStrength - 1] : 'bg-gray-200'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Force: {strengthLabels[passwordStrength - 1] || 'Aucune'}
-                </p>
-              </div>
+            {isSignUp && (
+              <PasswordStrengthIndicator password={password} />
             )}
           </div>
 
