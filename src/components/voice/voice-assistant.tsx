@@ -73,6 +73,30 @@ interface ChildTask {
   tasks: Task;
 }
 
+const loadVoices = (): Promise<SpeechSynthesisVoice[]> => {
+  return new Promise((resolve) => {
+    const existing = window.speechSynthesis.getVoices();
+    if (existing.length) {
+      resolve(existing);
+      return;
+    }
+
+    let timeout: NodeJS.Timeout;
+    const handler = () => {
+      clearTimeout(timeout);
+      window.speechSynthesis.removeEventListener('voiceschanged', handler);
+      resolve(window.speechSynthesis.getVoices());
+    };
+
+    window.speechSynthesis.addEventListener('voiceschanged', handler);
+
+    timeout = setTimeout(() => {
+      window.speechSynthesis.removeEventListener('voiceschanged', handler);
+      resolve(window.speechSynthesis.getVoices());
+    }, 1000);
+  });
+};
+
 export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
   const { enabled } = useVoiceAssistantSettings();
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -245,7 +269,7 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
     return suggestions.join('. ') + '.';
   };
 
-  const speak = (text: string) => {
+  const speak = async (text: string) => {
     console.log('🔊 Synthèse vocale:', text);
     
     // Récupérer les réglages vocaux
@@ -285,8 +309,10 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
     utterance.pitch = voiceSettings.pitch;
     utterance.volume = voiceSettings.volume;
 
+    // S'assurer que la liste des voix est chargée
+    const voices = await loadVoices();
+
     // Sélection de la meilleure voix française disponible
-    const voices = window.speechSynthesis.getVoices();
     const frenchVoices = voices.filter(voice => voice.lang.includes('fr'));
     if (frenchVoices.length > 0) {
       // Préférer une voix féminine si disponible
@@ -946,7 +972,7 @@ Assistant:`;
 
       // Obtenir une réponse conversationnelle
       const response = await getResponse(transcript);
-      speak(response);
+      await speak(response);
     };
 
     recognitionRef.current = recognition;
