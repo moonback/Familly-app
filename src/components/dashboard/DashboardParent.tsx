@@ -59,6 +59,7 @@ import { ManagementCard } from './ManagementCard';
 import { DetectedIntent } from '@/lib/gemini';
 import { VoiceAssistant } from '../voice/voice-assistant';
 import { VoiceSettings } from '../voice/voice-settings';
+import { PromptSettings } from '../voice/prompt-settings';
 import { toast } from '@/hooks/use-toast';
 
 type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | 'shop' | 'penalties' | 'voice' | null;
@@ -342,137 +343,159 @@ export const DashboardParent = () => {
     return null;
   }
 
-  const dashboardCards = [
-    {
-      id: 'children',
-      title: 'Gérer les Enfants',
-      description: 'Ajoutez, modifiez ou supprimez les profils de vos enfants.',
-      icon: Users,
-      color: 'text-pink-500',
-      hoverColor: 'hover:bg-pink-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-pink-100'
-    },
-    {
-      id: 'tasks',
-      title: 'Gérer les Tâches',
-      description: 'Définissez les tâches quotidiennes et leurs points de récompense.',
-      icon: CheckSquare,
-      color: 'text-emerald-500',
-      hoverColor: 'hover:bg-emerald-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-emerald-100'
-    },
-    {
-      id: 'rules',
-      title: 'Gérer les Règles',
-      description: 'Établissez les règles de comportement et les pénalités de points.',
-      icon: Shield,
-      color: 'text-amber-500',
-      hoverColor: 'hover:bg-amber-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-amber-100'
-    },
-    {
-      id: 'rewards',
-      title: 'Gérer les Récompenses',
-      description: 'Créez des récompenses que vos enfants pourront échanger avec leurs points.',
-      icon: Gift,
-      color: 'text-violet-500',
-      hoverColor: 'hover:bg-violet-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-violet-100'
-    },
-    {
-      id: 'riddles',
-      title: 'Gérer les Devinettes',
-      description: 'Créez des devinettes quotidiennes pour que vos enfants gagnent des points bonus.',
-      icon: Brain,
-      color: 'text-cyan-500',
-      hoverColor: 'hover:bg-cyan-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-cyan-100'
-    },
-    {
-      id: 'shop',
-      title: 'Gérer la Boutique',
-      description: 'Créez et gérez les articles que vos enfants peuvent acheter avec leurs points.',
-      icon: Gift,
-      color: 'text-violet-500',
-      hoverColor: 'hover:bg-violet-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-violet-100'
-    },
-    {
-      id: 'penalties',
-      title: 'Gérer les Pénalités',
-      description: 'Appliquez des pénalités de points pour les règles non respectées.',
-      icon: AlertCircle,
-      color: 'text-red-500',
-      hoverColor: 'hover:bg-red-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-red-100'
-    },
-    {
-      id: 'voice',
-      title: 'Assistant Vocal',
-      description: 'Configurez les commandes vocales pour contrôler le tableau.',
-      icon: Mic,
-      color: 'text-blue-500',
-      hoverColor: 'hover:bg-blue-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Configurer',
-      accent: 'bg-blue-100'
-    }
-  ];
-
   const renderManagementCards = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {dashboardCards.map((card) => (
-        <motion.div
-          key={card.id}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className={`relative overflow-hidden rounded-lg border ${card.borderColor} ${card.bgColor} ${card.hoverColor} transition-all duration-300 shadow-sm`}
-        >
-          <div className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${card.accent}`}>
-                  <card.icon className={`h-5 w-5 ${card.color}`} />
-                </div>
-                <h3 className="font-medium text-gray-900">{card.title}</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentView(card.id as View)}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900"
-              >
-                {card.buttonText}
-              </Button>
-            </div>
-            <p className="mt-2 text-sm text-gray-500 line-clamp-2">{card.description}</p>
-          </div>
-        </motion.div>
-      ))}
+    <div className="flex overflow-x-auto gap-4 pb-4">
+      <ManagementCard
+        id="children"
+        title="Enfants"
+        description="Gérer les profils des enfants"
+        icon={Users}
+        color="from-blue-500 to-indigo-600"
+        hoverColor="hover:from-blue-600 hover:to-indigo-700"
+        bgGradient="bg-gradient-to-br from-blue-50 to-indigo-50"
+        borderColor="border-blue-200"
+        buttonText="Gérer"
+        accent="bg-blue-500"
+        onClick={() => setCurrentView('children')}
+      />
+      <ManagementCard
+        id="tasks"
+        title="Tâches"
+        description="Gérer les tâches quotidiennes"
+        icon={CheckSquare}
+        color="from-emerald-500 to-teal-600"
+        hoverColor="hover:from-emerald-600 hover:to-teal-700"
+        bgGradient="bg-gradient-to-br from-emerald-50 to-teal-50"
+        borderColor="border-emerald-200"
+        buttonText="Gérer"
+        accent="bg-emerald-500"
+        onClick={() => setCurrentView('tasks')}
+      />
+      <ManagementCard
+        id="rules"
+        title="Règles"
+        description="Définir les règles familiales"
+        icon={Shield}
+        color="from-violet-500 to-purple-600"
+        hoverColor="hover:from-violet-600 hover:to-purple-700"
+        bgGradient="bg-gradient-to-br from-violet-50 to-purple-50"
+        borderColor="border-violet-200"
+        buttonText="Gérer"
+        accent="bg-violet-500"
+        onClick={() => setCurrentView('rules')}
+      />
+      <ManagementCard
+        id="rewards"
+        title="Récompenses"
+        description="Gérer les récompenses"
+        icon={Gift}
+        color="from-amber-500 to-orange-600"
+        hoverColor="hover:from-amber-600 hover:to-orange-700"
+        bgGradient="bg-gradient-to-br from-amber-50 to-orange-50"
+        borderColor="border-amber-200"
+        buttonText="Gérer"
+        accent="bg-amber-500"
+        onClick={() => setCurrentView('rewards')}
+      />
+      <ManagementCard
+        id="riddles"
+        title="Énigmes"
+        description="Gérer les énigmes quotidiennes"
+        icon={Brain}
+        color="from-rose-500 to-pink-600"
+        hoverColor="hover:from-rose-600 hover:to-pink-700"
+        bgGradient="bg-gradient-to-br from-rose-50 to-pink-50"
+        borderColor="border-rose-200"
+        buttonText="Gérer"
+        accent="bg-rose-500"
+        onClick={() => setCurrentView('riddles')}
+      />
+      <ManagementCard
+        id="shop"
+        title="Boutique"
+        description="Gérer la boutique de récompenses"
+        icon={PiggyBankIcon}
+        color="from-cyan-500 to-blue-600"
+        hoverColor="hover:from-cyan-600 hover:to-blue-700"
+        bgGradient="bg-gradient-to-br from-cyan-50 to-blue-50"
+        borderColor="border-cyan-200"
+        buttonText="Gérer"
+        accent="bg-cyan-500"
+        onClick={() => setCurrentView('shop')}
+      />
+      <ManagementCard
+        id="penalties"
+        title="Sanctions"
+        description="Gérer les sanctions"
+        icon={AlertCircle}
+        color="from-red-500 to-orange-600"
+        hoverColor="hover:from-red-600 hover:to-orange-700"
+        bgGradient="bg-gradient-to-br from-red-50 to-orange-50"
+        borderColor="border-red-200"
+        buttonText="Gérer"
+        accent="bg-red-500"
+        onClick={() => setCurrentView('penalties')}
+      />
+      <ManagementCard
+        id="voice"
+        title="Assistant Vocal"
+        description="Configurer l'assistant vocal"
+        icon={Mic}
+        color="from-indigo-500 to-purple-600"
+        hoverColor="hover:from-indigo-600 hover:to-purple-700"
+        bgGradient="bg-gradient-to-br from-indigo-50 to-purple-50"
+        borderColor="border-indigo-200"
+        buttonText="Configurer"
+        accent="bg-indigo-500"
+        onClick={() => setCurrentView('voice')}
+      />
     </div>
   );
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'children':
+        return <ChildrenManager />;
+      case 'tasks':
+        return <TasksManager />;
+      case 'rules':
+        return <RulesManager />;
+      case 'rewards':
+        return <RewardsManager />;
+      case 'riddles':
+        return <RiddlesManager />;
+      case 'shop':
+        return <ShopManager />;
+      case 'penalties':
+        return <PenaltyManager />;
+      case 'voice':
+        return (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Assistant Vocal</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <VoiceSettings />
+                <div className="flex items-center justify-end">
+                  <VoiceAssistant onIntent={handleVoiceIntent} />
+                </div>
+              </CardContent>
+            </Card>
+            <PromptSettings 
+              onSave={(prompt) => {
+                toast({
+                  title: "Configuration mise à jour",
+                  description: "Le comportement de l'assistant a été modifié avec succès.",
+                });
+              }} 
+            />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   const renderStats = () => (
     <div className="space-y-8">
@@ -594,227 +617,14 @@ export const DashboardParent = () => {
 
       {/* Managers */}
       <AnimatePresence mode="wait">
-        {currentView === 'children' && (
+        {currentView && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Enfants</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <ChildrenManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'tasks' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Tâches</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <TasksManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'rules' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Règles</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <RulesManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'rewards' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Récompenses</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <RewardsManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'riddles' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Devinettes</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <RiddlesManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'shop' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion de la Boutique</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <ShopManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'penalties' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Pénalités</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <PenaltyManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'voice' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Assistant Vocal</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <VoiceSettings />
-              </CardContent>
-            </Card>
+            {renderCurrentView()}
           </motion.div>
         )}
       </AnimatePresence>

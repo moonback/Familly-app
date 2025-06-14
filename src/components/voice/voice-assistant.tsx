@@ -184,6 +184,9 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
         throw new Error('Clé API Gemini manquante');
       }
 
+      // Récupérer le prompt personnalisé
+      const systemPrompt = localStorage.getItem('voiceAssistantPrompt') || `Tu es un assistant vocal familial nommé "FamilleIA". Réponds de manière naturelle et conversationnelle en français.`;
+
       console.log('🔄 Appel de l\'API Gemini...');
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
@@ -193,7 +196,8 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: `Tu es un assistant vocal amical et serviable. Réponds de manière naturelle et conversationnelle en français.
+                text: `${systemPrompt}
+
 Utilisateur: ${text}
 Assistant:`
               }]
