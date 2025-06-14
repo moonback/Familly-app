@@ -461,6 +461,12 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
         throw new Error('Clé API Gemini manquante');
       }
 
+      // Vérifier si l'enfant est chargé
+      if (!activeChild) {
+        console.error('❌ Aucun enfant actif');
+        return "Je ne peux pas répondre car aucun enfant n'est sélectionné.";
+      }
+
       // Détection des questions sur les points
       const pointsPatterns = [
         /combien (?:de points )?j'ai/i,
@@ -472,36 +478,7 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
 
       for (const pattern of pointsPatterns) {
         if (pattern.test(text)) {
-          if (!activeChild) {
-            return "Je ne peux pas voir tes points car aucun enfant n'est sélectionné.";
-          }
           return `${activeChild.name}, tu as actuellement ${activeChild.points || 0} points.`;
-        }
-      }
-
-      // Détection des demandes de validation de tâche
-      const taskValidationPatterns = [
-        /valider (?:la tâche )?["']?([^"']+)["']?/i,
-        /j'ai fini (?:la tâche )?["']?([^"']+)["']?/i,
-        /j'ai terminé (?:la tâche )?["']?([^"']+)["']?/i,
-        /j'ai complété (?:la tâche )?["']?([^"']+)["']?/i,
-        /c'est fait pour (?:la tâche )?["']?([^"']+)["']?/i,
-        /j'ai fait (?:la tâche )?["']?([^"']+)["']?/i
-      ];
-
-      for (const pattern of taskValidationPatterns) {
-        const match = text.match(pattern);
-        if (match) {
-          let taskName = match[1].trim();
-          // Nettoyer le nom de la tâche
-          taskName = taskName
-            .toLowerCase()
-            .replace(/^(de |la |le |les |l'|du |des )/i, '')
-            .trim();
-          
-          console.log('🎯 Détection de validation de tâche (nettoyée):', taskName);
-          const validationResult = await validateTask(taskName);
-          return validationResult.message;
         }
       }
 
@@ -526,7 +503,7 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
       const enhancedPrompt = `${replacedPrompt}
 
 Instructions importantes :
-- Tu dois TOUJOURS utiliser le nom "${activeChild?.name || 'l\'enfant'}" dans tes réponses
+- Tu dois TOUJOURS utiliser le nom "${activeChild.name}" dans tes réponses
 - Ne dis jamais "l'enfant" ou "toi" sans utiliser le nom
 - Ne dis pas "bonjour" à chaque message si la conversation est récente
 - Adapte ton langage à l'âge de l'enfant (${conversationContext.childAge || 'inconnu'} ans)
@@ -534,17 +511,17 @@ Instructions importantes :
 - Évite les répétitions
 - Fais des suggestions basées sur les tâches en cours
 - Encourage les bonnes habitudes et la persévérance
-- Mentionne les points actuels de l'enfant (${activeChild?.points || 0} points) quand c'est pertinent
+- Mentionne les points actuels de l'enfant (${activeChild.points || 0} points) quand c'est pertinent
 
 ${tasksList}
 
-Points actuels : ${activeChild?.points || 0}
+Points actuels : ${activeChild.points || 0}
 
 Exemples de réponses correctes :
-- "Bonjour ${activeChild?.name || 'l\'enfant'} ! Voici tes tâches pour aujourd'hui : ${pendingTasks.join(', ')}"
-- "${activeChild?.name || 'l\'enfant'}, tu as ${pendingTasks.length} tâches à faire : ${pendingTasks.join(', ')}"
-- "Je vois que ${activeChild?.name || 'l\'enfant'} a bien travaillé aujourd'hui !"
-- "${activeChild?.name || 'l\'enfant'}, tu as ${activeChild?.points || 0} points, continue comme ça !"
+- "Bonjour ${activeChild.name} ! Voici tes tâches pour aujourd'hui : ${pendingTasks.join(', ')}"
+- "${activeChild.name}, tu as ${pendingTasks.length} tâches à faire : ${pendingTasks.join(', ')}"
+- "Je vois que ${activeChild.name} a bien travaillé aujourd'hui !"
+- "${activeChild.name}, tu as ${activeChild.points || 0} points, continue comme ça !"
 
 ${conversationHistory ? `Historique de la conversation:\n${conversationHistory}\n\n` : ''}
 ${generateTaskSuggestions() ? `Suggestions actuelles :\n${generateTaskSuggestions()}\n\n` : ''}
@@ -553,9 +530,9 @@ Assistant:`;
 
       console.log('🔄 Appel de l\'API Gemini avec le contexte:', {
         pendingTasks,
-        childName: activeChild?.name,
+        childName: activeChild.name,
         childAge: conversationContext.childAge,
-        points: activeChild?.points
+        points: activeChild.points
       });
 
       const response = await fetch(
