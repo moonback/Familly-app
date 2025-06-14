@@ -151,16 +151,21 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
           const pendingTasks = tasksData?.map(t => t.tasks?.label).filter(Boolean) || [];
           console.log('📝 Tâches en attente:', pendingTasks);
 
-          setConversationContext(prev => ({
-            ...prev,
-            childId: childData.id,
-            lastInteraction: new Date(),
-            messageHistory: [],
-            childAge: childData.age,
-            pendingTasks: pendingTasks,
-            streak: prev.streak,
-            lastTaskCompletion: prev.lastTaskCompletion
-          }));
+          // Mettre à jour le contexte de conversation avec les nouvelles tâches
+          setConversationContext(prev => {
+            const newContext = {
+              ...prev,
+              childId: childData.id,
+              lastInteraction: new Date(),
+              messageHistory: prev.messageHistory || [],
+              childAge: childData.age,
+              pendingTasks: pendingTasks,
+              streak: prev.streak || 0,
+              lastTaskCompletion: prev.lastTaskCompletion
+            };
+            console.log('🔄 Nouveau contexte de conversation:', newContext);
+            return newContext;
+          });
         }
       } catch (error) {
         console.error('❌ Erreur lors du chargement des données de l\'enfant actif:', error);
@@ -465,6 +470,25 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
       if (!activeChild) {
         console.error('❌ Aucun enfant actif');
         return "Je ne peux pas répondre car aucun enfant n'est sélectionné.";
+      }
+
+      // Détection des questions sur les tâches
+      const tasksPatterns = [
+        /quelles sont mes tâches/i,
+        /quelles tâches j'ai/i,
+        /mes tâches en cours/i,
+        /qu'est-ce que j'ai à faire/i,
+        /que dois-je faire/i
+      ];
+
+      for (const pattern of tasksPatterns) {
+        if (pattern.test(text)) {
+          const pendingTasks = conversationContext.pendingTasks || [];
+          if (pendingTasks.length === 0) {
+            return `${activeChild.name}, tu n'as pas de tâches en cours pour le moment.`;
+          }
+          return `${activeChild.name}, voici tes tâches en cours : ${pendingTasks.join(', ')}`;
+        }
       }
 
       // Détection des questions sur les points
