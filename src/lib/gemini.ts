@@ -73,3 +73,42 @@ export async function generateSuggestions(type: 'task' | 'rule' | 'reward'): Pro
     .map((s) => s.replace(/^[-\d.\)\s]+/, '').trim())
     .filter(Boolean);
 }
+
+export interface DetectedIntent {
+  intent: 'complete_task' | 'get_points' | 'unknown';
+  task?: string;
+}
+
+export async function detectIntent(text: string): Promise<DetectedIntent> {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing VITE_GEMINI_API_KEY');
+  }
+
+  const prompt = `Comprends l'intention suivante et réponds uniquement en JSON.\nIntents possibles:\n- complete_task avec un champ task\n- get_points\nSi aucune correspondance, réponds {\"intent\":\"unknown\"}.\nPhrase: "${text}"`;
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const textResponse: string = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    return { intent: 'unknown' };
+  }
+  try {
+    return JSON.parse(jsonMatch[0]) as DetectedIntent;
+  } catch {
+    return { intent: 'unknown' };
+  }
+}

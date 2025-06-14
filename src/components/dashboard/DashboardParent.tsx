@@ -26,7 +26,8 @@ import {
   Heart,
   PiggyBankIcon,
   Minus,
-  AlertCircle
+  AlertCircle,
+  Mic
 } from 'lucide-react';
 import { ChildrenManager } from '@/components/children/children-manager';
 import { TasksManager } from '@/components/tasks/tasks-manager';
@@ -55,8 +56,12 @@ import { ChildrenPerformanceTable } from './ChildrenPerformanceTable';
 import { RecentActivities } from './RecentActivities';
 import { PiggyBankChart } from './PiggyBankChart';
 import { ManagementCard } from './ManagementCard';
+import { DetectedIntent } from '@/lib/gemini';
+import { VoiceAssistant } from '../voice/voice-assistant';
+import { VoiceSettings } from '../voice/voice-settings';
+import { toast } from '@/hooks/use-toast';
 
-type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | 'shop' | 'penalties' | null;
+type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | 'shop' | 'penalties' | 'voice' | null;
 type Period = 'day' | 'week' | 'month';
 
 interface DashboardStats {
@@ -311,6 +316,15 @@ export const DashboardParent = () => {
     fetchStats();
   }, [user, period]);
 
+  const handleVoiceIntent = (intent: DetectedIntent) => {
+    if (intent.intent === 'get_points') {
+      toast({
+        title: 'Points totaux',
+        description: `${stats.totalPoints} points`,
+      });
+    }
+  };
+
   if (loading || stats.isLoading) {
     return (
       <div className="p-6 space-y-6">
@@ -412,6 +426,18 @@ export const DashboardParent = () => {
       borderColor: 'border-gray-200',
       buttonText: 'Gérer',
       accent: 'bg-red-100'
+    },
+    {
+      id: 'voice',
+      title: 'Assistant Vocal',
+      description: 'Configurez les commandes vocales pour contrôler le tableau.',
+      icon: Mic,
+      color: 'text-blue-500',
+      hoverColor: 'hover:bg-blue-50',
+      bgColor: 'bg-white',
+      borderColor: 'border-gray-200',
+      buttonText: 'Configurer',
+      accent: 'bg-blue-100'
     }
   ];
 
@@ -560,6 +586,9 @@ export const DashboardParent = () => {
 
   return (
     <div className="flex flex-col space-y-8 mx-[-1.5rem] px-6">
+      <div className="flex justify-end">
+        <VoiceAssistant onIntent={handleVoiceIntent} />
+      </div>
       {/* Management Cards */}
       {renderManagementCards()}
 
@@ -756,6 +785,34 @@ export const DashboardParent = () => {
               </CardHeader>
               <CardContent className="p-6">
                 <PenaltyManager />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {currentView === 'voice' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl font-bold text-gray-800">Assistant Vocal</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCurrentView(null)}
+                    className="hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <VoiceSettings />
               </CardContent>
             </Card>
           </motion.div>

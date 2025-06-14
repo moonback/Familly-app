@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/auth-context';
+import { VoiceAssistantProvider } from '@/context/voice-assistant-context';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { MainNav } from '@/components/layout/main-nav';
@@ -50,6 +51,7 @@ function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <Router>
+        <VoiceAssistantProvider>
         <AuthProvider>
           <MainNav />
           <motion.main 
@@ -107,6 +109,7 @@ function App() {
           </motion.main>
           <Toaster />
         </AuthProvider>
+        </VoiceAssistantProvider>
       </Router>
     </ThemeProvider>
   );
