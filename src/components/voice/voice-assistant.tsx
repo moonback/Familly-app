@@ -321,8 +321,8 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
     utterance.onerror = (error) => {
       console.error('❌ Erreur de synthèse vocale:', error);
       toast({
-        title: "Erreur de synthèse vocale",
-        description: "Une erreur est survenue lors de la lecture de la réponse.",
+        title: `${activeChild?.name || 'Erreur'} de synthèse vocale`,
+        description: `${activeChild?.name || 'Une'} erreur est survenue lors de la lecture de la réponse.`,
         variant: "destructive"
       });
     };
@@ -363,8 +363,8 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
       const hasMicrophone = await checkMicrophoneAvailability();
       if (!hasMicrophone) {
         toast({
-          title: "Aucun microphone détecté",
-          description: "Veuillez connecter un microphone et réessayer",
+          title: `${activeChild?.name || 'Aucun'} microphone détecté`,
+          description: `${activeChild?.name || 'Veuillez'} connecter un microphone et réessayer`,
           variant: "destructive"
         });
         return false;
@@ -389,8 +389,8 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
       console.error('❌ Erreur lors de la demande de permission:', error);
       setIsMicrophoneAvailable(false);
       toast({
-        title: "Accès au microphone refusé",
-        description: "Veuillez autoriser l'accès au microphone dans les paramètres de votre navigateur",
+        title: `${activeChild?.name || 'Accès'} au microphone refusé`,
+        description: `${activeChild?.name || 'Veuillez'} autoriser l'accès au microphone dans les paramètres de votre navigateur`,
         variant: "destructive"
       });
       return false;
@@ -415,8 +415,8 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
         requestMicrophonePermission();
       } else {
         toast({
-          title: "Problème avec le microphone",
-          description: "Veuillez vérifier que votre microphone est bien connecté et autorisé",
+          title: `${activeChild?.name || 'Erreur'} - Problème avec le microphone`,
+          description: `${activeChild?.name || 'Veuillez'} vérifier que votre microphone est bien connecté et autorisé`,
           variant: "destructive"
         });
       }
@@ -425,8 +425,8 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
       if (retryCount < MAX_RETRIES) {
         setRetryCount(prev => prev + 1);
         toast({
-          title: "Je n'ai pas entendu de voix",
-          description: "Veuillez parler plus fort ou vérifier votre microphone",
+          title: `${activeChild?.name || 'Je'} n'ai pas entendu de voix`,
+          description: `${activeChild?.name || 'Veuillez'} parler plus fort ou vérifier votre microphone`,
           variant: "destructive"
         });
         setTimeout(() => {
@@ -438,16 +438,16 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
         setRetryCount(0);
         setListening(false);
         toast({
-          title: "Trop de tentatives",
-          description: "Je n'ai pas pu entendre votre voix. Veuillez réessayer.",
+          title: `${activeChild?.name || 'Je'} n'ai pas pu entendre ta voix`,
+          description: `${activeChild?.name || 'Veuillez'} réessayer`,
           variant: "destructive"
         });
       }
     } else {
       setListening(false);
       toast({
-        title: "Erreur de reconnaissance vocale",
-        description: "Une erreur est survenue. Veuillez réessayer.",
+        title: `${activeChild?.name || 'Erreur'} de reconnaissance vocale`,
+        description: `${activeChild?.name || 'Une'} erreur est survenue. Veuillez réessayer.`,
         variant: "destructive"
       });
     }
