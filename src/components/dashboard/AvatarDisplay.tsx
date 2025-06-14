@@ -38,11 +38,12 @@ export const AvatarDisplay = ({ child, streak }: AvatarDisplayProps) => {
         ))}
       </div>
 
-      <div className={`relative overflow-hidden border-0 shadow-2xl h-full transition-all duration-700 rounded-2xl
+      <div 
+        className={`relative rounded-2xl p-8 transition-all duration-700 ease-in-out
         ${isHovered ? 'scale-105 rotate-y-12' : ''} 
         hover:shadow-4xl transform-gpu`}
         style={{
-          background: `linear-gradient(135deg, 
+          backgroundImage: `linear-gradient(135deg, 
             ${child.custom_color || '#8B5CF6'} 0%, 
             ${child.custom_color ? child.custom_color + '80' : '#A855F7'} 50%, 
             ${child.custom_color ? child.custom_color + '60' : '#C084FC'} 100%)`,

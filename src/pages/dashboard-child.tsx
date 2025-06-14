@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ShopItemsList } from '@/components/shop/shop-items-list';
 import { PiggyBankManager } from '@/components/piggy-bank/piggy-bank-manager';
 import { ManualButton, ManualDialog } from '@/components/manual/manual-dialog';
+import { DetectedIntent } from '@/lib/gemini';
 
 // Import des nouveaux composants
 import { AvatarDisplay } from '@/components/dashboard/AvatarDisplay';
@@ -694,6 +695,23 @@ export default function DashboardChild() {
     }
   };
 
+  const handleVoiceIntent = (intent: DetectedIntent) => {
+    if (!child) return;
+    if (intent.intent === 'complete_task' && intent.task) {
+      const ct = childTasks.find((t) =>
+        t.task.label.toLowerCase().includes(intent.task!.toLowerCase())
+      );
+      if (ct) {
+        handleTaskToggle(ct.id, ct.is_completed);
+      }
+    } else if (intent.intent === 'get_points') {
+      toast({
+        title: 'Points',
+        description: `Tu as ${child.points} points`,
+      });
+    }
+  };
+
   if (loading || isLoading) {
     return <LoadingScreen />;
   }
@@ -723,9 +741,10 @@ export default function DashboardChild() {
         <BackgroundDecorations />
 
         <motion.div className="relative z-10 p-6">
-          <Header 
-            childName={child.name} 
-            onManualClick={() => setShowManual(true)} 
+          <Header
+            childName={child.name}
+            onManualClick={() => setShowManual(true)}
+            onVoiceIntent={handleVoiceIntent}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-12xl mx-auto">

@@ -1,7 +1,7 @@
 import { useAuth } from '@/context/auth-context';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   Plus, 
@@ -26,7 +26,17 @@ import {
   Heart,
   PiggyBankIcon,
   Minus,
-  AlertCircle
+  AlertCircle,
+  Mic,
+  Volume2,
+  VolumeX,
+  Play,
+  StopCircle,
+  Music,
+  Baby,  // au lieu de Child
+  User,
+  Bot  // au lieu de Robot
+  
 } from 'lucide-react';
 import { ChildrenManager } from '@/components/children/children-manager';
 import { TasksManager } from '@/components/tasks/tasks-manager';
@@ -55,8 +65,17 @@ import { ChildrenPerformanceTable } from './ChildrenPerformanceTable';
 import { RecentActivities } from './RecentActivities';
 import { PiggyBankChart } from './PiggyBankChart';
 import { ManagementCard } from './ManagementCard';
+import { DetectedIntent } from '@/lib/gemini';
+import { VoiceAssistant } from '../voice/voice-assistant';
+import { VoiceSettings } from '../voice/voice-settings';
+import { PromptSettings } from '../voice/prompt-settings';
+import { toast } from '@/hooks/use-toast';
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 
-type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | 'shop' | 'penalties' | null;
+type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | 'shop' | 'penalties' | 'voice' | null;
 type Period = 'day' | 'week' | 'month';
 
 interface DashboardStats {
@@ -113,6 +132,68 @@ export const DashboardParent = () => {
     childrenStats: [],
     recentActivities: []
   });
+  const [voiceSettings, setVoiceSettings] = useState({
+    rate: 1.0,
+    pitch: 1.0,
+    volume: 1.0,
+    isMuted: false,
+    isListening: false,
+    preset: 'default',
+    transitionSound: true
+  });
+
+  const [isTesting, setIsTesting] = useState(false);
+
+  const voicePresets = {
+    default: { rate: 1.0, pitch: 1.0, volume: 1.0 },
+    child: { rate: 1.2, pitch: 1.3, volume: 1.0 },
+    adult: { rate: 0.9, pitch: 0.9, volume: 1.0 },
+    robot: { rate: 0.8, pitch: 0.7, volume: 1.0 },
+    friendly: { rate: 1.1, pitch: 1.1, volume: 1.0 }
+  };
+
+  const testPhrases = [
+    "Bonjour ! Je suis votre assistant familial.",
+    "Comment puis-je vous aider aujourd'hui ?",
+    "N'oubliez pas de faire vos tâches !",
+    "Bravo pour vos points !"
+  ];
+
+  const applyPreset = (preset: keyof typeof voicePresets) => {
+    setVoiceSettings(prev => ({
+      ...prev,
+      ...voicePresets[preset],
+      preset
+    }));
+  };
+
+  const testVoice = () => {
+    if (isTesting) {
+      window.speechSynthesis.cancel();
+      setIsTesting(false);
+      return;
+    }
+
+    setIsTesting(true);
+    const utterance = new SpeechSynthesisUtterance(testPhrases[0]);
+    utterance.lang = 'fr-FR';
+    utterance.rate = voiceSettings.rate;
+    utterance.pitch = voiceSettings.pitch;
+    utterance.volume = voiceSettings.volume;
+
+    // Sélectionner la meilleure voix française
+    const voices = window.speechSynthesis.getVoices();
+    const frenchVoices = voices.filter(voice => voice.lang.includes('fr'));
+    if (frenchVoices.length > 0) {
+      utterance.voice = frenchVoices[0];
+    }
+
+    utterance.onend = () => {
+      setIsTesting(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
 
   const fetchStats = async () => {
     if (!user) return;
@@ -311,6 +392,28 @@ export const DashboardParent = () => {
     fetchStats();
   }, [user, period]);
 
+  // Sauvegarder les réglages dans le localStorage
+  useEffect(() => {
+    localStorage.setItem('voiceSettings', JSON.stringify(voiceSettings));
+  }, [voiceSettings]);
+
+  // Charger les réglages au démarrage
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('voiceSettings');
+    if (savedSettings) {
+      setVoiceSettings(JSON.parse(savedSettings));
+    }
+  }, []);
+
+  const handleVoiceIntent = (intent: DetectedIntent) => {
+    if (intent.intent === 'get_points') {
+      toast({
+        title: 'Points totaux',
+        description: `${stats.totalPoints} points`,
+      });
+    }
+  };
+
   if (loading || stats.isLoading) {
     return (
       <div className="p-6 space-y-6">
@@ -328,125 +431,159 @@ export const DashboardParent = () => {
     return null;
   }
 
-  const dashboardCards = [
-    {
-      id: 'children',
-      title: 'Gérer les Enfants',
-      description: 'Ajoutez, modifiez ou supprimez les profils de vos enfants.',
-      icon: Users,
-      color: 'text-pink-500',
-      hoverColor: 'hover:bg-pink-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-pink-100'
-    },
-    {
-      id: 'tasks',
-      title: 'Gérer les Tâches',
-      description: 'Définissez les tâches quotidiennes et leurs points de récompense.',
-      icon: CheckSquare,
-      color: 'text-emerald-500',
-      hoverColor: 'hover:bg-emerald-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-emerald-100'
-    },
-    {
-      id: 'rules',
-      title: 'Gérer les Règles',
-      description: 'Établissez les règles de comportement et les pénalités de points.',
-      icon: Shield,
-      color: 'text-amber-500',
-      hoverColor: 'hover:bg-amber-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-amber-100'
-    },
-    {
-      id: 'rewards',
-      title: 'Gérer les Récompenses',
-      description: 'Créez des récompenses que vos enfants pourront échanger avec leurs points.',
-      icon: Gift,
-      color: 'text-violet-500',
-      hoverColor: 'hover:bg-violet-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-violet-100'
-    },
-    {
-      id: 'riddles',
-      title: 'Gérer les Devinettes',
-      description: 'Créez des devinettes quotidiennes pour que vos enfants gagnent des points bonus.',
-      icon: Brain,
-      color: 'text-cyan-500',
-      hoverColor: 'hover:bg-cyan-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-cyan-100'
-    },
-    {
-      id: 'shop',
-      title: 'Gérer la Boutique',
-      description: 'Créez et gérez les articles que vos enfants peuvent acheter avec leurs points.',
-      icon: Gift,
-      color: 'text-violet-500',
-      hoverColor: 'hover:bg-violet-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-violet-100'
-    },
-    {
-      id: 'penalties',
-      title: 'Gérer les Pénalités',
-      description: 'Appliquez des pénalités de points pour les règles non respectées.',
-      icon: AlertCircle,
-      color: 'text-red-500',
-      hoverColor: 'hover:bg-red-50',
-      bgColor: 'bg-white',
-      borderColor: 'border-gray-200',
-      buttonText: 'Gérer',
-      accent: 'bg-red-100'
-    }
-  ];
-
   const renderManagementCards = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {dashboardCards.map((card) => (
-        <motion.div
-          key={card.id}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className={`relative overflow-hidden rounded-lg border ${card.borderColor} ${card.bgColor} ${card.hoverColor} transition-all duration-300 shadow-sm`}
-        >
-          <div className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${card.accent}`}>
-                  <card.icon className={`h-5 w-5 ${card.color}`} />
-                </div>
-                <h3 className="font-medium text-gray-900">{card.title}</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentView(card.id as View)}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900"
-              >
-                {card.buttonText}
-              </Button>
-            </div>
-            <p className="mt-2 text-sm text-gray-500 line-clamp-2">{card.description}</p>
-          </div>
-        </motion.div>
-      ))}
+    <div className="flex overflow-x-auto gap-4 pb-4">
+      <ManagementCard
+        id="children"
+        title="Enfants"
+        description="Gérer les profils des enfants"
+        icon={Users}
+        color="from-blue-500 to-indigo-600"
+        hoverColor="hover:from-blue-600 hover:to-indigo-700"
+        bgGradient="bg-gradient-to-br from-blue-50 to-indigo-50"
+        borderColor="border-blue-200"
+        buttonText="Gérer"
+        accent="bg-blue-500"
+        onClick={() => setCurrentView('children')}
+      />
+      <ManagementCard
+        id="tasks"
+        title="Tâches"
+        description="Gérer les tâches quotidiennes"
+        icon={CheckSquare}
+        color="from-emerald-500 to-teal-600"
+        hoverColor="hover:from-emerald-600 hover:to-teal-700"
+        bgGradient="bg-gradient-to-br from-emerald-50 to-teal-50"
+        borderColor="border-emerald-200"
+        buttonText="Gérer"
+        accent="bg-emerald-500"
+        onClick={() => setCurrentView('tasks')}
+      />
+      <ManagementCard
+        id="rules"
+        title="Règles"
+        description="Définir les règles familiales"
+        icon={Shield}
+        color="from-violet-500 to-purple-600"
+        hoverColor="hover:from-violet-600 hover:to-purple-700"
+        bgGradient="bg-gradient-to-br from-violet-50 to-purple-50"
+        borderColor="border-violet-200"
+        buttonText="Gérer"
+        accent="bg-violet-500"
+        onClick={() => setCurrentView('rules')}
+      />
+      <ManagementCard
+        id="rewards"
+        title="Récompenses"
+        description="Gérer les récompenses"
+        icon={Gift}
+        color="from-amber-500 to-orange-600"
+        hoverColor="hover:from-amber-600 hover:to-orange-700"
+        bgGradient="bg-gradient-to-br from-amber-50 to-orange-50"
+        borderColor="border-amber-200"
+        buttonText="Gérer"
+        accent="bg-amber-500"
+        onClick={() => setCurrentView('rewards')}
+      />
+      <ManagementCard
+        id="riddles"
+        title="Énigmes"
+        description="Gérer les énigmes quotidiennes"
+        icon={Brain}
+        color="from-rose-500 to-pink-600"
+        hoverColor="hover:from-rose-600 hover:to-pink-700"
+        bgGradient="bg-gradient-to-br from-rose-50 to-pink-50"
+        borderColor="border-rose-200"
+        buttonText="Gérer"
+        accent="bg-rose-500"
+        onClick={() => setCurrentView('riddles')}
+      />
+      <ManagementCard
+        id="shop"
+        title="Boutique"
+        description="Gérer la boutique de récompenses"
+        icon={PiggyBankIcon}
+        color="from-cyan-500 to-blue-600"
+        hoverColor="hover:from-cyan-600 hover:to-blue-700"
+        bgGradient="bg-gradient-to-br from-cyan-50 to-blue-50"
+        borderColor="border-cyan-200"
+        buttonText="Gérer"
+        accent="bg-cyan-500"
+        onClick={() => setCurrentView('shop')}
+      />
+      <ManagementCard
+        id="penalties"
+        title="Sanctions"
+        description="Gérer les sanctions"
+        icon={AlertCircle}
+        color="from-red-500 to-orange-600"
+        hoverColor="hover:from-red-600 hover:to-orange-700"
+        bgGradient="bg-gradient-to-br from-red-50 to-orange-50"
+        borderColor="border-red-200"
+        buttonText="Gérer"
+        accent="bg-red-500"
+        onClick={() => setCurrentView('penalties')}
+      />
+      <ManagementCard
+        id="voice"
+        title="Assistant Vocal"
+        description="Configurer l'assistant vocal"
+        icon={Mic}
+        color="from-indigo-500 to-purple-600"
+        hoverColor="hover:from-indigo-600 hover:to-purple-700"
+        bgGradient="bg-gradient-to-br from-indigo-50 to-purple-50"
+        borderColor="border-indigo-200"
+        buttonText="Configurer"
+        accent="bg-indigo-500"
+        onClick={() => setCurrentView('voice')}
+      />
     </div>
   );
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'children':
+        return <ChildrenManager />;
+      case 'tasks':
+        return <TasksManager />;
+      case 'rules':
+        return <RulesManager />;
+      case 'rewards':
+        return <RewardsManager />;
+      case 'riddles':
+        return <RiddlesManager />;
+      case 'shop':
+        return <ShopManager />;
+      case 'penalties':
+        return <PenaltyManager />;
+      case 'voice':
+        return (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Assistant Vocal</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <VoiceSettings />
+                <div className="flex items-center justify-end">
+                  <VoiceAssistant onIntent={handleVoiceIntent} />
+                </div>
+              </CardContent>
+            </Card>
+            <PromptSettings 
+              onSave={(prompt) => {
+                toast({
+                  title: "Configuration mise à jour",
+                  description: "Le comportement de l'assistant a été modifié avec succès.",
+                });
+              }} 
+            />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   const renderStats = () => (
     <div className="space-y-8">
@@ -560,210 +697,217 @@ export const DashboardParent = () => {
 
   return (
     <div className="flex flex-col space-y-8 mx-[-1.5rem] px-6">
+      <div className="flex justify-end">
+        <VoiceAssistant onIntent={handleVoiceIntent} />
+      </div>
       {/* Management Cards */}
       {renderManagementCards()}
 
       {/* Managers */}
       <AnimatePresence mode="wait">
-        {currentView === 'children' && (
+        {currentView && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Enfants</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <ChildrenManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'tasks' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Tâches</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <TasksManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'rules' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Règles</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <RulesManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'rewards' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Récompenses</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <RewardsManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'riddles' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Devinettes</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <RiddlesManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'shop' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion de la Boutique</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <ShopManager />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {currentView === 'penalties' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Pénalités</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentView(null)}
-                    className="hover:bg-gray-100"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <PenaltyManager />
-              </CardContent>
-            </Card>
+            {renderCurrentView()}
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Statistics */}
       {!currentView && renderStats()}
+
+      {/* Panneau de réglages vocaux */}
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mic className="h-5 w-5" />
+            Réglages de la voix
+          </CardTitle>
+          <CardDescription>
+            Personnalisez la voix de votre assistant familial
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Préréglages de voix */}
+            <div className="space-y-2">
+              <Label>Préréglages de voix</Label>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                <Button
+                  variant={voiceSettings.preset === 'default' ? 'default' : 'outline'}
+                  className="flex items-center gap-2"
+                  onClick={() => applyPreset('default')}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Par défaut
+                </Button>
+                <Button
+                  variant={voiceSettings.preset === 'child' ? 'default' : 'outline'}
+                  className="flex items-center gap-2"
+                  onClick={() => applyPreset('child')}
+                >
+                  <Baby className="h-4 w-4" />
+                  Enfant
+                </Button>
+                <Button
+                  variant={voiceSettings.preset === 'adult' ? 'default' : 'outline'}
+                  className="flex items-center gap-2"
+                  onClick={() => applyPreset('adult')}
+                >
+                  <User className="h-4 w-4" />
+                  Adulte
+                </Button>
+                <Button
+                  variant={voiceSettings.preset === 'robot' ? 'default' : 'outline'}
+                  className="flex items-center gap-2"
+                  onClick={() => applyPreset('robot')}
+                >
+                  <Bot className="h-4 w-4" />
+                  Robot
+                </Button>
+                <Button
+                  variant={voiceSettings.preset === 'friendly' ? 'default' : 'outline'}
+                  className="flex items-center gap-2"
+                  onClick={() => applyPreset('friendly')}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Amical
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Test de voix */}
+            <div className="space-y-2">
+              <Label>Test de voix</Label>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant={isTesting ? "destructive" : "default"}
+                  className="flex items-center gap-2"
+                  onClick={testVoice}
+                >
+                  {isTesting ? (
+                    <>
+                      <StopCircle className="h-4 w-4" />
+                      Arrêter
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4" />
+                      Tester
+                    </>
+                  )}
+                </Button>
+                <p className="text-sm text-gray-500">
+                  {isTesting ? "Test en cours..." : "Écoutez un exemple de voix"}
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Réglages manuels */}
+            <div className="space-y-4">
+              <Label>Réglages manuels</Label>
+              
+              {/* Vitesse de parole */}
+              <div className="space-y-2">
+                <Label>Vitesse de parole</Label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[voiceSettings.rate]}
+                    min={0.5}
+                    max={2}
+                    step={0.1}
+                    onValueChange={([value]) => 
+                      setVoiceSettings(prev => ({ ...prev, rate: value, preset: 'custom' }))
+                    }
+                    className="flex-1"
+                  />
+                  <span className="w-12 text-right">{voiceSettings.rate.toFixed(1)}x</span>
+                </div>
+              </div>
+
+              {/* Hauteur de la voix */}
+              <div className="space-y-2">
+                <Label>Hauteur de la voix</Label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[voiceSettings.pitch]}
+                    min={0.5}
+                    max={2}
+                    step={0.1}
+                    onValueChange={([value]) => 
+                      setVoiceSettings(prev => ({ ...prev, pitch: value, preset: 'custom' }))
+                    }
+                    className="flex-1"
+                  />
+                  <span className="w-12 text-right">{voiceSettings.pitch.toFixed(1)}</span>
+                </div>
+              </div>
+
+              {/* Volume */}
+              <div className="space-y-2">
+                <Label>Volume</Label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[voiceSettings.volume]}
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    onValueChange={([value]) => 
+                      setVoiceSettings(prev => ({ ...prev, volume: value, preset: 'custom' }))
+                    }
+                    className="flex-1"
+                  />
+                  <span className="w-12 text-right">{Math.round(voiceSettings.volume * 100)}%</span>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Options supplémentaires */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={voiceSettings.isMuted}
+                  onCheckedChange={(checked) => 
+                    setVoiceSettings(prev => ({ ...prev, isMuted: checked }))
+                  }
+                />
+                <Label>Mode silencieux</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={voiceSettings.isListening}
+                  onCheckedChange={(checked) => 
+                    setVoiceSettings(prev => ({ ...prev, isListening: checked }))
+                  }
+                />
+                <Label>Écoute continue</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={voiceSettings.transitionSound}
+                  onCheckedChange={(checked) => 
+                    setVoiceSettings(prev => ({ ...prev, transitionSound: checked }))
+                  }
+                />
+                <Label className="flex items-center gap-2">
+                  <Music className="h-4 w-4" />
+                  Effets sonores
+                </Label>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }; 

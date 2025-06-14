@@ -3,13 +3,15 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ManualButton } from '@/components/manual/manual-dialog';
+import { VoiceAssistant } from '@/components/voice/voice-assistant';
 
 interface HeaderProps {
   childName: string;
   onManualClick: () => void;
+  onVoiceIntent?: (intent: any) => void;
 }
 
-export const Header = ({ childName, onManualClick }: HeaderProps) => {
+export const Header = ({ childName, onManualClick, onVoiceIntent }: HeaderProps) => {
   return (
     <motion.div 
       initial={{ y: -50, opacity: 0 }}
@@ -28,7 +30,7 @@ export const Header = ({ childName, onManualClick }: HeaderProps) => {
         Bonjour {childName} ! 🦸‍♀️
       </motion.p>
       <div className="flex items-center justify-center gap-4">
-        <motion.div 
+        <motion.div
           className="inline-flex items-center bg-white/80 backdrop-blur-md rounded-full px-8 py-3 shadow-xl border-2 border-purple-200"
           whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
           transition={{ type: "spring", stiffness: 400 }}
@@ -39,6 +41,7 @@ export const Header = ({ childName, onManualClick }: HeaderProps) => {
           </span>
         </motion.div>
         <ManualButton onClick={onManualClick} />
+        <VoiceAssistant onIntent={onVoiceIntent ? onVoiceIntent : () => {}} />
       </div>
     </motion.div>
   );
