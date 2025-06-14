@@ -49,6 +49,17 @@ interface SpeechRecognition extends EventTarget {
   stop: () => void;
 }
 
+interface ConversationContext {
+  childId: string | null;
+  lastInteraction: Date | null;
+  messageHistory: string[];
+  childAge?: number;
+  pendingTasks?: string[];
+  completedTasks?: string[];
+  streak: number;
+  lastTaskCompletion?: Date;
+}
+
 export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
   const { enabled } = useVoiceAssistantSettings();
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -61,13 +72,24 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
   const { user } = useAuth();
   const { childName } = useParams();
   const [activeChild, setActiveChild] = useState<{ id: string; name: string; points: number } | null>(null);
+  const [conversationContext, setConversationContext] = useState<ConversationContext>({
+    childId: null,
+    lastInteraction: null,
+    messageHistory: [],
+    childAge: undefined,
+    pendingTasks: [],
+    completedTasks: [],
+    streak: 0,
+    lastTaskCompletion: undefined
+  });
 
-  // Charger les informations de l'enfant actif
+  // Charger les informations de l'enfant actif avec plus de détails
   useEffect(() => {
     const loadActiveChild = async () => {
       if (!user || !childName) return;
 
       try {
+        // Charger les données de l'enfant
         const { data: childData } = await supabase
           .from('children')
           .select('*')
@@ -78,6 +100,43 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
         if (childData) {
           console.log('👶 Enfant actif chargé:', childData.name);
           setActiveChild(childData);
+
+          // Charger les tâches de l'enfant
+          const { data: tasksData } = await supabase
+            .from('child_tasks')
+            .select(`
+              *,
+              task:task_id (
+                name,
+                points_reward,
+                category
+              )
+            `)
+            .eq('child_id', childData.id)
+            .eq('is_completed', false);
+
+          // Calculer le streak
+          const { data: completedTasks } = await supabase
+            .from('child_tasks')
+            .select('completed_at')
+            .eq('child_id', childData.id)
+            .eq('is_completed', true)
+            .order('completed_at', { ascending: false })
+            .limit(7);
+
+          const streak = calculateStreak(completedTasks || []);
+
+          // Mettre à jour le contexte avec toutes les informations
+          setConversationContext(prev => ({
+            ...prev,
+            childId: childData.id,
+            lastInteraction: new Date(),
+            messageHistory: [],
+            childAge: childData.age,
+            pendingTasks: tasksData?.map(t => t.task.name) || [],
+            streak: streak,
+            lastTaskCompletion: completedTasks?.[0]?.completed_at ? new Date(completedTasks[0].completed_at) : undefined
+          }));
         }
       } catch (error) {
         console.error('❌ Erreur lors du chargement des données de l\'enfant actif:', error);
@@ -86,6 +145,81 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
 
     loadActiveChild();
   }, [user, childName]);
+
+  // Fonction pour calculer le streak
+  const calculateStreak = (completedTasks: { completed_at: string }[]): number => {
+    if (!completedTasks.length) return 0;
+    
+    let streak = 1;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (let i = 1; i < completedTasks.length; i++) {
+      const currentDate = new Date(completedTasks[i].completed_at);
+      const previousDate = new Date(completedTasks[i - 1].completed_at);
+      
+      currentDate.setHours(0, 0, 0, 0);
+      previousDate.setHours(0, 0, 0, 0);
+      
+      const diffDays = Math.floor((currentDate.getTime() - previousDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  };
+
+  // Fonction pour personnaliser la réponse selon l'âge
+  const getAgeAppropriateResponse = (response: string): string => {
+    if (!conversationContext.childAge) return response;
+
+    const age = conversationContext.childAge;
+    let processedResponse = response;
+
+    if (age < 6) {
+      // Simplifier le langage pour les plus jeunes
+      processedResponse = processedResponse
+        .replace(/peux-tu/g, 'tu peux')
+        .replace(/pourrais-tu/g, 'tu peux')
+        .replace(/voudrais-tu/g, 'tu veux')
+        .replace(/souhaites-tu/g, 'tu veux')
+        .replace(/aimerais-tu/g, 'tu veux')
+        .replace(/pourquoi ne pas/g, 'tu peux')
+        .replace(/n'hésite pas à/g, 'tu peux')
+        .replace(/n'hésites pas à/g, 'tu peux');
+    } else if (age < 10) {
+      // Langage adapté aux enfants de 6-9 ans
+      processedResponse = processedResponse
+        .replace(/pourrais-tu/g, 'peux-tu')
+        .replace(/voudrais-tu/g, 'veux-tu')
+        .replace(/souhaites-tu/g, 'veux-tu')
+        .replace(/aimerais-tu/g, 'veux-tu');
+    }
+
+    return processedResponse;
+  };
+
+  // Fonction pour générer des suggestions basées sur les tâches
+  const generateTaskSuggestions = (): string => {
+    const pendingTasks = conversationContext.pendingTasks || [];
+    if (pendingTasks.length === 0) return '';
+
+    const suggestions = [];
+
+    if (pendingTasks.length > 0) {
+      suggestions.push(`Tu as ${pendingTasks.length} tâche${pendingTasks.length > 1 ? 's' : ''} à faire : ${pendingTasks.join(', ')}`);
+    }
+
+    if (conversationContext.streak > 0) {
+      suggestions.push(`Tu as une série de ${conversationContext.streak} jour${conversationContext.streak > 1 ? 's' : ''} consécutifs de tâches terminées !`);
+    }
+
+    return suggestions.join('. ') + '.';
+  };
 
   const speak = (text: string) => {
     console.log('🔊 Synthèse vocale:', text);
@@ -295,60 +429,6 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
     }
   };
 
-  // Fonction pour personnaliser la réponse
-  const personalizeResponse = (response: string): string => {
-    if (!activeChild) return response;
-
-    return response
-      .replace(/tu as/g, `${activeChild.name} a`)
-      .replace(/tu es/g, `${activeChild.name} est`)
-      .replace(/tu peux/g, `${activeChild.name} peut`)
-      .replace(/tu dois/g, `${activeChild.name} doit`)
-      .replace(/tu veux/g, `${activeChild.name} veut`)
-      .replace(/tu fais/g, `${activeChild.name} fait`)
-      .replace(/tu vas/g, `${activeChild.name} va`)
-      .replace(/tu peux/g, `${activeChild.name} peut`)
-      .replace(/tu as besoin/g, `${activeChild.name} a besoin`)
-      .replace(/tu peux faire/g, `${activeChild.name} peut faire`)
-      .replace(/tu dois faire/g, `${activeChild.name} doit faire`)
-      .replace(/tu veux faire/g, `${activeChild.name} veut faire`)
-      .replace(/tu fais bien/g, `${activeChild.name} fait bien`)
-      .replace(/tu vas bien/g, `${activeChild.name} va bien`)
-      .replace(/tu peux avoir/g, `${activeChild.name} peut avoir`)
-      .replace(/tu dois avoir/g, `${activeChild.name} doit avoir`)
-      .replace(/tu veux avoir/g, `${activeChild.name} veut avoir`)
-      .replace(/tu fais attention/g, `${activeChild.name} fait attention`)
-      .replace(/tu vas faire/g, `${activeChild.name} va faire`)
-      .replace(/tu peux aller/g, `${activeChild.name} peut aller`)
-      .replace(/tu dois aller/g, `${activeChild.name} doit aller`)
-      .replace(/tu veux aller/g, `${activeChild.name} veut aller`)
-      .replace(/tu fais partie/g, `${activeChild.name} fait partie`)
-      .replace(/tu vas avoir/g, `${activeChild.name} va avoir`)
-      .replace(/tu peux être/g, `${activeChild.name} peut être`)
-      .replace(/tu dois être/g, `${activeChild.name} doit être`)
-      .replace(/tu veux être/g, `${activeChild.name} veut être`)
-      .replace(/tu fais confiance/g, `${activeChild.name} fait confiance`)
-      .replace(/tu vas être/g, `${activeChild.name} va être`)
-      .replace(/tu peux faire confiance/g, `${activeChild.name} peut faire confiance`)
-      .replace(/tu dois faire confiance/g, `${activeChild.name} doit faire confiance`)
-      .replace(/tu veux faire confiance/g, `${activeChild.name} veut faire confiance`)
-      .replace(/tu fais attention à/g, `${activeChild.name} fait attention à`)
-      .replace(/tu vas faire attention/g, `${activeChild.name} va faire attention`)
-      .replace(/tu peux faire attention/g, `${activeChild.name} peut faire attention`)
-      .replace(/tu dois faire attention/g, `${activeChild.name} doit faire attention`)
-      .replace(/tu veux faire attention/g, `${activeChild.name} veut faire attention`)
-      .replace(/tu fais partie de/g, `${activeChild.name} fait partie de`)
-      .replace(/tu vas faire partie/g, `${activeChild.name} va faire partie`)
-      .replace(/tu peux faire partie/g, `${activeChild.name} peut faire partie`)
-      .replace(/tu dois faire partie/g, `${activeChild.name} doit faire partie`)
-      .replace(/tu veux faire partie/g, `${activeChild.name} veut faire partie`)
-      .replace(/tu fais confiance à/g, `${activeChild.name} fait confiance à`)
-      .replace(/tu vas faire confiance/g, `${activeChild.name} va faire confiance`)
-      .replace(/tu peux faire confiance à/g, `${activeChild.name} peut faire confiance à`)
-      .replace(/tu dois faire confiance à/g, `${activeChild.name} doit faire confiance à`)
-      .replace(/tu veux faire confiance à/g, `${activeChild.name} veut faire confiance à`);
-  };
-
   const getResponse = async (text: string) => {
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -363,6 +443,34 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
       // Remplacer les variables prédéfinies
       const replacedPrompt = await replacePredefinedVariables(systemPrompt);
 
+      // Ajouter le contexte de conversation au prompt
+      const conversationHistory = conversationContext.messageHistory
+        .map((msg, i) => `Message précédent ${i + 1}: ${msg}`)
+        .join('\n');
+
+      // Ajouter des instructions spécifiques pour la personnalisation
+      const enhancedPrompt = `${replacedPrompt}
+
+Instructions importantes :
+- Tu dois TOUJOURS utiliser le nom "${activeChild?.name || 'l\'enfant'}" dans tes réponses
+- Ne dis jamais "l'enfant" ou "toi" sans utiliser le nom
+- Ne dis pas "bonjour" à chaque message si la conversation est récente
+- Adapte ton langage à l'âge de l'enfant (${conversationContext.childAge || 'inconnu'} ans)
+- Sois naturel et conversationnel
+- Évite les répétitions
+- Fais des suggestions basées sur les tâches en cours
+- Encourage les bonnes habitudes et la persévérance
+
+Exemples de réponses correctes :
+- "Bonjour ${activeChild?.name || 'l\'enfant'} ! Comment puis-je t'aider aujourd'hui ?"
+- "${activeChild?.name || 'l\'enfant'}, tu as ${conversationContext.pendingTasks?.length || 0} tâches à faire"
+- "Je vois que ${activeChild?.name || 'l\'enfant'} a bien travaillé aujourd'hui !"
+
+${conversationHistory ? `Historique de la conversation:\n${conversationHistory}\n\n` : ''}
+${generateTaskSuggestions() ? `Suggestions actuelles :\n${generateTaskSuggestions()}\n\n` : ''}
+Utilisateur: ${text}
+Assistant:`;
+
       console.log('🔄 Appel de l\'API Gemini...');
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
@@ -372,10 +480,7 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: `${replacedPrompt}
-
-Utilisateur: ${text}
-Assistant:`
+                text: enhancedPrompt
               }]
             }],
             generationConfig: {
@@ -403,8 +508,16 @@ Assistant:`
         return "Désolé, je n'ai pas pu générer une réponse.";
       }
 
-      // Personnaliser la réponse si un enfant est actif
-      return personalizeResponse(generatedText);
+      // Personnaliser la réponse
+      let personalizedResponse = personalizeResponse(generatedText);
+      personalizedResponse = getAgeAppropriateResponse(personalizedResponse);
+
+      // Vérifier que le nom de l'enfant est bien utilisé
+      if (activeChild && !personalizedResponse.includes(activeChild.name)) {
+        personalizedResponse = personalizedResponse.replace(/l'enfant|toi|tu/g, activeChild.name);
+      }
+
+      return personalizedResponse;
     } catch (error) {
       console.error('❌ Erreur lors de la génération de réponse:', error);
       return "Désolé, j'ai rencontré une erreur lors de notre conversation.";
@@ -512,6 +625,91 @@ Assistant:`
       console.error('❌ Erreur lors du remplacement des variables:', error);
       return prompt;
     }
+  };
+
+  // Fonction pour personnaliser la réponse
+  const personalizeResponse = (response: string): string => {
+    if (!activeChild) return response;
+
+    // Éviter les répétitions de salutations
+    const hasGreeting = /^(bonjour|salut|hello|hi|hey)/i.test(response);
+    const timeSinceLastInteraction = conversationContext.lastInteraction 
+      ? (new Date().getTime() - new Date(conversationContext.lastInteraction).getTime()) / 1000
+      : Infinity;
+
+    // Supprimer les salutations si l'interaction est récente (moins de 5 minutes)
+    let processedResponse = response;
+    if (hasGreeting && timeSinceLastInteraction < 300) {
+      processedResponse = response.replace(/^(bonjour|salut|hello|hi|hey)[,.]?\s*/i, '');
+    }
+
+    // S'assurer que le nom de l'enfant est utilisé
+    processedResponse = processedResponse
+      .replace(/l'enfant/g, activeChild.name)
+      .replace(/^toi/g, activeChild.name)
+      .replace(/^tu/g, activeChild.name);
+
+    // Personnaliser la réponse avec le nom de l'enfant
+    processedResponse = processedResponse
+      .replace(/tu as/g, `${activeChild.name} a`)
+      .replace(/tu es/g, `${activeChild.name} est`)
+      .replace(/tu peux/g, `${activeChild.name} peut`)
+      .replace(/tu dois/g, `${activeChild.name} doit`)
+      .replace(/tu veux/g, `${activeChild.name} veut`)
+      .replace(/tu fais/g, `${activeChild.name} fait`)
+      .replace(/tu vas/g, `${activeChild.name} va`)
+      .replace(/tu peux/g, `${activeChild.name} peut`)
+      .replace(/tu as besoin/g, `${activeChild.name} a besoin`)
+      .replace(/tu peux faire/g, `${activeChild.name} peut faire`)
+      .replace(/tu dois faire/g, `${activeChild.name} doit faire`)
+      .replace(/tu veux faire/g, `${activeChild.name} veut faire`)
+      .replace(/tu fais bien/g, `${activeChild.name} fait bien`)
+      .replace(/tu vas bien/g, `${activeChild.name} va bien`)
+      .replace(/tu peux avoir/g, `${activeChild.name} peut avoir`)
+      .replace(/tu dois avoir/g, `${activeChild.name} doit avoir`)
+      .replace(/tu veux avoir/g, `${activeChild.name} veut avoir`)
+      .replace(/tu fais attention/g, `${activeChild.name} fait attention`)
+      .replace(/tu vas faire/g, `${activeChild.name} va faire`)
+      .replace(/tu peux aller/g, `${activeChild.name} peut aller`)
+      .replace(/tu dois aller/g, `${activeChild.name} doit aller`)
+      .replace(/tu veux aller/g, `${activeChild.name} veut aller`)
+      .replace(/tu fais partie/g, `${activeChild.name} fait partie`)
+      .replace(/tu vas avoir/g, `${activeChild.name} va avoir`)
+      .replace(/tu peux être/g, `${activeChild.name} peut être`)
+      .replace(/tu dois être/g, `${activeChild.name} doit être`)
+      .replace(/tu veux être/g, `${activeChild.name} veut être`)
+      .replace(/tu fais confiance/g, `${activeChild.name} fait confiance`)
+      .replace(/tu vas être/g, `${activeChild.name} va être`)
+      .replace(/tu peux faire confiance/g, `${activeChild.name} peut faire confiance`)
+      .replace(/tu dois faire confiance/g, `${activeChild.name} doit faire confiance`)
+      .replace(/tu veux faire confiance/g, `${activeChild.name} veut faire confiance`)
+      .replace(/tu fais attention à/g, `${activeChild.name} fait attention à`)
+      .replace(/tu vas faire attention/g, `${activeChild.name} va faire attention`)
+      .replace(/tu peux faire attention/g, `${activeChild.name} peut faire attention`)
+      .replace(/tu dois faire attention/g, `${activeChild.name} doit faire attention`)
+      .replace(/tu veux faire attention/g, `${activeChild.name} veut faire attention`)
+      .replace(/tu fais partie de/g, `${activeChild.name} fait partie de`)
+      .replace(/tu vas faire partie/g, `${activeChild.name} va faire partie`)
+      .replace(/tu peux faire partie/g, `${activeChild.name} peut faire partie`)
+      .replace(/tu dois faire partie/g, `${activeChild.name} doit faire partie`)
+      .replace(/tu veux faire partie/g, `${activeChild.name} veut faire partie`)
+      .replace(/tu fais confiance à/g, `${activeChild.name} fait confiance à`)
+      .replace(/tu vas faire confiance/g, `${activeChild.name} va faire confiance`)
+      .replace(/tu peux faire confiance à/g, `${activeChild.name} peut faire confiance à`)
+      .replace(/tu dois faire confiance à/g, `${activeChild.name} doit faire confiance à`)
+      .replace(/tu veux faire confiance à/g, `${activeChild.name} veut faire confiance à`)
+      // Ajouter des remplacements spécifiques pour les noms d'enfants
+      .replace(/Johann/g, activeChild.name)
+      .replace(/Roxane/g, activeChild.name);
+
+    // Mettre à jour le contexte de conversation
+    setConversationContext(prev => ({
+      ...prev,
+      lastInteraction: new Date(),
+      messageHistory: [...prev.messageHistory, processedResponse].slice(-5)
+    }));
+
+    return processedResponse;
   };
 
   useEffect(() => {
