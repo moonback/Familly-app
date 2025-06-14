@@ -1,8 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from '@/context/auth-context';
-import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/sonner';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '@/context/auth-context';
 import { MainNav } from '@/components/layout/main-nav';
+import { RootProviders } from '@/components/layout/RootProviders';
 import HomePage from '@/pages/index';
 import AuthPage from '@/pages/auth';
 import DashboardParent from '@/pages/dashboard-parent';
@@ -48,17 +47,15 @@ const NotFound = () => (
 
 function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-      <Router>
-        <AuthProvider>
-          <MainNav />
-          <motion.main 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex-grow bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen"
-          >
-            <AnimatePresence mode="wait">
-              <Routes>
+    <RootProviders>
+      <MainNav />
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex-grow bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen"
+      >
+        <AnimatePresence mode="wait">
+          <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route 
@@ -105,10 +102,7 @@ function App() {
               </Routes>
             </AnimatePresence>
           </motion.main>
-          <Toaster />
-        </AuthProvider>
-      </Router>
-    </ThemeProvider>
+        </RootProviders>
   );
 }
 
