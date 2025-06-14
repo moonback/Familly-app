@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { detectIntent, DetectedIntent } from '@/lib/gemini';
 import { useVoiceAssistantSettings } from '@/context/voice-assistant-context';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/auth-context';
 
 interface VoiceAssistantProps {
   onIntent: (intent: DetectedIntent) => void;
@@ -55,14 +57,103 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
   const [hasRequestedPermission, setHasRequestedPermission] = useState(false);
   const [isMicrophoneAvailable, setIsMicrophoneAvailable] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
+  const { user } = useAuth();
 
   const speak = (text: string) => {
     console.log('🔊 Synthèse vocale:', text);
+    
+    // Récupérer les réglages vocaux
+    const savedSettings = localStorage.getItem('voiceSettings');
+    const voiceSettings = savedSettings ? JSON.parse(savedSettings) : {
+      rate: 1.0,
+      pitch: 1.0,
+      volume: 1.0,
+      isMuted: false,
+      isListening: false,
+      preset: 'default',
+      transitionSound: true
+    };
+
+    // Si le mode silencieux est activé, ne pas parler
+    if (voiceSettings.isMuted) {
+      console.log('🔇 Mode silencieux activé');
+      return;
+    }
+
+    // Jouer l'effet sonore de transition si activé
+    if (voiceSettings.transitionSound) {
+      try {
+        const transitionSound = new Audio('/sounds/transition.mp3');
+        transitionSound.volume = voiceSettings.volume * 0.5;
+        transitionSound.play();
+      } catch (error) {
+        console.log('ℹ️ Effet sonore de transition non disponible');
+      }
+    }
+
     const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Configuration de la voix avec les réglages sauvegardés
     utterance.lang = 'fr-FR';
-    utterance.onstart = () => console.log('🎤 Début de la synthèse vocale');
-    utterance.onend = () => console.log('🎤 Fin de la synthèse vocale');
-    utterance.onerror = (error) => console.error('❌ Erreur de synthèse vocale:', error);
+    utterance.rate = voiceSettings.rate;
+    utterance.pitch = voiceSettings.pitch;
+    utterance.volume = voiceSettings.volume;
+
+    // Sélection de la meilleure voix française disponible
+    const voices = window.speechSynthesis.getVoices();
+    const frenchVoices = voices.filter(voice => voice.lang.includes('fr'));
+    if (frenchVoices.length > 0) {
+      // Préférer une voix féminine si disponible
+      const preferredVoice = frenchVoices.find(voice => voice.name.includes('female')) || frenchVoices[0];
+      utterance.voice = preferredVoice;
+    }
+
+    // Gestion des événements
+    utterance.onstart = () => {
+      console.log('🎤 Début de la synthèse vocale');
+      setListening(false); // Arrêter l'écoute pendant la synthèse
+    };
+    
+    utterance.onend = () => {
+      console.log('🎤 Fin de la synthèse vocale');
+      // Jouer l'effet sonore de fin si activé
+      if (voiceSettings.transitionSound) {
+        try {
+          const endSound = new Audio('/sounds/end.mp3');
+          endSound.volume = voiceSettings.volume * 0.3;
+          endSound.play();
+        } catch (error) {
+          console.log('ℹ️ Effet sonore de fin non disponible');
+        }
+      }
+      // Reprendre l'écoute si le mode écoute continue est activé
+      if (recognitionRef.current && voiceSettings.isListening) {
+        recognitionRef.current.start();
+      }
+    };
+    
+    utterance.onerror = (error) => {
+      console.error('❌ Erreur de synthèse vocale:', error);
+      toast({
+        title: "Erreur de synthèse vocale",
+        description: "Une erreur est survenue lors de la lecture de la réponse.",
+        variant: "destructive"
+      });
+    };
+
+    // Ajouter des pauses naturelles aux points et virgules
+    const processedText = text
+      .replace(/\./g, '. ')
+      .replace(/,/g, ', ')
+      .replace(/!/g, '! ')
+      .replace(/\?/g, '? ');
+
+    utterance.text = processedText;
+
+    // Arrêter toute synthèse vocale en cours
+    window.speechSynthesis.cancel();
+    
+    // Démarrer la nouvelle synthèse
     window.speechSynthesis.speak(utterance);
   };
 
@@ -240,24 +331,100 @@ Assistant:`
   // Fonction pour remplacer les variables prédéfinies
   const replacePredefinedVariables = async (prompt: string): Promise<string> => {
     try {
-      // Récupérer les données nécessaires
-      const familyData = await fetch('/api/family/data').then(res => res.json());
-      const tasks = await fetch('/api/tasks').then(res => res.json());
-      const rewards = await fetch('/api/rewards').then(res => res.json());
-      const rules = await fetch('/api/rules').then(res => res.json());
-      const dailyRiddle = await fetch('/api/daily-riddle').then(res => res.json());
-      const sanctions = await fetch('/api/sanctions').then(res => res.json());
+      if (!user) return prompt;
+
+      // Récupérer les données des enfants
+      const { data: childrenData } = await supabase
+        .from('children')
+        .select('*')
+        .eq('user_id', user.id);
+
+      // Récupérer les tâches
+      const { data: tasksData } = await supabase
+        .from('child_tasks')
+        .select(`
+          *,
+          children (
+            name
+          )
+        `)
+        .eq('user_id', user.id);
+
+      // Récupérer les récompenses
+      const { data: rewardsData } = await supabase
+        .from('rewards')
+        .select('*')
+        .eq('user_id', user.id);
+
+      // Récupérer les règles
+      const { data: rulesData } = await supabase
+        .from('rules')
+        .select('*')
+        .eq('user_id', user.id);
+
+      // Récupérer l'énigme du jour
+      const { data: riddleData } = await supabase
+        .from('daily_riddles')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      // Récupérer les sanctions
+      const { data: sanctionsData } = await supabase
+        .from('penalties')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+
+      // Calculer les points totaux
+      const totalPoints = childrenData?.reduce((sum, child) => sum + (child.points || 0), 0) || 0;
+
+      // Formater les tâches
+      const tasksInProgress = tasksData?.filter(t => !t.is_completed)
+        .map(t => `${t.children.name}: ${t.name}`)
+        .join(', ') || 'Aucune tâche en cours';
+      
+      const tasksCompleted = tasksData?.filter(t => t.is_completed)
+        .map(t => `${t.children.name}: ${t.name}`)
+        .join(', ') || 'Aucune tâche terminée';
+
+      // Formater les récompenses
+      const availableRewards = rewardsData?.filter(r => r.is_available)
+        .map(r => r.name)
+        .join(', ') || 'Aucune récompense disponible';
+
+      // Formater les sanctions
+      const activeSanctions = sanctionsData?.map(s => s.description)
+        .join(', ') || 'Aucune sanction active';
 
       // Remplacer les variables
-      return prompt
-        .replace('{POINTS_TOTAUX}', familyData.totalPoints.toString())
-        .replace('{POINTS_ENFANT}', (childName: string) => familyData.children[childName]?.points.toString() || '0')
-        .replace('{TACHES_EN_COURS}', tasks.filter((t: any) => !t.completed).map((t: any) => t.name).join(', '))
-        .replace('{TACHES_TERMINEES}', tasks.filter((t: any) => t.completed).map((t: any) => t.name).join(', '))
-        .replace('{RECOMPENSES_DISPONIBLES}', rewards.filter((r: any) => r.available).map((r: any) => r.name).join(', '))
-        .replace('{REGLE_SPECIFIQUE}', (ruleName: string) => rules.find((r: any) => r.name === ruleName)?.description || 'Règle non trouvée')
-        .replace('{ENIGME_DU_JOUR}', dailyRiddle.question)
-        .replace('{SANCTIONS_ACTIVES}', sanctions.filter((s: any) => s.active).map((s: any) => s.description).join(', '));
+      let processedPrompt = prompt
+        .replace('{POINTS_TOTAUX}', totalPoints.toString())
+        .replace('{TACHES_EN_COURS}', tasksInProgress)
+        .replace('{TACHES_TERMINEES}', tasksCompleted)
+        .replace('{RECOMPENSES_DISPONIBLES}', availableRewards)
+        .replace('{ENIGME_DU_JOUR}', riddleData?.[0]?.question || 'Aucune énigme disponible')
+        .replace('{SANCTIONS_ACTIVES}', activeSanctions);
+
+      // Remplacer les variables avec paramètres
+      processedPrompt = processedPrompt.replace(/{POINTS_ENFANT\((.*?)\)}/g, (_, childName) => {
+        const child = childrenData?.find(c => c.name.toLowerCase() === childName.toLowerCase());
+        return child ? child.points.toString() : '0';
+      });
+
+      processedPrompt = processedPrompt.replace(/{REGLE_SPECIFIQUE\((.*?)\)}/g, (_, ruleName) => {
+        const rule = rulesData?.find(r => r.name.toLowerCase() === ruleName.toLowerCase());
+        return rule ? rule.description : 'Règle non trouvée';
+      });
+
+      // Si {POINTS_ENFANT} est utilisé sans paramètre, utiliser le premier enfant
+      if (processedPrompt.includes('{POINTS_ENFANT}')) {
+        const firstChild = childrenData?.[0];
+        processedPrompt = processedPrompt.replace('{POINTS_ENFANT}', firstChild ? firstChild.points.toString() : '0');
+      }
+
+      return processedPrompt;
     } catch (error) {
       console.error('❌ Erreur lors du remplacement des variables:', error);
       return prompt;

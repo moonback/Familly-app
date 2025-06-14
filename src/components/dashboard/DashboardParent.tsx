@@ -1,7 +1,7 @@
 import { useAuth } from '@/context/auth-context';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   Plus, 
@@ -27,7 +27,16 @@ import {
   PiggyBankIcon,
   Minus,
   AlertCircle,
-  Mic
+  Mic,
+  Volume2,
+  VolumeX,
+  Play,
+  StopCircle,
+  Music,
+  Baby,  // au lieu de Child
+  User,
+  Bot  // au lieu de Robot
+  
 } from 'lucide-react';
 import { ChildrenManager } from '@/components/children/children-manager';
 import { TasksManager } from '@/components/tasks/tasks-manager';
@@ -61,6 +70,10 @@ import { VoiceAssistant } from '../voice/voice-assistant';
 import { VoiceSettings } from '../voice/voice-settings';
 import { PromptSettings } from '../voice/prompt-settings';
 import { toast } from '@/hooks/use-toast';
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 
 type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | 'shop' | 'penalties' | 'voice' | null;
 type Period = 'day' | 'week' | 'month';
@@ -119,6 +132,68 @@ export const DashboardParent = () => {
     childrenStats: [],
     recentActivities: []
   });
+  const [voiceSettings, setVoiceSettings] = useState({
+    rate: 1.0,
+    pitch: 1.0,
+    volume: 1.0,
+    isMuted: false,
+    isListening: false,
+    preset: 'default',
+    transitionSound: true
+  });
+
+  const [isTesting, setIsTesting] = useState(false);
+
+  const voicePresets = {
+    default: { rate: 1.0, pitch: 1.0, volume: 1.0 },
+    child: { rate: 1.2, pitch: 1.3, volume: 1.0 },
+    adult: { rate: 0.9, pitch: 0.9, volume: 1.0 },
+    robot: { rate: 0.8, pitch: 0.7, volume: 1.0 },
+    friendly: { rate: 1.1, pitch: 1.1, volume: 1.0 }
+  };
+
+  const testPhrases = [
+    "Bonjour ! Je suis votre assistant familial.",
+    "Comment puis-je vous aider aujourd'hui ?",
+    "N'oubliez pas de faire vos tâches !",
+    "Bravo pour vos points !"
+  ];
+
+  const applyPreset = (preset: keyof typeof voicePresets) => {
+    setVoiceSettings(prev => ({
+      ...prev,
+      ...voicePresets[preset],
+      preset
+    }));
+  };
+
+  const testVoice = () => {
+    if (isTesting) {
+      window.speechSynthesis.cancel();
+      setIsTesting(false);
+      return;
+    }
+
+    setIsTesting(true);
+    const utterance = new SpeechSynthesisUtterance(testPhrases[0]);
+    utterance.lang = 'fr-FR';
+    utterance.rate = voiceSettings.rate;
+    utterance.pitch = voiceSettings.pitch;
+    utterance.volume = voiceSettings.volume;
+
+    // Sélectionner la meilleure voix française
+    const voices = window.speechSynthesis.getVoices();
+    const frenchVoices = voices.filter(voice => voice.lang.includes('fr'));
+    if (frenchVoices.length > 0) {
+      utterance.voice = frenchVoices[0];
+    }
+
+    utterance.onend = () => {
+      setIsTesting(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
 
   const fetchStats = async () => {
     if (!user) return;
@@ -316,6 +391,19 @@ export const DashboardParent = () => {
   useEffect(() => {
     fetchStats();
   }, [user, period]);
+
+  // Sauvegarder les réglages dans le localStorage
+  useEffect(() => {
+    localStorage.setItem('voiceSettings', JSON.stringify(voiceSettings));
+  }, [voiceSettings]);
+
+  // Charger les réglages au démarrage
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('voiceSettings');
+    if (savedSettings) {
+      setVoiceSettings(JSON.parse(savedSettings));
+    }
+  }, []);
 
   const handleVoiceIntent = (intent: DetectedIntent) => {
     if (intent.intent === 'get_points') {
@@ -631,6 +719,195 @@ export const DashboardParent = () => {
 
       {/* Statistics */}
       {!currentView && renderStats()}
+
+      {/* Panneau de réglages vocaux */}
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mic className="h-5 w-5" />
+            Réglages de la voix
+          </CardTitle>
+          <CardDescription>
+            Personnalisez la voix de votre assistant familial
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Préréglages de voix */}
+            <div className="space-y-2">
+              <Label>Préréglages de voix</Label>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                <Button
+                  variant={voiceSettings.preset === 'default' ? 'default' : 'outline'}
+                  className="flex items-center gap-2"
+                  onClick={() => applyPreset('default')}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Par défaut
+                </Button>
+                <Button
+                  variant={voiceSettings.preset === 'child' ? 'default' : 'outline'}
+                  className="flex items-center gap-2"
+                  onClick={() => applyPreset('child')}
+                >
+                  <Baby className="h-4 w-4" />
+                  Enfant
+                </Button>
+                <Button
+                  variant={voiceSettings.preset === 'adult' ? 'default' : 'outline'}
+                  className="flex items-center gap-2"
+                  onClick={() => applyPreset('adult')}
+                >
+                  <User className="h-4 w-4" />
+                  Adulte
+                </Button>
+                <Button
+                  variant={voiceSettings.preset === 'robot' ? 'default' : 'outline'}
+                  className="flex items-center gap-2"
+                  onClick={() => applyPreset('robot')}
+                >
+                  <Bot className="h-4 w-4" />
+                  Robot
+                </Button>
+                <Button
+                  variant={voiceSettings.preset === 'friendly' ? 'default' : 'outline'}
+                  className="flex items-center gap-2"
+                  onClick={() => applyPreset('friendly')}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Amical
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Test de voix */}
+            <div className="space-y-2">
+              <Label>Test de voix</Label>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant={isTesting ? "destructive" : "default"}
+                  className="flex items-center gap-2"
+                  onClick={testVoice}
+                >
+                  {isTesting ? (
+                    <>
+                      <StopCircle className="h-4 w-4" />
+                      Arrêter
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4" />
+                      Tester
+                    </>
+                  )}
+                </Button>
+                <p className="text-sm text-gray-500">
+                  {isTesting ? "Test en cours..." : "Écoutez un exemple de voix"}
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Réglages manuels */}
+            <div className="space-y-4">
+              <Label>Réglages manuels</Label>
+              
+              {/* Vitesse de parole */}
+              <div className="space-y-2">
+                <Label>Vitesse de parole</Label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[voiceSettings.rate]}
+                    min={0.5}
+                    max={2}
+                    step={0.1}
+                    onValueChange={([value]) => 
+                      setVoiceSettings(prev => ({ ...prev, rate: value, preset: 'custom' }))
+                    }
+                    className="flex-1"
+                  />
+                  <span className="w-12 text-right">{voiceSettings.rate.toFixed(1)}x</span>
+                </div>
+              </div>
+
+              {/* Hauteur de la voix */}
+              <div className="space-y-2">
+                <Label>Hauteur de la voix</Label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[voiceSettings.pitch]}
+                    min={0.5}
+                    max={2}
+                    step={0.1}
+                    onValueChange={([value]) => 
+                      setVoiceSettings(prev => ({ ...prev, pitch: value, preset: 'custom' }))
+                    }
+                    className="flex-1"
+                  />
+                  <span className="w-12 text-right">{voiceSettings.pitch.toFixed(1)}</span>
+                </div>
+              </div>
+
+              {/* Volume */}
+              <div className="space-y-2">
+                <Label>Volume</Label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[voiceSettings.volume]}
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    onValueChange={([value]) => 
+                      setVoiceSettings(prev => ({ ...prev, volume: value, preset: 'custom' }))
+                    }
+                    className="flex-1"
+                  />
+                  <span className="w-12 text-right">{Math.round(voiceSettings.volume * 100)}%</span>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Options supplémentaires */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={voiceSettings.isMuted}
+                  onCheckedChange={(checked) => 
+                    setVoiceSettings(prev => ({ ...prev, isMuted: checked }))
+                  }
+                />
+                <Label>Mode silencieux</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={voiceSettings.isListening}
+                  onCheckedChange={(checked) => 
+                    setVoiceSettings(prev => ({ ...prev, isListening: checked }))
+                  }
+                />
+                <Label>Écoute continue</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={voiceSettings.transitionSound}
+                  onCheckedChange={(checked) => 
+                    setVoiceSettings(prev => ({ ...prev, transitionSound: checked }))
+                  }
+                />
+                <Label className="flex items-center gap-2">
+                  <Music className="h-4 w-4" />
+                  Effets sonores
+                </Label>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }; 
