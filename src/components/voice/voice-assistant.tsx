@@ -6,6 +6,7 @@ import { useVoiceAssistantSettings } from '@/context/voice-assistant-context';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/auth-context';
+import { useParams } from 'react-router-dom';
 
 interface VoiceAssistantProps {
   onIntent: (intent: DetectedIntent) => void;
@@ -58,6 +59,33 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
   const [isMicrophoneAvailable, setIsMicrophoneAvailable] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
   const { user } = useAuth();
+  const { childName } = useParams();
+  const [activeChild, setActiveChild] = useState<{ id: string; name: string; points: number } | null>(null);
+
+  // Charger les informations de l'enfant actif
+  useEffect(() => {
+    const loadActiveChild = async () => {
+      if (!user || !childName) return;
+
+      try {
+        const { data: childData } = await supabase
+          .from('children')
+          .select('*')
+          .eq('name', childName)
+          .eq('user_id', user.id)
+          .single();
+
+        if (childData) {
+          console.log('👶 Enfant actif chargé:', childData.name);
+          setActiveChild(childData);
+        }
+      } catch (error) {
+        console.error('❌ Erreur lors du chargement des données de l\'enfant actif:', error);
+      }
+    };
+
+    loadActiveChild();
+  }, [user, childName]);
 
   const speak = (text: string) => {
     console.log('🔊 Synthèse vocale:', text);
@@ -267,6 +295,60 @@ export const VoiceAssistant = ({ onIntent }: VoiceAssistantProps) => {
     }
   };
 
+  // Fonction pour personnaliser la réponse
+  const personalizeResponse = (response: string): string => {
+    if (!activeChild) return response;
+
+    return response
+      .replace(/tu as/g, `${activeChild.name} a`)
+      .replace(/tu es/g, `${activeChild.name} est`)
+      .replace(/tu peux/g, `${activeChild.name} peut`)
+      .replace(/tu dois/g, `${activeChild.name} doit`)
+      .replace(/tu veux/g, `${activeChild.name} veut`)
+      .replace(/tu fais/g, `${activeChild.name} fait`)
+      .replace(/tu vas/g, `${activeChild.name} va`)
+      .replace(/tu peux/g, `${activeChild.name} peut`)
+      .replace(/tu as besoin/g, `${activeChild.name} a besoin`)
+      .replace(/tu peux faire/g, `${activeChild.name} peut faire`)
+      .replace(/tu dois faire/g, `${activeChild.name} doit faire`)
+      .replace(/tu veux faire/g, `${activeChild.name} veut faire`)
+      .replace(/tu fais bien/g, `${activeChild.name} fait bien`)
+      .replace(/tu vas bien/g, `${activeChild.name} va bien`)
+      .replace(/tu peux avoir/g, `${activeChild.name} peut avoir`)
+      .replace(/tu dois avoir/g, `${activeChild.name} doit avoir`)
+      .replace(/tu veux avoir/g, `${activeChild.name} veut avoir`)
+      .replace(/tu fais attention/g, `${activeChild.name} fait attention`)
+      .replace(/tu vas faire/g, `${activeChild.name} va faire`)
+      .replace(/tu peux aller/g, `${activeChild.name} peut aller`)
+      .replace(/tu dois aller/g, `${activeChild.name} doit aller`)
+      .replace(/tu veux aller/g, `${activeChild.name} veut aller`)
+      .replace(/tu fais partie/g, `${activeChild.name} fait partie`)
+      .replace(/tu vas avoir/g, `${activeChild.name} va avoir`)
+      .replace(/tu peux être/g, `${activeChild.name} peut être`)
+      .replace(/tu dois être/g, `${activeChild.name} doit être`)
+      .replace(/tu veux être/g, `${activeChild.name} veut être`)
+      .replace(/tu fais confiance/g, `${activeChild.name} fait confiance`)
+      .replace(/tu vas être/g, `${activeChild.name} va être`)
+      .replace(/tu peux faire confiance/g, `${activeChild.name} peut faire confiance`)
+      .replace(/tu dois faire confiance/g, `${activeChild.name} doit faire confiance`)
+      .replace(/tu veux faire confiance/g, `${activeChild.name} veut faire confiance`)
+      .replace(/tu fais attention à/g, `${activeChild.name} fait attention à`)
+      .replace(/tu vas faire attention/g, `${activeChild.name} va faire attention`)
+      .replace(/tu peux faire attention/g, `${activeChild.name} peut faire attention`)
+      .replace(/tu dois faire attention/g, `${activeChild.name} doit faire attention`)
+      .replace(/tu veux faire attention/g, `${activeChild.name} veut faire attention`)
+      .replace(/tu fais partie de/g, `${activeChild.name} fait partie de`)
+      .replace(/tu vas faire partie/g, `${activeChild.name} va faire partie`)
+      .replace(/tu peux faire partie/g, `${activeChild.name} peut faire partie`)
+      .replace(/tu dois faire partie/g, `${activeChild.name} doit faire partie`)
+      .replace(/tu veux faire partie/g, `${activeChild.name} veut faire partie`)
+      .replace(/tu fais confiance à/g, `${activeChild.name} fait confiance à`)
+      .replace(/tu vas faire confiance/g, `${activeChild.name} va faire confiance`)
+      .replace(/tu peux faire confiance à/g, `${activeChild.name} peut faire confiance à`)
+      .replace(/tu dois faire confiance à/g, `${activeChild.name} doit faire confiance à`)
+      .replace(/tu veux faire confiance à/g, `${activeChild.name} veut faire confiance à`);
+  };
+
   const getResponse = async (text: string) => {
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -321,7 +403,8 @@ Assistant:`
         return "Désolé, je n'ai pas pu générer une réponse.";
       }
 
-      return generatedText;
+      // Personnaliser la réponse si un enfant est actif
+      return personalizeResponse(generatedText);
     } catch (error) {
       console.error('❌ Erreur lors de la génération de réponse:', error);
       return "Désolé, j'ai rencontré une erreur lors de notre conversation.";
@@ -516,7 +599,13 @@ Assistant:`
   }
 
   return (
-    <Button variant="outline" size="icon" onClick={toggle} className="ml-2">
+    <Button 
+      variant="outline" 
+      size="icon" 
+      onClick={toggle} 
+      className="ml-2"
+      data-child-name={childName}
+    >
       {listening ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
     </Button>
   );
