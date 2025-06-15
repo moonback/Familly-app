@@ -10,12 +10,22 @@ import DashboardChild from '@/pages/dashboard-child';
 import ChildHome from '@/pages/home';
 import { motion, AnimatePresence } from 'framer-motion';
 import SetParentCodePage from '@/pages/set-parent-code';
+import PresentationPage from '@/pages/presentation';
 
-// Composant de protection des routes
+// Composant de protection des routes pour les utilisateurs connectés
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+};
+
+// Composant de protection des routes pour les utilisateurs non connectés
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  if (user) {
+    return <Navigate to="/dashboard/parent" replace />;
   }
   return <>{children}</>;
 };
@@ -60,6 +70,14 @@ function App() {
             <AnimatePresence mode="wait">
               <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route 
+                  path="/presentation" 
+                  element={
+                    <PublicRoute>
+                      <PresentationPage />
+                    </PublicRoute>
+                  } 
+                />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route 
                   path="/set-parent-code" 
