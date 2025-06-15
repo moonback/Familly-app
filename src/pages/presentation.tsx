@@ -17,22 +17,37 @@ const PresentationPage = () => {
     {
       icon: "🎯",
       title: "Gestion des tâches",
-      description: "Créez et suivez les tâches quotidiennes de vos enfants"
+      description: "Créez et suivez les corvées et activités quotidiennes"
     },
     {
-      icon: "⭐",
-      title: "Système de récompenses",
-      description: "Motivez vos enfants avec un système de points et de récompenses"
+      icon: "⚖️",
+      title: "Règles de comportement",
+      description: "Définissez des règles claires avec système de pénalités"
     },
     {
-      icon: "📊",
-      title: "Suivi des progrès",
-      description: "Visualisez les progrès de vos enfants dans leurs différentes activités"
+      icon: "🛍️",
+      title: "Récompenses & Boutique",
+      description: "Échangez les points gagnés contre des cadeaux personnalisés"
+    },
+    {
+      icon: "🐷",
+      title: "Tirelire virtuelle",
+      description: "Épargnez des points pour de futurs achats plus importants"
+    },
+    {
+      icon: "❓",
+      title: "Devinettes quotidiennes",
+      description: "Répondez à une énigme journalière pour gagner des bonus"
+    },
+    {
+      icon: "📈",
+      title: "Analytics & progression",
+      description: "Suivez l'évolution des points et des réussites de chaque enfant"
     },
     {
       icon: "👨‍👩‍👧‍👦",
       title: "Interface adaptée",
-      description: "Une interface simple pour les enfants et complète pour les parents"
+      description: "Un mode enfant ludique et un espace parent complet"
     }
   ];
 
