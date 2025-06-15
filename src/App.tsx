@@ -10,6 +10,7 @@ import DashboardChild from '@/pages/dashboard-child';
 import ChildHome from '@/pages/home';
 import { motion, AnimatePresence } from 'framer-motion';
 import SetParentCodePage from '@/pages/set-parent-code';
+import HowItWorksPage from '@/pages/how-it-works';
 
 // Composant de protection des routes pour les utilisateurs connectés
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -69,7 +70,7 @@ function App() {
             <AnimatePresence mode="wait">
               <Routes>
                 <Route path="/" element={<HomePage />} />
-                
+                <Route path="/how-it-works" element={<HowItWorksPage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route 
                   path="/set-parent-code" 

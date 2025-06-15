@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { HomeIcon, UserIcon, LogOutIcon, LogInIcon, ChevronDownIcon, SparklesIcon, MenuIcon, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
@@ -28,6 +28,7 @@ export function MainNav() {
   const [children, setChildren] = useState<Child[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -59,7 +60,13 @@ export function MainNav() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+      // En cas d'erreur, forcer la redirection
+      window.location.href = '/';
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -239,17 +246,29 @@ export function MainNav() {
                 </Button>
               </motion.div>
             ) : (
-              <Link to="/auth">
-                <motion.div whileHover={{ scale: 1.05 }}>
-                  <Button 
-                    variant="default"
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
-                  >
-                    <LogInIcon className="h-5 w-5 mr-2" />
-                    <span className="hidden md:inline font-medium">Connexion</span>
-                  </Button>
-                </motion.div>
-              </Link>
+              <>
+                <Link to="/how-it-works">
+                  <motion.div whileHover={{ scale: 1.05 }}>
+                    <Button 
+                      variant="ghost"
+                      className="hover:bg-purple-50 transition-all duration-300"
+                    >
+                      <span className="hidden md:inline font-medium">Comment ça marche</span>
+                    </Button>
+                  </motion.div>
+                </Link>
+                <Link to="/auth">
+                  <motion.div whileHover={{ scale: 1.05 }}>
+                    <Button 
+                      variant="default"
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
+                    >
+                      <LogInIcon className="h-5 w-5 mr-2" />
+                      <span className="hidden md:inline font-medium">Connexion</span>
+                    </Button>
+                  </motion.div>
+                </Link>
+              </>
             )}
           </div>
         </div>

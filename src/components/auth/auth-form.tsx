@@ -139,51 +139,51 @@ export function AuthForm() {
           >
             <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               {isSignUp ? 'Créer un compte' : 'Bienvenue'}
-            </CardTitle>
+        </CardTitle>
           </motion.div>
           <CardDescription className="text-center text-gray-600">
             {isSignUp 
               ? 'Rejoignez Family App et commencez à organiser votre vie de famille'
               : 'Connectez-vous pour accéder à votre espace famille'}
           </CardDescription>
-        </CardHeader>
-        <CardContent>
+      </CardHeader>
+      <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-            {error && (
+          {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
                 <Alert variant="destructive" role="alert" className="bg-red-50 border-red-200">
                   <AlertDescription className="text-red-600">{error}</AlertDescription>
-                </Alert>
+            </Alert>
               </motion.div>
-            )}
+          )}
 
-            <div className="grid gap-2">
+          <div className="grid gap-2">
               <Label htmlFor="email" className="text-gray-700">Email</Label>
-              <div className="relative">
+            <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-purple-500" aria-hidden="true" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="votre@email.com"
+              <Input
+                id="email"
+                type="email"
+                placeholder="votre@email.com"
                   className={`pl-10 bg-white/50 backdrop-blur-sm border-2 ${
                     validationErrors.email ? 'border-red-500' : 'border-purple-100'
                   } focus:border-purple-500 focus:ring-purple-500`}
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (validationErrors.email) {
-                      setValidationErrors(prev => ({ ...prev, email: undefined }));
-                    }
-                  }}
-                  aria-invalid={!!validationErrors.email}
-                  aria-describedby={validationErrors.email ? 'email-error' : undefined}
-                  required
-                />
-              </div>
-              {validationErrors.email && (
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (validationErrors.email) {
+                    setValidationErrors(prev => ({ ...prev, email: undefined }));
+                  }
+                }}
+                aria-invalid={!!validationErrors.email}
+                aria-describedby={validationErrors.email ? 'email-error' : undefined}
+                required
+              />
+            </div>
+            {validationErrors.email && (
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -191,48 +191,48 @@ export function AuthForm() {
                   className="text-sm text-red-500"
                   role="alert"
                 >
-                  {validationErrors.email}
+                {validationErrors.email}
                 </motion.p>
-              )}
-            </div>
+            )}
+          </div>
 
-            <div className="grid gap-2">
+          <div className="grid gap-2">
               <Label htmlFor="password" className="text-gray-700">Mot de passe</Label>
-              <div className="relative">
+            <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-purple-500" aria-hidden="true" />
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
                   className={`pl-10 pr-10 bg-white/50 backdrop-blur-sm border-2 ${
                     validationErrors.password ? 'border-red-500' : 'border-purple-100'
                   } focus:border-purple-500 focus:ring-purple-500`}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (validationErrors.password) {
-                      setValidationErrors(prev => ({ ...prev, password: undefined }));
-                    }
-                  }}
-                  aria-invalid={!!validationErrors.password}
-                  aria-describedby={validationErrors.password ? 'password-error' : undefined}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                >
-                  {showPassword ? (
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (validationErrors.password) {
+                    setValidationErrors(prev => ({ ...prev, password: undefined }));
+                  }
+                }}
+                aria-invalid={!!validationErrors.password}
+                aria-describedby={validationErrors.password ? 'password-error' : undefined}
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showPassword ? (
                     <EyeOff className="h-4 w-4 text-purple-500" aria-hidden="true" />
-                  ) : (
+                ) : (
                     <Eye className="h-4 w-4 text-purple-500" aria-hidden="true" />
-                  )}
-                </Button>
-              </div>
-              {validationErrors.password && (
+                )}
+              </Button>
+            </div>
+            {validationErrors.password && (
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -240,11 +240,11 @@ export function AuthForm() {
                   className="text-sm text-red-500"
                   role="alert"
                 >
-                  {validationErrors.password}
+                {validationErrors.password}
                 </motion.p>
-              )}
-              
-              {isSignUp && password && (
+            )}
+            
+            {isSignUp && password && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -252,61 +252,61 @@ export function AuthForm() {
                   role="status"
                   aria-label={`Force du mot de passe: ${strengthLabels[passwordStrength - 1] || 'Aucune'}`}
                 >
-                  <div className="flex space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
                         className={`h-2 w-full rounded transition-all duration-300 ${
-                          i < passwordStrength ? strengthColors[passwordStrength - 1] : 'bg-gray-200'
-                        }`}
-                      />
-                    ))}
-                  </div>
+                        i < passwordStrength ? strengthColors[passwordStrength - 1] : 'bg-gray-200'
+                      }`}
+                    />
+                  ))}
+                </div>
                   <p className="text-xs text-gray-500">
-                    Force: {strengthLabels[passwordStrength - 1] || 'Aucune'}
-                  </p>
+                  Force: {strengthLabels[passwordStrength - 1] || 'Aucune'}
+                </p>
                 </motion.div>
-              )}
-            </div>
+            )}
+          </div>
 
-            {isSignUp && (
-              <div className="grid gap-2">
+          {isSignUp && (
+            <div className="grid gap-2">
                 <Label htmlFor="confirmPassword" className="text-gray-700">Confirmer le mot de passe</Label>
-                <div className="relative">
+              <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-purple-500" aria-hidden="true" />
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
                     className={`pl-10 pr-10 bg-white/50 backdrop-blur-sm border-2 ${
                       validationErrors.confirmPassword ? 'border-red-500' : 'border-purple-100'
                     } focus:border-purple-500 focus:ring-purple-500`}
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value);
-                      if (validationErrors.confirmPassword) {
-                        setValidationErrors(prev => ({ ...prev, confirmPassword: undefined }));
-                      }
-                    }}
-                    aria-invalid={!!validationErrors.confirmPassword}
-                    aria-describedby={validationErrors.confirmPassword ? 'confirm-password-error' : undefined}
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    aria-label={showConfirmPassword ? 'Masquer la confirmation du mot de passe' : 'Afficher la confirmation du mot de passe'}
-                  >
-                    {showConfirmPassword ? (
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (validationErrors.confirmPassword) {
+                      setValidationErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                    }
+                  }}
+                  aria-invalid={!!validationErrors.confirmPassword}
+                  aria-describedby={validationErrors.confirmPassword ? 'confirm-password-error' : undefined}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label={showConfirmPassword ? 'Masquer la confirmation du mot de passe' : 'Afficher la confirmation du mot de passe'}
+                >
+                  {showConfirmPassword ? (
                       <EyeOff className="h-4 w-4 text-purple-500" aria-hidden="true" />
-                    ) : (
+                  ) : (
                       <Eye className="h-4 w-4 text-purple-500" aria-hidden="true" />
-                    )}
-                  </Button>
-                </div>
-                {validationErrors.confirmPassword && (
+                  )}
+                </Button>
+              </div>
+              {validationErrors.confirmPassword && (
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -314,23 +314,23 @@ export function AuthForm() {
                     className="text-sm text-red-500"
                     role="alert"
                   >
-                    {validationErrors.confirmPassword}
+                  {validationErrors.confirmPassword}
                   </motion.p>
-                )}
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
-            <Button 
-              type="submit" 
+          <Button 
+            type="submit" 
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
-              disabled={loading}
-              aria-busy={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                  {isSignUp ? 'Création...' : 'Connexion...'}
-                </>
+            disabled={loading}
+            aria-busy={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                {isSignUp ? 'Création...' : 'Connexion...'}
+              </>
               ) : (
                 <>
                   {isSignUp ? (
@@ -338,32 +338,32 @@ export function AuthForm() {
                       <UserPlus className="mr-2 h-4 w-4" />
                       Créer un compte
                     </>
-                  ) : (
+            ) : (
                     <>
                       <LogIn className="mr-2 h-4 w-4" />
                       Se connecter
                     </>
                   )}
                 </>
-              )}
-            </Button>
-          </form>
+            )}
+          </Button>
+        </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              {isSignUp ? 'Déjà un compte ? ' : 'Pas encore de compte ? '}
-              <Button 
-                variant="link" 
-                onClick={toggleAuthMode}
+          {isSignUp ? 'Déjà un compte ? ' : 'Pas encore de compte ? '}
+          <Button 
+            variant="link" 
+            onClick={toggleAuthMode}
                 className="p-0 h-auto font-normal text-purple-600 hover:text-purple-700"
-                type="button"
-              >
-                {isSignUp ? 'Se connecter' : "S'inscrire"}
-              </Button>
+            type="button"
+          >
+            {isSignUp ? 'Se connecter' : "S'inscrire"}
+          </Button>
             </p>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </CardContent>
+    </Card>
     </motion.div>
   );
 }

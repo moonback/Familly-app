@@ -18,83 +18,113 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Correctement déstructurer l'objet retourné par onAuthStateChange
-    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+    // Vérifier la session au chargement
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
+      } catch (error) {
+        console.error('Erreur lors de la vérification de la session:', error);
+        setUser(null);
+      } finally {
         setLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // Écouter les changements d'état d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          // Supprimer toutes les données de session
+          localStorage.clear();
+          sessionStorage.clear();
+        } else {
+          setUser(session?.user || null);
+        }
       }
     );
 
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => {
-        setUser(session?.user || null);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-
     return () => {
-      // Appeler unsubscribe sur l'objet d'abonnement
-      authListener.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      setUser(data.user);
+      return { error: null };
+    } catch (error: any) {
       toast({
         title: 'Erreur de connexion',
         description: error.message,
         variant: 'destructive',
       });
+      return { error };
     }
-    return { error };
   };
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
-    });
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Inscription réussie',
+        description: 'Veuillez vérifier votre email pour confirmer votre compte.',
+      });
+      return { error: null };
+    } catch (error: any) {
       toast({
         title: "Erreur d'inscription",
         description: error.message,
         variant: 'destructive',
       });
-    } else {
-      toast({
-        title: 'Inscription réussie',
-        description: 'Veuillez vérifier votre email pour confirmer votre compte.',
-      });
+      return { error };
     }
-    return { error };
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: 'Erreur de déconnexion',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Déconnexion réussie',
-        description: 'Vous avez été déconnecté.',
-      });
+    try {
+      // Déconnecter l'utilisateur
+      await supabase.auth.signOut();
+      
+      // Réinitialiser l'état
+      setUser(null);
+      
+      // Nettoyer le stockage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Forcer un rechargement complet
+      window.location.href = '/';
+      
+      return { error: null };
+    } catch (error: any) {
+      console.error('Erreur lors de la déconnexion:', error);
+      // En cas d'erreur, forcer quand même la déconnexion
+      setUser(null);
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
+      return { error };
     }
-    return { error };
   };
 
   return (
