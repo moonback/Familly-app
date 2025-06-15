@@ -32,6 +32,7 @@ import { ChildrenManager } from '@/components/children/children-manager';
 import { TasksManager } from '@/components/tasks/tasks-manager';
 import { RulesManager } from '@/components/rules/rules-manager';
 import { RewardsManager } from '@/components/rewards/rewards-manager';
+import { MissionsManager } from '@/components/missions/missions-manager';
 import { RiddlesManager } from '@/components/riddles/riddles-manager';
 import {
   Select,
@@ -354,6 +355,18 @@ export const DashboardParent = () => {
       accent: 'bg-emerald-100'
     },
     {
+      id: 'missions',
+      title: 'Gérer les Missions',
+      description: 'Créez des missions ludiques avec badges à la clé.',
+      icon: Trophy,
+      color: 'text-teal-500',
+      hoverColor: 'hover:bg-teal-50',
+      bgColor: 'bg-white',
+      borderColor: 'border-gray-200',
+      buttonText: 'Gérer',
+      accent: 'bg-teal-100'
+    },
+    {
       id: 'rules',
       title: 'Gérer les Règles',
       description: 'Établissez les règles de comportement et les pénalités de points.',
@@ -616,6 +629,34 @@ export const DashboardParent = () => {
               </CardHeader>
               <CardContent className="p-6">
                 <TasksManager />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {currentView === 'missions' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Missions</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCurrentView(null)}
+                    className="hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <MissionsManager />
               </CardContent>
             </Card>
           </motion.div>

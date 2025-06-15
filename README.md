@@ -65,6 +65,8 @@ L'application propose des idées de tâches, de règles et de récompenses grâc
 - `rules` : Règles de comportement
 - `rewards` : Catalogue de récompenses
 - `riddles` : Devinettes créées par les parents
+- `missions` : Missions éducatives à étapes
+- `badges` : Badges à collectionner
 - `shop_items` : Articles disponibles dans la boutique
 - `purchases` : Achats effectués par les enfants
 - `piggy_bank_transactions` : Mouvements de points de la tirelire
@@ -73,6 +75,9 @@ L'application propose des idées de tâches, de règles et de récompenses grâc
 - `child_tasks` : Tâches assignées aux enfants
 - `child_rules_violations` : Violations des règles
 - `child_rewards_claimed` : Récompenses réclamées
+- `mission_steps` : Étapes d'une mission
+- `child_missions` : Progression des missions par enfant
+- `child_badges` : Badges obtenus par enfant
 - `daily_riddles` : Devinettes quotidiennes par enfant
 - `points_history` : Historique des points pour analytics
 
@@ -104,8 +109,9 @@ L'application propose des idées de tâches, de règles et de récompenses grâc
    - `20250613104538_shrill_snow.sql`
    - `20250613110000_add_shop_items.sql`
    - `20250613113000_add_piggy_bank_transactions.sql`
+   - `20250615120000_add_missions_badges.sql`
    
-   Ces migrations ajoutent les contraintes d'âge, les devinettes, les articles de boutique et la table de transactions de la tirelire.
+   Ces migrations ajoutent les contraintes d'âge, les devinettes, les articles de boutique, la table de transactions de la tirelire ainsi que les missions et badges.
 
 5. Démarrer l'application :
    ```bash

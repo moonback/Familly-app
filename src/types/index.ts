@@ -75,6 +75,48 @@ export interface PiggyBankTransaction {
   created_at: string;
 }
 
+export interface Mission {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  category: string;
+  created_at: string;
+}
+
+export interface MissionStep {
+  id: string;
+  mission_id: string;
+  label: string;
+  step_order: number;
+  created_at: string;
+}
+
+export interface ChildMission {
+  id: string;
+  child_id: string;
+  mission_id: string;
+  current_step: number;
+  is_completed: boolean;
+  validated: boolean;
+  created_at: string;
+}
+
+export interface Badge {
+  id: string;
+  title: string;
+  description?: string;
+  icon_url?: string;
+  created_at: string;
+}
+
+export interface ChildBadge {
+  id: string;
+  child_id: string;
+  badge_id: string;
+  awarded_at: string;
+}
+
 export interface ChildTask {
   id: string;
   child_id: string;

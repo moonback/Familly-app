@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ShopItemsList } from '@/components/shop/shop-items-list';
 import { PiggyBankManager } from '@/components/piggy-bank/piggy-bank-manager';
 import { ManualButton, ManualDialog } from '@/components/manual/manual-dialog';
+import { BadgeGallery } from '@/components/badges/badge-gallery';
 
 // Import des nouveaux composants
 import { AvatarDisplay } from '@/components/dashboard/AvatarDisplay';
@@ -766,11 +767,13 @@ export default function DashboardChild() {
                 <TrophyIcon className="w-6 h-6" />
                 Mes Récompenses Validées
               </h2>
-              <ValidatedRewardsList 
-                claimedRewards={claimedRewards} 
+              <ValidatedRewardsList
+                claimedRewards={claimedRewards}
                 childColor={child.custom_color}
               />
             </div>
+
+            <BadgeGallery childId={child.id} />
           </motion.div>
 
           <DailyRiddle 
