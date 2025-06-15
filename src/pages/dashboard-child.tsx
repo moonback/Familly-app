@@ -1,5 +1,5 @@
 import { useAuth } from '@/context/auth-context';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -30,6 +30,14 @@ import { LoadingScreen } from '@/components/dashboard/LoadingScreen';
 import { BackgroundDecorations } from '@/components/dashboard/BackgroundDecorations';
 import { Header } from '@/components/dashboard/Header';
 import { ValidatedRewardsList } from '@/components/dashboard/ValidatedRewardsList';
+import { PointsHistoryList } from '@/components/dashboard/PointsHistoryList';
+
+// Hooks personnalisés
+import { useTasks } from '@/hooks/useTasks';
+import { useRewards } from '@/hooks/useRewards';
+import { useRiddles } from '@/hooks/useRiddles';
+import { useStreak } from '@/hooks/useStreak';
+import { usePointsHistory } from '@/hooks/usePointsHistory';
 
 const CONVERSION_RATE = 100; // 100 points = 1 euro
 
@@ -169,20 +177,42 @@ export default function DashboardChild() {
   const navigate = useNavigate();
   const { childName } = useParams();
   const [child, setChild] = useState<Child | null>(null);
-  const [childTasks, setChildTasks] = useState<ChildTask[]>([]);
-  const [rewards, setRewards] = useState<Reward[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [showManual, setShowManual] = useState(false);
   const [completedTasksAnimation, setCompletedTasksAnimation] = useState<string[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [currentRiddle, setCurrentRiddle] = useState<Riddle | null>(null);
-  const [riddleAnswer, setRiddleAnswer] = useState('');
-  const [showRiddleSuccess, setShowRiddleSuccess] = useState(false);
-  const [riddleSolved, setRiddleSolved] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [claimedRewards, setClaimedRewards] = useState<ChildRewardClaimed[]>([]);
-  const [streak, setStreak] = useState(0);
-  const [penalties, setPenalties] = useState<PenaltyHistory[]>([]);
-  const [showManual, setShowManual] = useState(false);
+
+  const fetchChildData = useCallback(async () => {
+    try {
+      const { data: childData, error: childError } = await supabase
+        .from('children')
+        .select('*')
+        .eq('name', childName)
+        .single();
+
+      if (childError) throw childError;
+      setChild(childData);
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible de charger les données",
+        variant: 'destructive',
+      });
+    }
+  }, [childName]);
+
+  // Utilisation des hooks personnalisés
+  const { childTasks, isLoading: tasksLoading, toggleTask } = useTasks(child, fetchChildData);
+  const { rewards, claimedRewards, claimReward } = useRewards(child, fetchChildData);
+  const { 
+    currentRiddle, 
+    riddleSolved, 
+    showSuccess, 
+    submitRiddleAnswer, 
+    purchaseHint 
+  } = useRiddles(child, fetchChildData);
+  const { streak } = useStreak(child);
+  const { pointsHistory } = usePointsHistory(child);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -192,509 +222,17 @@ export default function DashboardChild() {
     }
   }, [user, loading, navigate, childName]);
 
-  useEffect(() => {
-    if (child?.user_id) {
-      fetchDailyRiddle();
-      calculateStreak();
-    }
-  }, [child?.user_id]);
-
-  const calculateStreak = async () => {
-    if (!childName) return;
-
-    try {
-      // Récupérer les tâches complétées des 30 derniers jours
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const { data: completedTasks, error } = await supabase
-        .from('child_tasks')
-        .select('completed_at, due_date')
-        .eq('child_id', child?.id)
-        .eq('is_completed', true)
-        .gte('completed_at', thirtyDaysAgo.toISOString())
-        .order('completed_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Calculer le streak
-      let currentStreak = 0;
-      let currentDate = new Date();
-      const completedDates = new Set(
-        completedTasks?.map(task => format(new Date(task.completed_at), 'yyyy-MM-dd')) || []
-      );
-
-      // Vérifier les jours consécutifs en remontant dans le temps
-      while (completedDates.has(format(currentDate, 'yyyy-MM-dd'))) {
-        currentStreak++;
-        currentDate.setDate(currentDate.getDate() - 1);
-      }
-
-      setStreak(currentStreak);
-    } catch (error) {
-      console.error('Erreur lors du calcul du streak:', error);
-    }
-  };
-
-  const fetchChildData = async () => {
-    try {
-      // Récupérer les informations de l'enfant
-      const { data: childData, error: childError } = await supabase
-        .from('children')
-        .select('*')
-        .eq('name', childName)
-        .single();
-
-      if (childError) throw childError;
-      setChild(childData);
-
-      // Générer des tâches appropriées à l'âge de l'enfant
-      await generateAgeAppropriateTasks(childData);
-
-      // Récupérer les tâches de l'enfant
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('child_tasks')
-        .select(`
-          *,
-          task:tasks(*)
-        `)
-        .eq('child_id', childData.id)
-        .eq('due_date', format(new Date(), 'yyyy-MM-dd'))
-        .order('due_date', { ascending: true });
-
-      if (tasksError) throw tasksError;
-      setChildTasks(tasksData);
-
-      // Récupérer les récompenses disponibles
-      const { data: rewardsData, error: rewardsError } = await supabase
-        .from('rewards')
-        .select('*')
-        .eq('user_id', childData.user_id);
-
-      if (rewardsError) throw rewardsError;
-      setRewards(rewardsData);
-
-      // Récupérer les récompenses réclamées
-      const { data: claimedRewardsData, error: claimedRewardsError } = await supabase
-        .from('child_rewards_claimed')
-        .select(`
-          *,
-          reward:rewards(*)
-        `)
-        .eq('child_id', childData.id)
-        .order('claimed_at', { ascending: false });
-
-      if (claimedRewardsError) throw claimedRewardsError;
-      setClaimedRewards(claimedRewardsData);
-
-      // Récupérer l'historique des pénalités
-      const { data: penaltiesData, error: penaltiesError } = await supabase
-        .from('points_history')
-        .select('*')
-        .eq('child_id', childData.id)
-        .lt('points', 0)
-        .not('reason', 'ilike', 'Récompense réclamée%')
-        .order('created_at', { ascending: false });
-
-      if (penaltiesError) throw penaltiesError;
-      setPenalties(penaltiesData || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
-      toast({
-        title: 'Erreur',
-        description: "Impossible de charger les données",
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchDailyRiddle = async () => {
-    try {
-      console.log('Fetching daily riddle for child:', child?.id);
-      
-      // Vérifier d'abord si l'enfant a déjà une devinette pour aujourd'hui
-      const { data: existingRiddle, error: checkError } = await supabase
-        .from('daily_riddles')
-        .select(`
-          *,
-          riddles (
-            id,
-            question,
-            answer,
-            points,
-            hint
-          )
-        `)
-        .eq('child_id', child?.id)
-        .eq('date', format(new Date(), 'yyyy-MM-dd'))
-        .single();
-
-      console.log('Existing riddle check:', { existingRiddle, checkError });
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Erreur lors de la vérification de la devinette:', checkError);
-        return;
-      }
-
-      if (existingRiddle) {
-        console.log('Using existing riddle:', existingRiddle);
-        setCurrentRiddle(existingRiddle.riddles);
-        setRiddleSolved(existingRiddle.is_solved);
-        return;
-      }
-
-      // Si aucune devinette n'existe pour aujourd'hui, en créer une nouvelle
-      const { data: riddles, error: riddleError } = await supabase
-        .from('riddles')
-        .select(`
-          id,
-          question,
-          answer,
-          points,
-          hint
-        `)
-        .eq('user_id', child?.user_id);
-
-      console.log('Available riddles:', { riddles, riddleError });
-
-      if (riddleError) {
-        console.error('Erreur lors de la récupération des devinettes:', riddleError);
-        return;
-      }
-
-      if (riddles && riddles.length > 0) {
-        // Sélectionner une devinette aléatoire
-        const randomRiddle = riddles[Math.floor(Math.random() * riddles.length)];
-        console.log('Selected random riddle:', randomRiddle);
-
-        // Créer une nouvelle entrée dans daily_riddles
-        const { data: dailyRiddle, error: insertError } = await supabase
-          .from('daily_riddles')
-          .insert([
-            {
-              child_id: child?.id,
-              riddle_id: randomRiddle.id,
-              date: format(new Date(), 'yyyy-MM-dd'),
-              is_solved: false
-            }
-          ])
-          .select()
-          .single();
-
-        console.log('Created daily riddle:', { dailyRiddle, insertError });
-
-        if (insertError) {
-          console.error('Erreur lors de la création de la devinette quotidienne:', insertError);
-          return;
-        }
-
-        setCurrentRiddle({ ...randomRiddle, is_solved: false });
-        setRiddleSolved(false);
-      } else {
-        console.log('Aucune devinette disponible pour cet utilisateur');
-      }
-    } catch (error) {
-      console.error('Erreur lors de la récupération de la devinette:', error);
-    }
-  };
-
   const handleTaskToggle = async (childTaskId: string, isCompleted: boolean) => {
-    try {
-      // Vérifier si la tâche a déjà été complétée aujourd'hui
-      const { data: existingCompletion, error: checkError } = await supabase
-        .from('child_tasks')
-        .select('completed_at')
-        .eq('id', childTaskId)
-        .eq('due_date', format(new Date(), 'yyyy-MM-dd'))
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw checkError;
-      }
-
-      // Si la tâche a déjà été complétée aujourd'hui, afficher un message
-      if (existingCompletion?.completed_at) {
-        toast({
-          title: 'Information',
-          description: "Cette tâche a déjà été complétée aujourd'hui",
-          variant: 'default',
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('child_tasks')
-        .update({
-          is_completed: !isCompleted,
-          completed_at: !isCompleted ? new Date().toISOString() : null
-        })
-        .eq('id', childTaskId);
-
-      if (error) throw error;
-
-      if (!isCompleted) {
-        const childTask = childTasks.find(ct => ct.id === childTaskId);
-        if (childTask) {
-          // Mettre à jour les points de l'enfant
-          const { error: updateError } = await supabase
-            .from('children')
-            .update({
-              points: (child?.points || 0) + childTask.task.points_reward
-            })
-            .eq('id', child?.id);
-
-          if (updateError) throw updateError;
-
-          // Enregistrer dans l'historique des points
-          const { error: historyError } = await supabase
-            .from('points_history')
-            .insert([{
-              user_id: child?.user_id,
-              child_id: child?.id,
-              points: childTask.task.points_reward,
-              reason: `Tâche complétée: ${childTask.task.label}`
-            }]);
-
-          if (historyError) console.error('Erreur historique:', historyError);
-
-          setChild(prev => prev ? { ...prev, points: prev.points + childTask.task.points_reward } : null);
-          
-          // Animation améliorée
-          setCompletedTasksAnimation(prev => [...prev, childTaskId]);
-          setShowConfetti(true);
-          setTimeout(() => {
-            setCompletedTasksAnimation(prev => prev.filter(id => id !== childTaskId));
-            setShowConfetti(false);
-          }, 3000);
-
-          // Toast personnalisé avec animation
-          toast({
-            title: '🎉 Bravo !',
-            description: `Tu as gagné ${childTask.task.points_reward} points !`,
-            duration: 3000,
-          });
-
-          // Recalculer le streak
-          calculateStreak();
-        }
-      }
-
-      fetchChildData();
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour de la tâche:', error);
-      toast({
-        title: 'Erreur',
-        description: "Impossible de mettre à jour la tâche",
-        variant: 'destructive',
-      });
-    }
+    await toggleTask(childTaskId, isCompleted);
+    setCompletedTasksAnimation(prev => [...prev, childTaskId]);
+    setShowConfetti(true);
+    setTimeout(() => {
+      setCompletedTasksAnimation(prev => prev.filter(id => id !== childTaskId));
+      setShowConfetti(false);
+    }, 3000);
   };
 
-  const handleRewardClaim = async (rewardId: string, cost: number) => {
-    if (!child) return;
-
-    try {
-      if (child.points < cost) {
-        toast({
-          title: 'Erreur',
-          description: "Points insuffisants",
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Créer l'enregistrement de récompense réclamée
-      const { error: claimError } = await supabase
-        .from('child_rewards_claimed')
-        .insert([{
-          child_id: child.id,
-          reward_id: rewardId,
-          claimed_at: new Date().toISOString()
-        }]);
-
-      if (claimError) throw claimError;
-
-      // Mettre à jour les points de l'enfant
-      const { error: updateError } = await supabase
-        .from('children')
-        .update({
-          points: child.points - cost
-        })
-        .eq('id', child.id);
-
-      if (updateError) throw updateError;
-
-      // Enregistrer dans l'historique des points
-      const reward = rewards.find(r => r.id === rewardId);
-      const { error: historyError } = await supabase
-        .from('points_history')
-        .insert([{
-          user_id: child.user_id,
-          child_id: child.id,
-          points: -cost,
-          reason: `Récompense réclamée: ${reward?.label}`
-        }]);
-
-      if (historyError) console.error('Erreur historique:', historyError);
-
-      toast({
-        title: '🎉 Félicitations !',
-        description: "Récompense réclamée avec succès",
-      });
-
-      fetchChildData();
-    } catch (error) {
-      console.error('Erreur lors de la réclamation de la récompense:', error);
-      toast({
-        title: 'Erreur',
-        description: "Impossible de réclamer la récompense",
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleRiddleSubmit = async (answer: string) => {
-    if (!currentRiddle || !answer.trim() || !child) return;
-
-    try {
-      const isCorrect = answer.toLowerCase().trim() === currentRiddle.answer.toLowerCase().trim();
-      
-      if (isCorrect) {
-        // Mettre à jour le statut de la devinette dans daily_riddles
-        const { error: updateError } = await supabase
-          .from('daily_riddles')
-          .update({ is_solved: true })
-          .eq('child_id', child.id)
-          .eq('date', format(new Date(), 'yyyy-MM-dd'));
-
-        if (updateError) {
-          console.error('Erreur lors de la mise à jour de la devinette:', updateError);
-          return;
-        }
-
-        // Mettre à jour les points de l'enfant
-        const { error: pointsError } = await supabase
-          .from('children')
-          .update({
-            points: (child?.points || 0) + currentRiddle.points
-          })
-          .eq('id', child.id);
-
-        if (pointsError) {
-          console.error('Erreur lors de l\'ajout des points:', pointsError);
-          return;
-        }
-
-        // Enregistrer dans l'historique des points
-        const { error: historyError } = await supabase
-          .from('points_history')
-          .insert([{
-            user_id: child.user_id,
-            child_id: child.id,
-            points: currentRiddle.points,
-            reason: 'Devinette résolue'
-          }]);
-
-        if (historyError) console.error('Erreur historique:', historyError);
-
-        setRiddleSolved(true);
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
-        setRiddleAnswer('');
-        fetchChildData();
-
-        toast({
-          title: '🧠 Excellent !',
-          description: `Tu as gagné ${currentRiddle.points} points pour avoir résolu la devinette !`,
-        });
-      } else {
-        toast({
-          title: '❌ Oups !',
-          description: "Ce n'est pas la bonne réponse. Essaie encore !",
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Erreur lors de la soumission de la réponse:', error);
-    }
-  };
-
-  const handleHintPurchase = async () => {
-    if (!child || !currentRiddle) return;
-
-    try {
-      // Vérifier si l'enfant a assez de points
-      if (child.points < 10) {
-        toast({
-          title: "Points insuffisants",
-          description: "Il te faut 10 points pour obtenir un indice",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Déduire les points
-      const { error: updateError } = await supabase
-        .from('children')
-        .update({
-          points: child.points - 10
-        })
-        .eq('id', child.id);
-
-      if (updateError) throw updateError;
-
-      // Enregistrer dans l'historique des points
-      const { error: historyError } = await supabase
-        .from('points_history')
-        .insert([{
-          user_id: child.user_id,
-          child_id: child.id,
-          points: -10,
-          reason: 'Achat d\'indice pour la devinette'
-        }]);
-
-      if (historyError) console.error('Erreur historique:', historyError);
-
-      // Mettre à jour l'état local
-      setChild(prev => prev ? { ...prev, points: prev.points - 10 } : null);
-
-      toast({
-        title: "Indice acheté !",
-        description: "10 points ont été déduits de ton compte",
-      });
-    } catch (error) {
-      console.error('Erreur lors de l\'achat de l\'indice:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'acheter l'indice",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'quotidien': return '🌅';
-      case 'scolaire': return '📚';
-      case 'maison': return '🏠';
-      case 'personnel': return '🌟';
-      default: return '✅';
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'quotidien': return 'from-blue-400 to-blue-600';
-      case 'scolaire': return 'from-green-400 to-green-600';
-      case 'maison': return 'from-orange-400 to-orange-600';
-      case 'personnel': return 'from-purple-400 to-purple-600';
-      default: return 'from-gray-400 to-gray-600';
-    }
-  };
-
-  if (loading || isLoading) {
+  if (loading || tasksLoading) {
     return <LoadingScreen />;
   }
 
@@ -713,6 +251,7 @@ export default function DashboardChild() {
         animate={{ opacity: 1 }}
         style={{
           '--child-color': child?.custom_color || '#8B5CF6',
+          backgroundSize: 'cover',
         } as React.CSSProperties}
         className={`min-h-screen relative overflow-hidden ${
           child?.custom_color
@@ -738,7 +277,7 @@ export default function DashboardChild() {
             <RewardShop 
               rewards={rewards} 
               childPoints={child.points} 
-              onRewardClaim={handleRewardClaim} 
+              onRewardClaim={claimReward} 
               childColor={child.custom_color} 
             />
           </div>
@@ -761,13 +300,20 @@ export default function DashboardChild() {
               className="transform hover:scale-[1.01] transition-transform duration-300"
             />
 
-            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <TrophyIcon className="w-6 h-6" />
-                Mes Récompenses Validées
-              </h2>
-              <ValidatedRewardsList 
-                claimedRewards={claimedRewards} 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                  <TrophyIcon className="w-6 h-6" />
+                  Mes Récompenses Validées
+                </h2>
+                <ValidatedRewardsList 
+                  claimedRewards={claimedRewards} 
+                  childColor={child.custom_color}
+                />
+              </div>
+
+              <PointsHistoryList 
+                pointsHistory={pointsHistory}
                 childColor={child.custom_color}
               />
             </div>
@@ -776,10 +322,10 @@ export default function DashboardChild() {
           <DailyRiddle 
             riddle={currentRiddle} 
             isSolved={riddleSolved} 
-            onRiddleSubmit={handleRiddleSubmit} 
+            onRiddleSubmit={submitRiddleAnswer} 
             childColor={child.custom_color}
             childPoints={child.points}
-            onHintPurchase={handleHintPurchase}
+            onHintPurchase={purchaseHint}
           />
 
           <SuccessAnimation 
