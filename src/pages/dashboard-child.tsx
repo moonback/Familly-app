@@ -252,12 +252,11 @@ export default function DashboardChild() {
         style={{
           '--child-color': child?.custom_color || '#8B5CF6',
           backgroundSize: 'cover',
+          backgroundImage: child?.custom_color
+            ? 'linear-gradient(135deg,var(--child-color) 20%,var(--child-color) 10%,#f8fafc)'
+            : 'linear-gradient(to bottom right, #e0e7ff, #f3e8ff, #fce7f3)',
         } as React.CSSProperties}
-        className={`min-h-screen relative overflow-hidden ${
-          child?.custom_color
-            ? 'bg-[linear-gradient(135deg,var(--child-color)_20,var(--child-color)_10,#f8fafc)]'
-            : 'bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100'
-        }`}
+        className="min-h-screen relative overflow-hidden"
       >
         <BackgroundDecorations />
 
