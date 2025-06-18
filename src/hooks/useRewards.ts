@@ -110,7 +110,22 @@ export function useRewards(child: Child | null, fetchChildData: () => void) {
         throw new Error('Récompense non trouvée');
       }
 
-      if (child.points < reward.cost) {
+      // Récupérer le solde de la tirelire pour le calcul total
+      const { data: piggyData } = await supabase
+        .from('piggy_bank_transactions')
+        .select('*')
+        .eq('child_id', child.id);
+
+      const piggyStats = {
+        totalSavings: piggyData?.filter(t => t.type === 'savings').reduce((sum, t) => sum + t.points, 0) || 0,
+        totalSpending: piggyData?.filter(t => t.type === 'spending').reduce((sum, t) => sum + t.points, 0) || 0,
+        totalDonations: piggyData?.filter(t => t.type === 'donation').reduce((sum, t) => sum + t.points, 0) || 0
+      };
+      
+      const piggyBalance = piggyStats.totalSavings - piggyStats.totalSpending - piggyStats.totalDonations;
+      const totalAvailablePoints = child.points + piggyBalance;
+
+      if (totalAvailablePoints < reward.cost) {
         toast({
           title: 'Points insuffisants',
           description: "Tu n'as pas assez de points pour cette récompense",
@@ -119,22 +134,51 @@ export function useRewards(child: Child | null, fetchChildData: () => void) {
         return;
       }
 
-      // Déduire les points
+      // Calculer combien de points utiliser de chaque source
+      let pointsFromWallet = Math.min(child.points, reward.cost);
+      let pointsFromPiggy = reward.cost - pointsFromWallet;
+
+      // Mettre à jour les points de l'enfant
+      const newWalletPoints = child.points - pointsFromWallet;
       const { error: updateError } = await supabase
         .from('children')
-        .update({ points: child.points - reward.cost })
+        .update({ points: newWalletPoints })
         .eq('id', child.id);
 
       if (updateError) throw updateError;
+
+      // Si on utilise des points épargnés, créer une transaction de dépense
+      if (pointsFromPiggy > 0) {
+        const { error: piggyError } = await supabase
+          .from('piggy_bank_transactions')
+          .insert([{
+            child_id: child.id,
+            type: 'spending',
+            points: pointsFromPiggy,
+            created_at: new Date().toISOString()
+          }]);
+
+        if (piggyError) throw piggyError;
+      }
 
       // Marquer comme réclamée
       const newClaimedRewards = [...claimedRewards, rewardId];
       setClaimedRewards(newClaimedRewards);
       saveClaimedRewards(newClaimedRewards);
 
+      // Message de confirmation avec détails
+      let message = `Tu as réclamé "${reward.label}" !`;
+      if (pointsFromWallet > 0 && pointsFromPiggy > 0) {
+        message += ` (${pointsFromWallet} points disponibles + ${pointsFromPiggy} points épargnés)`;
+      } else if (pointsFromWallet > 0) {
+        message += ` (${pointsFromWallet} points disponibles)`;
+      } else {
+        message += ` (${pointsFromPiggy} points épargnés)`;
+      }
+
       toast({
         title: '🎉 Récompense réclamée !',
-        description: `Tu as réclamé "${reward.label}" !`,
+        description: message,
       });
 
       // Mettre à jour les données
