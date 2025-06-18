@@ -1016,101 +1016,96 @@ export default function ChildDashboard() {
                               </div>
                             </div>
 
-                            {/* Section de dépôt */}
-                            <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border-2 border-orange-200">
-                              <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                <PiggyBankIcon className="w-5 h-5 text-orange-600" />
-                                Déposer des points
-                              </h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <Label htmlFor="piggy-amount">Montant à déposer</Label>
-                                  <Input
-                                    id="piggy-amount"
-                                    type="number"
-                                    value={piggyAmount}
-                                    onChange={(e) => setPiggyAmount(e.target.value)}
-                                    placeholder="Points à déposer"
-                                    max={child.points}
-                                    disabled={depositing}
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    Points disponibles : {child.points}
-                                  </p>
+                            {/* Section de dépôt et de retrait côte à côte */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Dépôt */}
+                              <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border-2 border-orange-200 flex flex-col justify-between h-full">
+                                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                                  <PiggyBankIcon className="w-5 h-5 text-orange-600" />
+                                  Déposer des points
+                                </h4>
+                                <div className="flex-1 flex flex-col justify-between">
+                                  <div>
+                                    <Label htmlFor="piggy-amount">Montant à déposer</Label>
+                                    <Input
+                                      id="piggy-amount"
+                                      type="number"
+                                      value={piggyAmount}
+                                      onChange={(e) => setPiggyAmount(e.target.value)}
+                                      placeholder="Points à déposer"
+                                      max={child.points}
+                                      disabled={depositing}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Points disponibles : {child.points}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-end mt-4">
+                                    <Button
+                                      onClick={() => setShowPiggyDialog(true)}
+                                      disabled={!piggyAmount || parseInt(piggyAmount) <= 0 || parseInt(piggyAmount) > child.points || depositing}
+                                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+                                    >
+                                      {depositing ? (
+                                        <>
+                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                          Dépôt en cours...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <PiggyBankIcon className="w-4 h-4 mr-2" />
+                                          Déposer
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
                                 </div>
-                                <div className="flex items-end">
-                                  <Button
-                                    onClick={() => setShowPiggyDialog(true)}
-                                    disabled={!piggyAmount || parseInt(piggyAmount) <= 0 || parseInt(piggyAmount) > child.points || depositing}
-                                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
-                                  >
-                                    {depositing ? (
-                                      <>
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                        Dépôt en cours...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <PiggyBankIcon className="w-4 h-4 mr-2" />
-                                        Déposer
-                                      </>
-                                    )}
-                                  </Button>
+                              </div>
+                              {/* Retrait */}
+                              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border-2 border-blue-200 flex flex-col justify-between h-full">
+                                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                                  <Minus className="w-5 h-5 text-blue-600" />
+                                  Retirer des points
+                                </h4>
+                                <div className="flex-1 flex flex-col justify-between">
+                                  <div>
+                                    <Label htmlFor="piggy-withdraw-amount">Montant à retirer</Label>
+                                    <Input
+                                      id="piggy-withdraw-amount"
+                                      type="number"
+                                      value={piggyWithdrawAmount}
+                                      onChange={(e) => setPiggyWithdrawAmount(e.target.value)}
+                                      placeholder="Points à retirer"
+                                      max={stats.currentBalance}
+                                      disabled={depositing}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Solde épargné : {stats.currentBalance}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-end mt-4">
+                                    <Button
+                                      onClick={() => setShowPiggyWithdrawDialog(true)}
+                                      disabled={!piggyWithdrawAmount || parseInt(piggyWithdrawAmount) <= 0 || parseInt(piggyWithdrawAmount) > stats.currentBalance || depositing}
+                                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+                                    >
+                                      {depositing ? (
+                                        <>
+                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                          Retrait en cours...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Minus className="w-4 h-4 mr-2" />
+                                          Retirer
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-
-                            {/* Section de retrait */}
-                            {(() => {
-                              const stats = getPiggyBankStats();
-                              if (stats.currentBalance > 0) {
-                                return (
-                                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border-2 border-blue-200">
-                                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                      <Minus className="w-5 h-5 text-blue-600" />
-                                      Retirer des points
-                                    </h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      <div>
-                                        <Label htmlFor="piggy-withdraw-amount">Montant à retirer</Label>
-                                        <Input
-                                          id="piggy-withdraw-amount"
-                                          type="number"
-                                          value={piggyWithdrawAmount}
-                                          onChange={(e) => setPiggyWithdrawAmount(e.target.value)}
-                                          placeholder="Points à retirer"
-                                          max={stats.currentBalance}
-                                          disabled={depositing}
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">
-                                          Solde épargné : {stats.currentBalance}
-                                        </p>
-                                      </div>
-                                      <div className="flex items-end">
-                                        <Button
-                                          onClick={() => setShowPiggyWithdrawDialog(true)}
-                                          disabled={!piggyWithdrawAmount || parseInt(piggyWithdrawAmount) <= 0 || parseInt(piggyWithdrawAmount) > stats.currentBalance || depositing}
-                                          className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
-                                        >
-                                          {depositing ? (
-                                            <>
-                                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                              Retrait en cours...
-                                            </>
-                                          ) : (
-                                            <>
-                                              <Minus className="w-4 h-4 mr-2" />
-                                              Retirer
-                                            </>
-                                          )}
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              }
-                              return null;
-                            })()}
+                            {/* Fin section dépôt/retrait côte à côte */}
 
                             {/* Historique des transactions */}
                             <div>
