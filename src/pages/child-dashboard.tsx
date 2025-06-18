@@ -24,8 +24,6 @@ import {
   CalendarIcon,
   UsersIcon,
   AwardIcon,
-  BarChart3,
-  Loader2,
   Plus,
   Minus,
   PackageIcon,
@@ -45,8 +43,6 @@ import { useStreak } from '@/hooks/useStreak';
 import { usePointsHistory } from '@/hooks/usePointsHistory';
 import { usePiggyBank } from '@/hooks/usePiggyBank';
 import { usePurchases } from '@/hooks/usePurchases';
-import { useAiAnalysis } from '@/hooks/useAiAnalysis';
-import { ChildAnalysis } from '@/components/analysis/ChildAnalysis';
 import ChildChatbot from '@/components/chat/ChildChatbot';
 import WeatherWidget from '@/components/WeatherWidget';
 
@@ -113,13 +109,6 @@ export default function ChildDashboard() {
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [shopLoading, setShopLoading] = useState(true);
   const [showChatbot, setShowChatbot] = useState(false);
-  const [showAnalysis, setShowAnalysis] = useState(false);
-
-  const {
-    analysis,
-    loading: analysisLoading,
-    getAnalysis,
-  } = useAiAnalysis(user?.id);
 
   // Fonction de conversion des points en euros
   const convertPointsToEuros = (points: number) => {
@@ -324,12 +313,6 @@ export default function ChildDashboard() {
         setPiggyWithdrawAmount('');
       }
     }
-  };
-
-  const handleOpenAnalysis = async () => {
-    if (!child) return;
-    setShowAnalysis(true);
-    await getAnalysis(child.id);
   };
 
   const getCategoryIcon = (category: string) => {
@@ -1655,42 +1638,6 @@ export default function ChildDashboard() {
         </DialogContent>
       </Dialog>
 
-      {showAnalysis && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-          style={{ backdropFilter: 'blur(2px)' }}
-        >
-          <div
-            className="relative bg-white rounded-2xl shadow-2xl flex flex-col"
-            style={{ width: '90vw', height: '90vh', maxWidth: 1200, maxHeight: '90vh' }}
-          >
-            {/* Bouton de fermeture */}
-            <button
-              onClick={() => setShowAnalysis(false)}
-              className="absolute top-4 right-4 z-10 text-gray-500 hover:text-red-500 text-2xl font-bold"
-              aria-label="Fermer"
-            >
-              ×
-            </button>
-            {/* Header */}
-            <div className="flex items-center gap-3 px-8 pt-8 pb-4 border-b">
-              <BarChart3 className="w-7 h-7 text-blue-600" />
-              <h2 className="text-2xl font-bold text-gray-800">Analyse IA</h2>
-            </div>
-            {/* Contenu */}
-            <div className="flex-1 overflow-y-auto p-8">
-              {analysisLoading ? (
-                <div className="flex justify-center items-center h-full">
-                  <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
-                </div>
-              ) : (
-                analysis && <ChildAnalysis analysis={analysis} />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       <ChildChatbot open={showChatbot} onOpenChange={setShowChatbot} />
 
       {/* Dialogue Boutique */}
@@ -2054,20 +2001,6 @@ export default function ChildDashboard() {
                     : 'Aucune devinette disponible'
                 }
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-              </div>
-            </div>
-
-            {/* Analyse IA */}
-            <div className="relative group">
-              <div
-                className="bg-gradient-to-r from-sky-500 to-blue-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={handleOpenAnalysis}
-              >
-                <BarChart3 className="w-6 h-6" />
-              </div>
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                Analyse IA
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
               </div>
             </div>
 
