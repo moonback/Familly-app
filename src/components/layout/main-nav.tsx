@@ -47,15 +47,22 @@ export function MainNav() {
 
   const fetchChildren = async () => {
     try {
+      console.log('Récupération des enfants pour l\'utilisateur:', user?.id);
       const { data, error } = await supabase
         .from('children')
         .select('id, name')
         .eq('user_id', user?.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur lors du chargement des enfants:', error);
+        throw error;
+      }
+      
+      console.log('Enfants récupérés:', data);
       setChildren(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des enfants:', error);
+      setChildren([]);
     }
   };
 
@@ -138,6 +145,11 @@ export function MainNav() {
                               <Link
                                 key={child.id}
                                 to={`/child-dashboard/${encodeURIComponent(child.name)}`}
+                                onClick={() => {
+                                  // Fermer le drawer après clic
+                                  const drawerClose = document.querySelector('[data-radix-drawer-close]') as HTMLButtonElement;
+                                  if (drawerClose) drawerClose.click();
+                                }}
                               >
                                 <Button 
                                   variant="ghost" 
@@ -185,7 +197,7 @@ export function MainNav() {
                             className="hover:bg-purple-50 transition-all duration-300"
                           >
                             <UserIcon className="h-5 w-5 mr-2" />
-                            Enfants
+                            Enfants ({children.length})
                             <ChevronDownIcon className="h-4 w-4 ml-2" />
                           </Button>
                         </motion.div>
