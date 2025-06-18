@@ -137,7 +137,7 @@ export function MainNav() {
                             {children.map((child) => (
                               <Link
                                 key={child.id}
-                                to={`/dashboard/child/${encodeURIComponent(child.name)}`}
+                                to={`/child-dashboard/${encodeURIComponent(child.name)}`}
                               >
                                 <Button 
                                   variant="ghost" 
@@ -195,7 +195,7 @@ export function MainNav() {
                           <div key={child.id} className="p-1">
                             <DropdownMenuItem asChild>
                               <Link 
-                                to={`/dashboard/child/${encodeURIComponent(child.name)}`}
+                                to={`/child-dashboard/${encodeURIComponent(child.name)}`}
                                 className="flex items-center justify-between w-full cursor-pointer p-2 rounded-lg hover:bg-purple-50 transition-colors"
                               >
                                 <span className="flex items-center">

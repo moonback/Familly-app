@@ -1,37 +1,57 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Child, Reward, ChildRewardClaimed } from '@/types/dashboard';
 import { toast } from '@/hooks/use-toast';
 
-export const useRewards = (child: Child | null, onPointsUpdated: () => void) => {
+interface Child {
+  id: string;
+  name: string;
+  age: number;
+  points: number;
+  avatar_url: string;
+  custom_color: string;
+  user_id: string;
+  created_at: string;
+}
+
+interface Reward {
+  id: string;
+  label: string;
+  cost: number;
+  user_id: string;
+  created_at: string;
+}
+
+interface ClaimedReward {
+  id: string;
+  child_id: string;
+  reward_id: string;
+  claimed_at: string;
+  reward: Reward;
+}
+
+export function useRewards(child: Child | null, fetchChildData: () => void) {
   const [rewards, setRewards] = useState<Reward[]>([]);
-  const [claimedRewards, setClaimedRewards] = useState<ChildRewardClaimed[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [claimedRewards, setClaimedRewards] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [claiming, setClaiming] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (child) {
+      fetchRewards();
+      loadClaimedRewards();
+    }
+  }, [child]);
 
   const fetchRewards = async () => {
-    if (!child) return;
-
     try {
-      const [rewardsResponse, claimedRewardsResponse] = await Promise.all([
-        supabase
-          .from('rewards')
-          .select('*')
-          .eq('user_id', child.user_id),
-        supabase
-          .from('child_rewards_claimed')
-          .select(`
-            *,
-            reward:rewards(*)
-          `)
-          .eq('child_id', child.id)
-          .order('claimed_at', { ascending: false })
-      ]);
+      const { data, error } = await supabase
+        .from('rewards')
+        .select('*')
+        .eq('user_id', child?.user_id)
+        .order('cost', { ascending: true });
 
-      if (rewardsResponse.error) throw rewardsResponse.error;
-      if (claimedRewardsResponse.error) throw claimedRewardsResponse.error;
-
-      setRewards(rewardsResponse.data);
-      setClaimedRewards(claimedRewardsResponse.data);
+      if (error) throw error;
+      setRewards(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des récompenses:', error);
       toast({
@@ -40,81 +60,107 @@ export const useRewards = (child: Child | null, onPointsUpdated: () => void) => 
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const claimReward = async (rewardId: string, cost: number) => {
+  const loadClaimedRewards = () => {
     if (!child) return;
+    
+    try {
+      const stored = localStorage.getItem(`claimed_rewards_${child.id}`);
+      if (stored) {
+        const claimed = JSON.parse(stored) as string[];
+        setClaimedRewards(claimed);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des récompenses réclamées:', error);
+      setClaimedRewards([]);
+    }
+  };
+
+  const saveClaimedRewards = (claimed: string[]) => {
+    if (!child) return;
+    
+    try {
+      localStorage.setItem(`claimed_rewards_${child.id}`, JSON.stringify(claimed));
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde des récompenses réclamées:', error);
+    }
+  };
+
+  const claimReward = async (rewardId: string) => {
+    if (!child || claiming) return;
+
+    // Vérifier si la récompense a déjà été réclamée
+    if (claimedRewards.includes(rewardId)) {
+      toast({
+        title: 'Déjà réclamée',
+        description: "Tu as déjà réclamé cette récompense !",
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setClaiming(rewardId);
 
     try {
-      if (child.points < cost) {
+      const reward = rewards.find(r => r.id === rewardId);
+      if (!reward) {
+        throw new Error('Récompense non trouvée');
+      }
+
+      if (child.points < reward.cost) {
         toast({
-          title: 'Erreur',
-          description: "Points insuffisants",
+          title: 'Points insuffisants',
+          description: "Tu n'as pas assez de points pour cette récompense",
           variant: 'destructive',
         });
         return;
       }
 
-      const [claimResponse, updatePointsResponse] = await Promise.all([
-        supabase
-          .from('child_rewards_claimed')
-          .insert([{
-            child_id: child.id,
-            reward_id: rewardId,
-            claimed_at: new Date().toISOString()
-          }]),
-        supabase
-          .from('children')
-          .update({
-            points: child.points - cost
-          })
-          .eq('id', child.id)
-      ]);
+      // Déduire les points
+      const { error: updateError } = await supabase
+        .from('children')
+        .update({ points: child.points - reward.cost })
+        .eq('id', child.id);
 
-      if (claimResponse.error) throw claimResponse.error;
-      if (updatePointsResponse.error) throw updatePointsResponse.error;
+      if (updateError) throw updateError;
 
-      const reward = rewards.find(r => r.id === rewardId);
-      await supabase
-        .from('points_history')
-        .insert([{
-          user_id: child.user_id,
-          child_id: child.id,
-          points: -cost,
-          reason: `Récompense réclamée: ${reward?.label}`,
-          reward_id: rewardId
-        }]);
+      // Marquer comme réclamée
+      const newClaimedRewards = [...claimedRewards, rewardId];
+      setClaimedRewards(newClaimedRewards);
+      saveClaimedRewards(newClaimedRewards);
 
       toast({
-        title: '🎉 Félicitations !',
-        description: "Récompense réclamée avec succès",
+        title: '🎉 Récompense réclamée !',
+        description: `Tu as réclamé "${reward.label}" !`,
       });
 
-      onPointsUpdated();
-      await fetchRewards();
+      // Mettre à jour les données
+      fetchChildData();
     } catch (error) {
-      console.error('Erreur lors de la réclamation de la récompense:', error);
+      console.error('Erreur lors de la réclamation:', error);
       toast({
         title: 'Erreur',
         description: "Impossible de réclamer la récompense",
         variant: 'destructive',
       });
+    } finally {
+      setClaiming(null);
     }
   };
 
-  useEffect(() => {
-    if (child) {
-      fetchRewards();
-    }
-  }, [child]);
+  const isRewardClaimed = (rewardId: string) => {
+    return claimedRewards.includes(rewardId);
+  };
 
   return {
     rewards,
     claimedRewards,
-    isLoading,
+    loading,
+    claiming,
     claimReward,
-    refreshRewards: fetchRewards
+    isRewardClaimed
   };
-}; 
+} 
