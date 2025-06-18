@@ -1038,7 +1038,7 @@ export default function ChildDashboard() {
                                     />
                                     {/* Boutons rapides pour le dépôt */}
                                     <div className="flex gap-2 mt-2">
-                                    {[1, 5, 10, 20, 50, 100].map((val) => (
+                                    {[10, 20, 50, 100].map((val) => (
                                         <Button
                                           key={val}
                                           type="button"
@@ -1107,7 +1107,7 @@ export default function ChildDashboard() {
                                     />
                                     {/* Boutons rapides pour le retrait */}
                                     <div className="flex gap-2 mt-2">
-                                      {[1, 5, 10, 20, 50, 100].map((val) => (
+                                      {[10, 20, 50, 100].map((val) => (
                                         <Button
                                           key={val}
                                           type="button"
