@@ -381,7 +381,7 @@ interface ChatHistoryEntry {
   content: string;
 }
 
-export async function getChatbotResponse(history: ChatHistoryEntry[], userId?: string, childName?: string): Promise<string> {
+export async function getChatbotResponse(history: ChatHistoryEntry[], userId?: string, childName?: string, chatbotName?: string): Promise<string> {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('Missing VITE_GEMINI_API_KEY');
@@ -549,7 +549,7 @@ ${familyData.piggyBankTransactions.map(tx =>
   }
 
   // Créer le prompt système avec les données de la famille
-  const systemPrompt = `Tu es un assistant familial intelligent et bienveillant pour une application de gestion de récompenses pour enfants. 
+  const systemPrompt = `Tu es ${chatbotName || 'un assistant familial intelligent et bienveillant'} pour une application de gestion de récompenses pour enfants. 
 
 ${currentChildData ? `Tu parles actuellement avec ${currentChildData.name} (${currentChildData.age} ans) qui a ${currentChildData.points} points.` : ''}
 
@@ -572,6 +572,7 @@ Tu as accès à toutes les données de la famille et tu peux aider les enfants e
 - Donne des conseils pratiques et réalisables
 - Célèbre les succès et encourage les efforts
 - **Ne commence pas tes réponses par une salutation comme 'Bonjour' ou 'Salut', sauf pour le tout premier message de la conversation.**
+- **Si l'enfant t'a donné un nom personnalisé, utilise ce nom pour te présenter et te référer à toi-même dans tes réponses.**
 
 ${currentChildData ? `**PERSONNALISATION POUR ${currentChildData.name.toUpperCase()} :**
 - Adresse-toi directement à ${currentChildData.name}

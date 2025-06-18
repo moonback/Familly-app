@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MessageCircleIcon, Loader2, SparklesIcon, RotateCcw, BarChart3, Send, Bot, User, Star, Trophy, Target, PiggyBank, ShoppingCart, Gift, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { MessageCircleIcon, Loader2, SparklesIcon, RotateCcw, BarChart3, Send, Bot, User, Star, Trophy, Target, PiggyBank, ShoppingCart, Gift, AlertCircle, CheckCircle, Clock, Edit3 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { getChatbotResponse } from '@/lib/gemini';
 import { useAuth } from '@/context/auth-context';
@@ -63,6 +63,13 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   const { user } = useAuth();
   const { childName } = useParams();
   const storageKey = `chatbot_history_${childName || 'default'}`;
+  const chatbotNameKey = `chatbot_name_${childName || 'default'}`;
+  
+  // État pour le nom du chatbot
+  const [chatbotName, setChatbotName] = useState<string>('Assistant Personnel');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newChatbotName, setNewChatbotName] = useState('');
+  
   const [messages, setMessages] = useState<ChatMessage[]>([{
     sender: 'bot',
     text: `Bonjour ${childName ? decodeURIComponent(childName) : ''} ! 👋 Je suis ton assistant familial intelligent. Je peux t'aider avec tes missions, tes points, tes récompenses et bien plus encore ! Que puis-je faire pour toi aujourd'hui ?`,
@@ -71,9 +78,15 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Charger l'historique depuis le localStorage au montage
+  // Charger l'historique et le nom du chatbot depuis le localStorage au montage
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
+    const savedName = localStorage.getItem(chatbotNameKey);
+    
+    if (savedName) {
+      setChatbotName(savedName);
+    }
+    
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -93,6 +106,29 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     localStorage.setItem(storageKey, JSON.stringify(messages));
     // eslint-disable-next-line
   }, [messages, childName]);
+
+  // Fonction pour changer le nom du chatbot
+  const handleNameChange = () => {
+    if (newChatbotName.trim()) {
+      setChatbotName(newChatbotName.trim());
+      localStorage.setItem(chatbotNameKey, newChatbotName.trim());
+      setIsEditingName(false);
+      setNewChatbotName('');
+      
+      // Ajouter un message informatif
+      setMessages(prev => [...prev, {
+        sender: 'bot',
+        text: `Parfait ! Tu peux maintenant m'appeler "${newChatbotName.trim()}" ! 😊`,
+        timestamp: new Date()
+      }]);
+    }
+  };
+
+  // Fonction pour annuler le changement de nom
+  const cancelNameChange = () => {
+    setIsEditingName(false);
+    setNewChatbotName('');
+  };
 
   const sendMessage = async (content?: string) => {
     const messageContent = content || input.trim();
@@ -118,7 +154,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
         }));
       
       const currentChildName = childName ? decodeURIComponent(childName) : '';
-      const reply = await getChatbotResponse(conversationHistory, user?.id, currentChildName);
+      const reply = await getChatbotResponse(conversationHistory, user?.id, currentChildName, chatbotName);
       setMessages(prev => [...prev, { 
         sender: 'bot', 
         text: reply,
@@ -143,7 +179,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   const resetConversation = () => {
     const welcome = [{
       sender: 'bot' as const,
-      text: `Bonjour ${childName ? decodeURIComponent(childName) : ''} ! 👋 Je suis ton assistant personnel. Je peux t'aider avec tes missions, tes points, tes récompenses et bien plus encore ! Que puis-je faire pour toi aujourd'hui ?`,
+      text: `Bonjour ${childName ? decodeURIComponent(childName) : ''} ! 👋 Je suis ${chatbotName}. Je peux t'aider avec tes missions, tes points, tes récompenses et bien plus encore ! Que puis-je faire pour toi aujourd'hui ?`,
       timestamp: new Date()
     }];
     setMessages(welcome);
@@ -173,9 +209,56 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
                 <MessageCircleIcon className="w-6 h-6" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold">
-                  Assistant Personnel
-                </DialogTitle>
+                {isEditingName ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={newChatbotName}
+                      onChange={(e) => setNewChatbotName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleNameChange();
+                        } else if (e.key === 'Escape') {
+                          cancelNameChange();
+                        }
+                      }}
+                      placeholder="Nouveau nom..."
+                      className="bg-white/20 text-white placeholder-white/70 border-white/30 focus:border-white/50"
+                      autoFocus
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleNameChange}
+                      className="bg-white/20 hover:bg-white/30 text-white"
+                    >
+                      ✓
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={cancelNameChange}
+                      className="bg-white/20 hover:bg-white/30 text-white"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <DialogTitle className="text-xl font-bold">
+                      {chatbotName}
+                    </DialogTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setIsEditingName(true);
+                        setNewChatbotName(chatbotName);
+                      }}
+                      className="text-white hover:bg-white/20 p-1"
+                      title="Changer le nom du chatbot"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
                 <p className="text-sm text-white/80">
                   {childName ? decodeURIComponent(childName) : ''}
                 </p>
@@ -265,7 +348,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
               <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
-                  <span className="text-sm text-gray-600">L'assistant réfléchit...</span>
+                  <span className="text-sm text-gray-600">{chatbotName} réfléchit...</span>
                 </div>
               </div>
             </motion.div>
