@@ -161,7 +161,7 @@ export default function ChildDashboard() {
   // Utilisation des hooks personnalisés
   const { childTasks, isLoading: tasksLoading, toggleTask } = useTasks(child, fetchChildData);
   const { rewards, claimedRewards, claimReward, claiming, isRewardClaimed } = useRewards(child, fetchChildData);
-  const { currentRiddle, riddleSolved, showSuccess, submitRiddleAnswer, purchaseHint } = useRiddles(child, fetchChildData);
+  const { currentRiddle, riddleSolved, showSuccess, hintPurchased, hintText, submitRiddleAnswer, purchaseHint } = useRiddles(child, fetchChildData);
   const { streak } = useStreak(child);
   const { pointsHistory } = usePointsHistory(child);
 
@@ -755,6 +755,17 @@ export default function ChildDashboard() {
                           <h3 className="text-xl font-semibold text-gray-800 mb-4">{currentRiddle.question}</h3>
                           <p className="text-gray-600 mb-4">Récompense : {currentRiddle.points} points</p>
                           
+                          {/* Affichage de l'indice si acheté */}
+                          {hintPurchased && !riddleSolved && (
+                            <div className="mb-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-2xl">💡</span>
+                                <span className="font-semibold text-yellow-800">Indice acheté :</span>
+                              </div>
+                              <p className="text-yellow-700">{hintText}</p>
+                            </div>
+                          )}
+                          
                           {riddleSolved ? (
                             <div className="space-y-4">
                               <div className="flex items-center justify-center gap-2 text-green-600 font-bold">
@@ -772,13 +783,26 @@ export default function ChildDashboard() {
                                 <BrainIcon className="w-4 h-4 mr-2" />
                                 Répondre
                               </Button>
-                              <Button
-                                onClick={purchaseHint}
-                                variant="outline"
-                                className="border-purple-300 text-purple-600 hover:bg-purple-50"
-                              >
-                                💡 Acheter un indice (5 points)
-                              </Button>
+                              
+                              {!hintPurchased ? (
+                                <Button
+                                  onClick={purchaseHint}
+                                  variant="outline"
+                                  disabled={child.points < 5 || !currentRiddle?.hint}
+                                  className={`border-purple-300 text-purple-600 hover:bg-purple-50 ${
+                                    child.points < 5 || !currentRiddle?.hint ? 'opacity-50 cursor-not-allowed' : ''
+                                  }`}
+                                >
+                                  💡 Acheter un indice (5 points)
+                                  {!currentRiddle?.hint && (
+                                    <span className="ml-2 text-xs">(Non disponible)</span>
+                                  )}
+                                </Button>
+                              ) : (
+                                <div className="text-sm text-gray-500">
+                                  ✅ Indice déjà acheté pour aujourd'hui
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
