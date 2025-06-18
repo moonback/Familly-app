@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
@@ -21,39 +21,41 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Composant de protection des routes pour les utilisateurs non connectés
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
-  if (user) {
-    return <Navigate to="/dashboard/parent" replace />;
-  }
-  return <>{children}</>;
+// Composant pour conditionner l'affichage de la navigation
+const AppLayout = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const isChildDashboard = location.pathname.startsWith('/child-dashboard/');
+  const isChildHome = location.pathname.startsWith('/child/');
+  
+  return (
+    <>
+      {!isChildDashboard && !isChildHome && <MainNav />}
+      <motion.main 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className={`flex-grow min-h-screen ${
+          isChildDashboard || isChildHome 
+            ? 'bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100' 
+            : 'bg-gradient-to-br from-gray-50 to-gray-100'
+        }`}
+      >
+        {children}
+      </motion.main>
+    </>
+  );
 };
 
-// Composant pour la page 404
+// Composant NotFound
 const NotFound = () => (
-  <motion.div 
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-pink-50"
-  >
-    <motion.h1 
-      initial={{ scale: 0.5 }}
-      animate={{ scale: 1 }}
-      className="text-6xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
-    >
-      404
-    </motion.h1>
-    <motion.p 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.2 }}
-      className="text-xl mb-8 text-gray-600"
-    >
-      Page non trouvée
-    </motion.p>
-    <Navigate to="/" replace />
-  </motion.div>
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="text-center">
+      <h1 className="text-4xl font-bold text-gray-800 mb-4">404</h1>
+      <p className="text-gray-600 mb-4">Page non trouvée</p>
+      <a href="/" className="text-purple-600 hover:underline">
+        Retour à l'accueil
+      </a>
+    </div>
+  </div>
 );
 
 function App() {
@@ -61,12 +63,7 @@ function App() {
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <Router>
         <AuthProvider>
-          <MainNav />
-          <motion.main 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex-grow bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen"
-          >
+          <AppLayout>
             <AnimatePresence mode="wait">
               <Routes>
                 <Route path="/" element={<HomePage />} />
@@ -123,7 +120,7 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AnimatePresence>
-          </motion.main>
+          </AppLayout>
           <Toaster />
         </AuthProvider>
       </Router>
