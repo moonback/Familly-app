@@ -340,12 +340,36 @@ export default function ChildDashboard() {
         <div className="container mx-auto p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div 
-                className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center text-white text-2xl font-bold shadow-lg"
-                style={{ backgroundColor: child.custom_color }}
-              >
-                {child.name.charAt(0).toUpperCase()}
-              </div>
+              {child.avatar_url ? (
+                <div className="w-16 h-16 rounded-full overflow-hidden shadow-lg">
+                  <img 
+                    src={child.avatar_url} 
+                    alt={`Photo de ${child.name}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // En cas d'erreur de chargement, afficher l'avatar par défaut
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  <div 
+                    className={`w-full h-full flex items-center justify-center text-white text-2xl font-bold ${
+                      child.avatar_url ? 'hidden' : ''
+                    }`}
+                    style={{ backgroundColor: child.custom_color }}
+                  >
+                    {child.name.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+              ) : (
+                <div 
+                  className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center text-white text-2xl font-bold shadow-lg"
+                  style={{ backgroundColor: child.custom_color }}
+                >
+                  {child.name.charAt(0).toUpperCase()}
+                </div>
+              )}
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">Salut {child.name} ! 👋</h1>
                 <p className="text-gray-600">Prêt pour de nouvelles aventures ?</p>
@@ -832,12 +856,36 @@ export default function ChildDashboard() {
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="text-center">
-                        <div 
-                          className="w-32 h-32 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center text-white text-4xl font-bold shadow-lg mx-auto mb-4"
-                          style={{ backgroundColor: child.custom_color }}
-                        >
-                          {child.name.charAt(0).toUpperCase()}
-                        </div>
+                        {child.avatar_url ? (
+                          <div className="w-32 h-32 rounded-full overflow-hidden shadow-lg mx-auto mb-4">
+                            <img 
+                              src={child.avatar_url} 
+                              alt={`Photo de ${child.name}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // En cas d'erreur de chargement, afficher l'avatar par défaut
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                target.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                            <div 
+                              className={`w-full h-full flex items-center justify-center text-white text-4xl font-bold ${
+                                child.avatar_url ? 'hidden' : ''
+                              }`}
+                              style={{ backgroundColor: child.custom_color }}
+                            >
+                              {child.name.charAt(0).toUpperCase()}
+                            </div>
+                          </div>
+                        ) : (
+                          <div 
+                            className="w-32 h-32 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg mx-auto mb-4"
+                            style={{ backgroundColor: child.custom_color }}
+                          >
+                            {child.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                         <h3 className="text-2xl font-bold text-gray-800 mb-2">{child.name}</h3>
                         <p className="text-gray-600 mb-4">{child.age} ans</p>
                       </div>
