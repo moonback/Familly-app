@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MessageCircleIcon, Loader2, SparklesIcon, RotateCcw, BarChart3, Send, Bot, User } from 'lucide-react';
+import { MessageCircleIcon, Loader2, SparklesIcon, RotateCcw, BarChart3, Send, Bot, User, Star, Trophy, Target, PiggyBank, ShoppingCart, Gift, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { getChatbotResponse } from '@/lib/gemini';
 import { useAuth } from '@/context/auth-context';
@@ -31,6 +31,35 @@ const quickQuestions = [
   { text: "Qu'ai-je acheté récemment ?", icon: "📦", color: "from-indigo-400 to-purple-400" },
   { text: "Donne-moi des conseils !", icon: "💡", color: "from-cyan-400 to-blue-400" }
 ];
+
+// Nouveau composant FormattedMessage simple et compatible HTML
+const FormattedMessage = ({ text }: { text: string }) => {
+  let formatted = text
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // gras markdown
+    .replace(/\n/g, '<br />')
+    .replace(/(\d+) points?/gi, '<span style="background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:8px;font-weight:bold;">⭐ $1 points</span>')
+    .replace(/récompense[s]?/gi, '<span style="background:#EDE9FE;color:#6D28D9;padding:2px 6px;border-radius:8px;font-weight:bold;">🏆 récompense</span>')
+    .replace(/mission[s]?/gi, '<span style="background:#DBEAFE;color:#1D4ED8;padding:2px 6px;border-radius:8px;font-weight:bold;">🎯 mission</span>')
+    .replace(/tirelire/gi, '<span style="background:#FCE7F3;color:#BE185D;padding:2px 6px;border-radius:8px;font-weight:bold;">🐷 tirelire</span>')
+    .replace(/achat[s]?/gi, '<span style="background:#DCFCE7;color:#166534;padding:2px 6px;border-radius:8px;font-weight:bold;">🛒 achat</span>')
+    .replace(/cadeau[x]?/gi, '<span style="background:#FFEDD5;color:#C2410C;padding:2px 6px;border-radius:8px;font-weight:bold;">🎁 cadeau</span>')
+    .replace(/✅|terminé[e]?|complété[e]?/gi, '<span style="background:#D1FAE5;color:#065F46;padding:2px 6px;border-radius:8px;font-weight:bold;">✅ Terminé</span>')
+    .replace(/⏳|en cours|en attente/gi, '<span style="background:#FEF9C3;color:#92400E;padding:2px 6px;border-radius:8px;font-weight:bold;">⏳ En cours</span>')
+    .replace(/❌|erreur|problème/gi, '<span style="background:#FECACA;color:#991B1B;padding:2px 6px;border-radius:8px;font-weight:bold;">❌ Attention</span>')
+    // liens
+    .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:#2563EB;text-decoration:underline;">$1</a>');
+
+  // Listes à la main (optionnel)
+  formatted = formatted.replace(/(?:^|\n)[-•*] (.+)/g, '<ul style="margin:8px 0 8px 16px;"><li>$1</li></ul>');
+
+  return (
+    <div
+      className="prose prose-sm max-w-none"
+      style={{ wordBreak: 'break-word' }}
+      dangerouslySetInnerHTML={{ __html: formatted }}
+    />
+  );
+};
 
 export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   const { user } = useAuth();
@@ -181,7 +210,11 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
                       ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
                       : 'bg-white border border-gray-200 text-gray-800'
                   }`}>
-                    <p className="text-sm leading-relaxed">{m.text}</p>
+                    {m.sender === 'bot' ? (
+                      <FormattedMessage text={m.text} />
+                    ) : (
+                      <p className="text-sm leading-relaxed">{m.text}</p>
+                    )}
                     {m.timestamp && (
                       <p className={`text-xs mt-2 ${
                         m.sender === 'user' ? 'text-white/70' : 'text-gray-500'
