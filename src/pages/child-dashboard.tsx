@@ -1419,6 +1419,14 @@ export default function ChildDashboard() {
                             <div className="text-4xl font-extrabold text-green-600">{completedTasks}</div>
                             <div className="text-sm text-green-500 mt-1">sur {totalTasks} mission{totalTasks > 1 ? 's' : ''}</div>
                           </div>
+                          <div className="bg-gradient-to-br from-orange-50 to-pink-100 rounded-2xl p-5 border-2 border-orange-200 flex flex-col items-center">
+                            <div className="flex items-center gap-2 mb-1">
+                              <PiggyBankIcon className="w-7 h-7 text-orange-600" />
+                              <span className="font-semibold text-gray-800">Points épargnés</span>
+                            </div>
+                            <div className="text-4xl font-extrabold text-orange-600">{getPiggyBankStats().currentBalance}</div>
+                            <div className="text-sm text-orange-500 mt-1">≈ {convertPointsToEuros(getPiggyBankStats().currentBalance)} €</div>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
