@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
@@ -16,31 +16,17 @@ import {
   BrainIcon, 
   PiggyBankIcon,
   ShoppingCartIcon,
-  SettingsIcon,
   HomeIcon,
-  BookOpenIcon,
   HeartIcon,
   TargetIcon,
-  SparklesIcon,
   CheckCircleIcon,
-  ClockIcon,
   CalendarIcon,
   UsersIcon,
   AwardIcon,
-  CoinsIcon,
-  PuzzleIcon,
-  MusicIcon,
-  PaintbrushIcon,
-  GamepadIcon,
-  BookIcon,
-  CalculatorIcon,
-  GlobeIcon,
-  MicroscopeIcon,
-  PaletteIcon,
-  CameraIcon,
-  BikeIcon,
   Plus,
   Minus,
+  PackageIcon,
+  TrendingUp,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
@@ -54,6 +40,7 @@ import { useRiddles } from '@/hooks/useRiddles';
 import { useStreak } from '@/hooks/useStreak';
 import { usePointsHistory } from '@/hooks/usePointsHistory';
 import { usePiggyBank } from '@/hooks/usePiggyBank';
+import { usePurchases } from '@/hooks/usePurchases';
 
 interface Child {
   id: string;
@@ -104,7 +91,7 @@ export default function ChildDashboard() {
   const navigate = useNavigate();
   const { childName } = useParams();
   const [child, setChild] = useState<Child | null>(null);
-  const [activeTab, setActiveTab] = useState<'tasks' | 'rewards' | 'shop' | 'piggy' | 'riddles' | 'profile'>('tasks');
+  const [activeTab, setActiveTab] = useState<'tasks' | 'rewards' | 'shop' | 'piggy' | 'riddles' | 'profile' | 'purchases'>('tasks');
   const [showConfetti, setShowConfetti] = useState(false);
   const [completedTaskId, setCompletedTaskId] = useState<string | null>(null);
   const [showRiddleDialog, setShowRiddleDialog] = useState(false);
@@ -169,6 +156,7 @@ export default function ChildDashboard() {
   const { streak } = useStreak(child);
   const { pointsHistory } = usePointsHistory(child);
   const { transactions: piggyTransactions, loading: piggyLoading, depositing, depositPoints, withdrawPoints, getPiggyBankStats } = usePiggyBank(child, fetchChildData);
+  const { purchases, loading: purchasesLoading, getPurchaseStats } = usePurchases(child);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -280,6 +268,10 @@ export default function ChildDashboard() {
         setShowShopDialog(false);
         setSelectedShopItem(null);
         fetchChildData();
+        // Recharger les achats pour mettre à jour l'onglet "Mes Achats"
+        if (activeTab === 'purchases') {
+          // Le hook usePurchases se rechargera automatiquement grâce au useEffect
+        }
       } catch (error) {
         console.error('Erreur lors de l\'achat:', error);
         toast({
@@ -333,7 +325,7 @@ export default function ChildDashboard() {
     }
   };
 
-  if (loading || tasksLoading || piggyLoading) {
+  if (loading || tasksLoading || piggyLoading || purchasesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 to-pink-100">
         <div className="text-center">
@@ -356,6 +348,7 @@ export default function ChildDashboard() {
     { id: 'tasks', label: 'Mes Missions', icon: TargetIcon, color: 'text-blue-600' },
     { id: 'rewards', label: 'Mes Récompenses', icon: TrophyIcon, color: 'text-yellow-600' },
     { id: 'shop', label: 'Boutique', icon: ShoppingCartIcon, color: 'text-green-600' },
+    { id: 'purchases', label: 'Mes Achats', icon: PackageIcon, color: 'text-indigo-600' },
     { id: 'piggy', label: 'Ma Tirelire', icon: PiggyBankIcon, color: 'text-orange-600' },
     { id: 'riddles', label: 'Devinettes', icon: BrainIcon, color: 'text-purple-600' },
     { id: 'profile', label: 'Mon Profil', icon: UsersIcon, color: 'text-pink-600' }
@@ -428,7 +421,7 @@ export default function ChildDashboard() {
       {/* Navigation par onglets */}
       <div className="container mx-auto p-4">
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-2 mb-6 shadow-lg">
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-7 gap-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -1290,6 +1283,152 @@ export default function ChildDashboard() {
                         </div>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Onglet Mes Achats */}
+            {activeTab === 'purchases' && (
+              <div className="space-y-6">
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3 text-2xl">
+                      <PackageIcon className="w-8 h-8 text-indigo-600" />
+                      Mes Achats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const stats = getPurchaseStats();
+                      return (
+                        <div className="space-y-6">
+                          {/* Statistiques des achats */}
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border-2 border-indigo-200 text-center">
+                              <div className="text-2xl font-bold text-indigo-600">{stats.totalPurchases}</div>
+                              <div className="text-sm text-gray-600">Total des achats</div>
+                            </div>
+                            <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
+                              <div className="text-2xl font-bold text-green-600">{stats.totalSpent}</div>
+                              <div className="text-sm text-gray-600">Points dépensés</div>
+                            </div>
+                            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
+                              <div className="text-2xl font-bold text-yellow-600">{stats.uniqueItems}</div>
+                              <div className="text-sm text-gray-600">Articles différents</div>
+                            </div>
+                            <div className="bg-gradient-to-br from-pink-50 to-red-50 rounded-xl p-4 border-2 border-pink-200 text-center">
+                              <div className="text-2xl font-bold text-pink-600">
+                                {stats.totalPurchases > 0 ? Math.round(stats.totalSpent / stats.totalPurchases) : 0}
+                              </div>
+                              <div className="text-sm text-gray-600">Moyenne par achat</div>
+                            </div>
+                          </div>
+
+                          {/* Historique des achats */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                              <CalendarIcon className="w-5 h-5 text-purple-600" />
+                              Historique des achats
+                            </h4>
+                            {purchasesLoading ? (
+                              <div className="space-y-4">
+                                {Array.from({ length: 3 }).map((_, index) => (
+                                  <div key={index} className="bg-gray-100 rounded-xl p-4 animate-pulse">
+                                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : purchases.length > 0 ? (
+                              <div className="space-y-3">
+                                {purchases.map((purchase) => (
+                                  <motion.div
+                                    key={purchase.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border-2 border-indigo-200 shadow-sm"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-full bg-indigo-100 text-indigo-600">
+                                          <PackageIcon className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold text-gray-800">
+                                            {purchase.item?.name || 'Article supprimé'}
+                                          </p>
+                                          <p className="text-sm text-gray-600">
+                                            {format(new Date(purchase.purchased_at), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="flex items-center gap-1 text-indigo-600 font-bold">
+                                          <StarIcon className="w-4 h-4" />
+                                          <span>{purchase.item?.price || 0} pts</span>
+                                        </div>
+                                        <p className="text-xs text-gray-500">
+                                          Achat #{purchase.id.slice(0, 8)}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center py-12">
+                                <div className="text-6xl mb-4">📦</div>
+                                <h3 className="text-xl font-semibold text-gray-800 mb-2">Aucun achat</h3>
+                                <p className="text-gray-600 mb-4">Tu n'as pas encore acheté d'articles !</p>
+                                <Button
+                                  onClick={() => setActiveTab('shop')}
+                                  className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
+                                >
+                                  <ShoppingCartIcon className="w-4 h-4 mr-2" />
+                                  Aller à la boutique
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Statistiques mensuelles */}
+                          {Object.keys(stats.monthlyStats).length > 0 && (
+                            <div>
+                              <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5 text-green-600" />
+                                Statistiques mensuelles
+                              </h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {Object.entries(stats.monthlyStats)
+                                  .sort(([a], [b]) => b.localeCompare(a))
+                                  .slice(0, 6)
+                                  .map(([month, data]) => {
+                                    const [year, monthNum] = month.split('-');
+                                    const monthName = new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                                    
+                                    return (
+                                      <div key={month} className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-4 border-2 border-blue-200">
+                                        <h5 className="font-semibold text-gray-800 mb-2">{monthName}</h5>
+                                        <div className="space-y-1">
+                                          <div className="flex justify-between text-sm">
+                                            <span className="text-gray-600">Achats :</span>
+                                            <span className="font-medium">{data.count}</span>
+                                          </div>
+                                          <div className="flex justify-between text-sm">
+                                            <span className="text-gray-600">Points :</span>
+                                            <span className="font-medium text-green-600">{data.total}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </div>
