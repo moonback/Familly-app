@@ -155,12 +155,71 @@ export function useRewards(child: Child | null, fetchChildData: () => void) {
     return claimedRewards.includes(rewardId);
   };
 
+  // Statistiques des récompenses
+  const getRewardStats = () => {
+    const totalRewards = rewards.length;
+    const claimedCount = claimedRewards.length;
+    const availableCount = totalRewards - claimedCount;
+    const affordableCount = rewards.filter(r => child && child.points >= r.cost && !claimedRewards.includes(r.id)).length;
+    const totalSpent = claimedRewards.reduce((total, rewardId) => {
+      const reward = rewards.find(r => r.id === rewardId);
+      return total + (reward?.cost || 0);
+    }, 0);
+
+    return {
+      total: totalRewards,
+      claimed: claimedCount,
+      available: availableCount,
+      affordable: affordableCount,
+      totalSpent
+    };
+  };
+
+  const getNextReward = () => {
+    if (!child) return null;
+    
+    const affordableRewards = rewards.filter(r => 
+      child.points >= r.cost && !claimedRewards.includes(r.id)
+    );
+    
+    return affordableRewards.length > 0 ? affordableRewards[0] : null;
+  };
+
+  const getProgressToNextReward = () => {
+    if (!child) return { progress: 0, pointsNeeded: 0, nextReward: null };
+    
+    const affordableRewards = rewards.filter(r => 
+      child.points >= r.cost && !claimedRewards.includes(r.id)
+    );
+    
+    if (affordableRewards.length > 0) {
+      return { progress: 100, pointsNeeded: 0, nextReward: affordableRewards[0] };
+    }
+    
+    const unclaimedRewards = rewards.filter(r => !claimedRewards.includes(r.id));
+    if (unclaimedRewards.length === 0) {
+      return { progress: 100, pointsNeeded: 0, nextReward: null };
+    }
+    
+    const nextReward = unclaimedRewards.reduce((min, reward) => 
+      reward.cost < min.cost ? reward : min
+    );
+    
+    const progress = Math.min((child.points / nextReward.cost) * 100, 100);
+    const pointsNeeded = Math.max(0, nextReward.cost - child.points);
+    
+    return { progress, pointsNeeded, nextReward };
+  };
+
   return {
     rewards,
     claimedRewards,
     loading,
     claiming,
     claimReward,
-    isRewardClaimed
+    isRewardClaimed,
+    getRewardStats,
+    getNextReward,
+    getProgressToNextReward
   };
 } 

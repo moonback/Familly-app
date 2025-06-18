@@ -160,7 +160,7 @@ export default function ChildDashboard() {
 
   // Utilisation des hooks personnalisés
   const { childTasks, isLoading: tasksLoading, toggleTask } = useTasks(child, fetchChildData);
-  const { rewards, claimedRewards, claimReward, claiming, isRewardClaimed } = useRewards(child, fetchChildData);
+  const { rewards, claimedRewards, claimReward, claiming, isRewardClaimed, getRewardStats, getProgressToNextReward } = useRewards(child, fetchChildData);
   const { currentRiddle, riddleSolved, showSuccess, hintPurchased, hintText, submitRiddleAnswer, purchaseHint } = useRiddles(child, fetchChildData);
   const { streak } = useStreak(child);
   const { pointsHistory } = usePointsHistory(child);
@@ -544,6 +544,7 @@ export default function ChildDashboard() {
             {/* Onglet Récompenses */}
             {activeTab === 'rewards' && (
               <div className="space-y-6">
+                {/* Statistiques des récompenses */}
                 <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-3 text-2xl">
@@ -552,78 +553,202 @@ export default function ChildDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {rewards.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {rewards.map((reward) => {
-                          const isClaimed = isRewardClaimed(reward.id);
-                          const canAfford = child.points >= reward.cost;
-                          const isClaiming = claiming === reward.id;
-                          
-                          return (
-                            <motion.div
-                              key={reward.id}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className={`rounded-2xl p-6 border-2 shadow-lg ${
-                                isClaimed 
-                                  ? 'bg-gradient-to-br from-green-50 to-blue-50 border-green-200' 
-                                  : 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-4">
-                                <GiftIcon className={`w-8 h-8 ${isClaimed ? 'text-green-600' : 'text-yellow-600'}`} />
-                                <Badge className={`${
-                                  isClaimed 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                  {reward.cost} points
-                                </Badge>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
+                        <div className="text-2xl font-bold text-yellow-600">{rewards.length}</div>
+                        <div className="text-sm text-gray-600">Récompenses disponibles</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
+                        <div className="text-2xl font-bold text-green-600">{claimedRewards.length}</div>
+                        <div className="text-sm text-gray-600">Récompenses réclamées</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 text-center">
+                        <div className="text-2xl font-bold text-purple-600">{child.points}</div>
+                        <div className="text-sm text-gray-600">Points disponibles</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4 border-2 border-red-200 text-center">
+                        <div className="text-2xl font-bold text-red-600">
+                          {rewards.filter(r => child.points >= r.cost).length}
+                        </div>
+                        <div className="text-sm text-gray-600">Accessibles maintenant</div>
+                      </div>
+                    </div>
+
+                    {/* Barre de progression vers la prochaine récompense */}
+                    {(() => {
+                      const { progress, pointsNeeded, nextReward } = getProgressToNextReward();
+                      if (nextReward) {
+                        return (
+                          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-200 mb-6">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-semibold text-gray-800">
+                                {progress >= 100 ? '🎉' : '🎯'} Prochaine récompense
+                              </h4>
+                              <span className="text-sm text-gray-600">
+                                {progress >= 100 ? 'Prête !' : `${Math.round(progress)}%`}
+                              </span>
+                            </div>
+                            <div className="mb-2">
+                              <div className="text-sm text-gray-700 mb-1">
+                                {nextReward.label} ({nextReward.cost} points)
                               </div>
-                              <h3 className="text-lg font-semibold text-gray-800 mb-3">{reward.label}</h3>
+                              <Progress value={progress} className="h-2" />
+                            </div>
+                            {progress < 100 && (
+                              <div className="text-xs text-gray-600">
+                                Il te faut encore {pointsNeeded} points pour débloquer cette récompense
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {rewards.length > 0 ? (
+                      <div className="space-y-6">
+                        {/* Récompenses disponibles */}
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                            <GiftIcon className="w-5 h-5 text-green-600" />
+                            Récompenses disponibles
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {rewards.map((reward) => {
+                              const isClaimed = isRewardClaimed(reward.id);
+                              const canAfford = child.points >= reward.cost;
+                              const isClaiming = claiming === reward.id;
                               
-                              {isClaimed ? (
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-2 text-green-600 font-bold">
-                                    <CheckCircleIcon className="w-5 h-5" />
-                                    <span>Réclamée !</span>
-                                  </div>
-                                  <p className="text-sm text-gray-600">Tu as déjà réclamé cette récompense</p>
-                                </div>
-                              ) : (
-                                <Button
-                                  onClick={() => claimReward(reward.id)}
-                                  disabled={!canAfford || isClaiming}
-                                  className={`w-full ${
-                                    canAfford 
-                                      ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white' 
-                                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              return (
+                                <motion.div
+                                  key={reward.id}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className={`rounded-2xl p-6 border-2 shadow-lg transition-all duration-300 ${
+                                    isClaimed 
+                                      ? 'bg-gradient-to-br from-green-50 to-blue-50 border-green-200' 
+                                      : canAfford
+                                        ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200 hover:border-yellow-300'
+                                        : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200'
                                   }`}
                                 >
-                                  {isClaiming ? (
-                                    <>
-                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                      Réclamation...
-                                    </>
-                                  ) : canAfford ? (
-                                    <>
-                                      <GiftIcon className="w-4 h-4 mr-2" />
-                                      Réclamer
-                                    </>
+                                  <div className="flex items-center justify-between mb-4">
+                                    <div className={`p-3 rounded-full ${
+                                      isClaimed 
+                                        ? 'bg-green-100 text-green-600' 
+                                        : canAfford
+                                          ? 'bg-yellow-100 text-yellow-600'
+                                          : 'bg-gray-100 text-gray-400'
+                                    }`}>
+                                      <GiftIcon className="w-6 h-6" />
+                                    </div>
+                                    <Badge className={`${
+                                      isClaimed 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : canAfford
+                                          ? 'bg-yellow-100 text-yellow-800'
+                                          : 'bg-gray-100 text-gray-500'
+                                    }`}>
+                                      {reward.cost} points
+                                    </Badge>
+                                  </div>
+                                  <h3 className="text-lg font-semibold text-gray-800 mb-3">{reward.label}</h3>
+                                  
+                                  {isClaimed ? (
+                                    <div className="space-y-2">
+                                      <div className="flex items-center gap-2 text-green-600 font-bold">
+                                        <CheckCircleIcon className="w-5 h-5" />
+                                        <span>Réclamée !</span>
+                                      </div>
+                                      <p className="text-sm text-gray-600">Tu as déjà réclamé cette récompense</p>
+                                    </div>
                                   ) : (
-                                    'Points insuffisants'
+                                    <div className="space-y-3">
+                                      <Button
+                                        onClick={() => claimReward(reward.id)}
+                                        disabled={!canAfford || isClaiming}
+                                        className={`w-full ${
+                                          canAfford 
+                                            ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white' 
+                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        }`}
+                                      >
+                                        {isClaiming ? (
+                                          <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                            Réclamation...
+                                          </>
+                                        ) : canAfford ? (
+                                          <>
+                                            <GiftIcon className="w-4 h-4 mr-2" />
+                                            Réclamer
+                                          </>
+                                        ) : (
+                                          <>
+                                            <StarIcon className="w-4 h-4 mr-2" />
+                                            Il te faut {reward.cost - child.points} points de plus
+                                          </>
+                                        )}
+                                      </Button>
+                                      
+                                      {!canAfford && (
+                                        <div className="text-xs text-gray-500 text-center">
+                                          Tu as {child.points} points, il en faut {reward.cost}
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
-                                </Button>
-                              )}
-                            </motion.div>
-                          );
-                        })}
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Récompenses réclamées */}
+                        {claimedRewards.length > 0 && (
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                              <CheckCircleIcon className="w-5 h-5 text-green-600" />
+                              Récompenses réclamées ({claimedRewards.length})
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {claimedRewards.map((rewardId) => {
+                                const reward = rewards.find(r => r.id === rewardId);
+                                if (!reward) return null;
+                                
+                                return (
+                                  <motion.div
+                                    key={rewardId}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="p-2 rounded-full bg-green-100 text-green-600">
+                                        <CheckCircleIcon className="w-4 h-4" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <h4 className="font-semibold text-gray-800">{reward.label}</h4>
+                                        <p className="text-sm text-gray-600">{reward.cost} points</p>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="text-center py-12">
                         <div className="text-6xl mb-4">🎁</div>
                         <h3 className="text-xl font-semibold text-gray-800 mb-2">Aucune récompense disponible</h3>
-                        <p className="text-gray-600">Demande à tes parents d'ajouter des récompenses !</p>
+                        <p className="text-gray-600 mb-4">Demande à tes parents d'ajouter des récompenses !</p>
+                        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-200">
+                          <p className="text-sm text-gray-600">
+                            💡 <strong>Conseil :</strong> Complète tes missions pour gagner des points et débloquer des récompenses !
+                          </p>
+                        </div>
                       </div>
                     )}
                   </CardContent>
