@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MessageCircleIcon, Loader2, SparklesIcon, RotateCcw, BarChart3, Send, Bot, User, Star, Trophy, Target, PiggyBank, ShoppingCart, Gift, AlertCircle, CheckCircle, Clock, Edit3 } from 'lucide-react';
+import { MessageCircleIcon, Loader2, SparklesIcon, RotateCcw, BarChart3, Send, Bot, User, Star, Trophy, Target, PiggyBank, ShoppingCart, Gift, AlertCircle, CheckCircle, Clock, Edit3, LocateIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { getChatbotResponse } from '@/lib/gemini';
 import { useAuth } from '@/context/auth-context';
@@ -86,6 +86,13 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   // Ajout d'un état pour mémoriser l'attente d'une activité
   const [pendingActivity, setPendingActivity] = useState<null | { weather: any; age: number | null }>(null);
 
+  // Ajout d'un état pour la ville détectée
+  const [city, setCity] = useState<string>(() => {
+    // On tente de charger la ville depuis le localStorage
+    return localStorage.getItem('user_city') || 'Paris';
+  });
+  const [cityLoading, setCityLoading] = useState(false);
+
   // Charger l'historique et le nom du chatbot depuis le localStorage au montage
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
@@ -114,6 +121,35 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     localStorage.setItem(storageKey, JSON.stringify(messages));
     // eslint-disable-next-line
   }, [messages, childName]);
+
+  // Détection automatique de la ville au montage
+  useEffect(() => {
+    if (city && city !== 'Paris') return; // déjà détectée
+    setCityLoading(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          // Reverse geocoding via Nominatim
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=fr`);
+          const data = await res.json();
+          const detectedCity = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || data.address?.county || 'Paris';
+          setCity(detectedCity);
+          localStorage.setItem('user_city', detectedCity);
+        } catch {
+          setCity('Paris');
+        } finally {
+          setCityLoading(false);
+        }
+      }, () => {
+        setCity('Paris');
+        setCityLoading(false);
+      }, { timeout: 8000 });
+    } else {
+      setCity('Paris');
+      setCityLoading(false);
+    }
+  }, []);
 
   // Fonction pour changer le nom du chatbot
   const handleNameChange = () => {
@@ -156,7 +192,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
       try {
         const activity = messageContent;
         const { weather, age } = pendingActivity;
-        const prompt = `Voici la météo à Paris aujourd'hui : ${weather.temp}°C, ${weather.description}. L'enfant a ${age ? age + ' ans' : 'un âge inconnu'}. Il/elle va faire l'activité suivante : ${activity}. Quelle tenue conseilles-tu ? Sois bref, donne une suggestion concrète et adaptée à la météo, à l'âge et à l'activité.`;
+        const prompt = `Voici la météo à ${city} aujourd'hui : ${weather.temp}°C, ${weather.description}. L'enfant a ${age ? age + ' ans' : 'un âge inconnu'}. Il/elle va faire l'activité suivante : ${activity}. Quelle tenue conseilles-tu ? Sois bref, donne une suggestion concrète et adaptée à la météo, à l'âge et à l'activité.`;
         const conversationHistory = messages
           .slice(1)
           .concat({ sender: 'user', text: prompt })
@@ -188,10 +224,10 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     const regexMeteo = /(météo|temps|température|fait-il chaud|froid|quel temps|quelle température)/i;
     if (regexMeteo.test(messageContent)) {
       try {
-        const weather = await getWeather('Paris');
+        const weather = await getWeather(city);
         setMessages(prev => [...prev, {
           sender: 'bot',
-          text: `À Paris, il fait actuellement ${weather.temp}°C avec un temps « ${weather.description} ». ☀️🌡️`,
+          text: `À ${city}, il fait actuellement ${weather.temp}°C avec un temps « ${weather.description} ». ☀️🌡️`,
           timestamp: new Date()
         }]);
       } catch (e) {
@@ -211,20 +247,12 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     const regexTenue = /(tenue|vêtements?|habiller|porter|comment m'habiller|comment dois-je m'habiller|comment dois-je m\s?habiller|comment s'habiller|comment s\s?habiller|que dois-je porter|quelle tenue)/i;
     if (regexTenue.test(messageContent)) {
       try {
-        const weather = await getWeather('Paris');
-        // Récupérer l'âge de l'enfant si possible
+        const weather = await getWeather(city);
         let age: number | null = null;
-        // On va essayer de l'extraire du contexte Gemini (si possible)
-        // Mais on peut aussi le demander à Gemini via le prompt, il le connaît via le contexte
-        // On va essayer de le récupérer via le prompt système, mais si tu veux le forcer, tu peux le passer ici
-        // Pour l'instant, on laisse à null si inconnu
-
-        // Détection de l'activité dans la question
         const activities = ['école', 'sport', 'maison', 'sortie', 'plage', 'piscine', 'parc', 'anniversaire', 'balade', 'randonnée', 'vacances', 'voyage', 'fête', 'dormir', 'pyjama', 'jeux', 'dehors', 'extérieur', 'intérieur'];
         const foundActivity = activities.find(act => messageContent.toLowerCase().includes(act));
         if (foundActivity) {
-          // Générer un prompt personnalisé pour Gemini
-          const prompt = `Voici la météo à Paris aujourd'hui : ${weather.temp}°C, ${weather.description}. L'enfant a ${age ? age + ' ans' : 'un âge inconnu'}. Il/elle va faire l'activité suivante : ${foundActivity}. Quelle tenue conseilles-tu ? Sois bref, donne une suggestion concrète et adaptée à la météo, à l'âge et à l'activité.`;
+          const prompt = `Voici la météo à ${city} aujourd'hui : ${weather.temp}°C, ${weather.description}. L'enfant a ${age ? age + ' ans' : 'un âge inconnu'}. Il/elle va faire l'activité suivante : ${foundActivity}. Quelle tenue conseilles-tu ? Sois bref, donne une suggestion concrète et adaptée à la météo, à l'âge et à l'activité.`;
           const conversationHistory = messages
             .slice(1)
             .concat({ sender: 'user', text: prompt })
@@ -240,7 +268,6 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
             timestamp: new Date()
           }]);
         } else {
-          // On demande à l'utilisateur de préciser l'activité
           setMessages(prev => [...prev, {
             sender: 'bot',
             text: `Pour quelle activité veux-tu une suggestion de tenue ? (école, sport, sortie, maison…)`,
@@ -262,7 +289,6 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     // --- FIN INTERCEPTION TENUE ---
 
     try {
-      // Créer l'historique pour Gemini en excluant le message de bienvenue initial
       const conversationHistory = messages
         .slice(1)
         .concat({ sender: 'user', text: messageContent })
@@ -322,6 +348,33 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, loading]);
+
+  // Fonction pour relancer la localisation
+  const handleLocate = async () => {
+    setCityLoading(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=fr`);
+          const data = await res.json();
+          const detectedCity = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || data.address?.county || 'Paris';
+          setCity(detectedCity);
+          localStorage.setItem('user_city', detectedCity);
+        } catch {
+          setCity('Paris');
+        } finally {
+          setCityLoading(false);
+        }
+      }, () => {
+        setCity('Paris');
+        setCityLoading(false);
+      }, { timeout: 8000 });
+    } else {
+      setCity('Paris');
+      setCityLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -387,6 +440,27 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
                 <p className="text-sm text-white/80">
                   {childName ? decodeURIComponent(childName) : ''}
                 </p>
+                {/* Affichage ville + bouton localiser */}
+                <div className="flex items-center gap-2 mt-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLocate}
+                    className="text-white hover:bg-white/20 px-2 py-1"
+                    title="Localiser ma ville"
+                    disabled={cityLoading}
+                  >
+                    <LocateIcon className="w-4 h-4 mr-1" />
+                    {cityLoading ? (
+                      <span className="flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Localisation...</span>
+                    ) : (
+                      <span>Localiser</span>
+                    )}
+                  </Button>
+                  <span className="text-xs text-white/80 bg-black/20 rounded px-2 py-0.5">
+                    {cityLoading ? '...' : city}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex gap-2">
