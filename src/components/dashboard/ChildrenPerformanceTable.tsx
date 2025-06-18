@@ -1,11 +1,13 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trophy, Calendar, ExternalLink } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Heart, Flame } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 interface ChildStats {
   id: string;
@@ -31,6 +33,12 @@ export const ChildrenPerformanceTable = ({
   period,
   onPeriodChange
 }: ChildrenPerformanceTableProps) => {
+  const navigate = useNavigate();
+
+  const handleOpenChildDashboard = (childName: string) => {
+    navigate(`/child-dashboard/${childName}`);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -78,6 +86,7 @@ export const ChildrenPerformanceTable = ({
                   <th className="text-center py-4 px-4 font-semibold text-gray-700">En attente</th>
                   <th className="text-center py-4 px-4 font-semibold text-gray-700">Dernière activité</th>
                   <th className="text-center py-4 px-4 font-semibold text-gray-700">Progression</th>
+                  <th className="text-center py-4 px-4 font-semibold text-gray-700">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -143,6 +152,17 @@ export const ChildrenPerformanceTable = ({
                           transition={{ duration: 1, delay: index * 0.1 }}
                         />
                       </div>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenChildDashboard(child.name)}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"
+                      >
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        Dashboard
+                      </Button>
                     </td>
                   </motion.tr>
                 ))}

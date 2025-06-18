@@ -42,9 +42,34 @@ export const usePointsHistory = (child: Child | null) => {
     }
   }, [child]);
 
+  const addPointsEntry = async (points: number, reason: string, taskId?: string, rewardId?: string) => {
+    if (!child) return;
+
+    try {
+      const { error } = await supabase
+        .from('points_history')
+        .insert([{
+          child_id: child.id,
+          points,
+          reason,
+          task_id: taskId,
+          reward_id: rewardId,
+          created_at: new Date().toISOString()
+        }]);
+
+      if (error) throw error;
+      
+      // Rafraîchir l'historique
+      fetchPointsHistory();
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'entrée d\'historique:', error);
+    }
+  };
+
   return {
     pointsHistory,
     isLoading,
+    addPointsEntry,
     refreshHistory: fetchPointsHistory
   };
 }; 

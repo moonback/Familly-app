@@ -6,7 +6,7 @@ import { MainNav } from '@/components/layout/main-nav';
 import HomePage from '@/pages/index';
 import AuthPage from '@/pages/auth';
 import DashboardParent from '@/pages/dashboard-parent';
-import DashboardChild from '@/pages/dashboard-child';
+import ChildDashboard from '@/pages/child-dashboard';
 import ChildHome from '@/pages/home';
 import { motion, AnimatePresence } from 'framer-motion';
 import SetParentCodePage from '@/pages/set-parent-code';
@@ -100,7 +100,7 @@ function App() {
                   path="/dashboard/child/:childName" 
                   element={
                     <ProtectedRoute>
-                      <DashboardChild />
+                      <Navigate to="/dashboard/parent" replace state={{ message: "Page non disponible" }} />
                     </ProtectedRoute>
                   } 
                 />
@@ -109,6 +109,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <ChildHome />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/child-dashboard/:childName" 
+                  element={
+                    <ProtectedRoute>
+                      <ChildDashboard />
                     </ProtectedRoute>
                   } 
                 />
