@@ -1334,19 +1334,20 @@ export default function ChildDashboard() {
 
               {/* Onglet Profil */}
               {activeTab === 'profile' && (
-                <div className="space-y-6">
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+                <div className="space-y-8">
+                  <Card className="bg-white/90 backdrop-blur-md border-0 shadow-2xl">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-3 text-2xl">
-                        <UsersIcon className="w-8 h-8 text-pink-600" />
+                      <CardTitle className="flex items-center gap-3 text-3xl font-extrabold">
+                        <UsersIcon className="w-9 h-9 text-pink-500" />
                         Mon Profil
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="text-center">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                        {/* Avatar et infos principales */}
+                        <div className="flex flex-col items-center md:col-span-1">
                           {child.avatar_url ? (
-                            <div className="w-32 h-32 rounded-full overflow-hidden shadow-lg mx-auto mb-4">
+                            <div className="w-36 h-36 rounded-full overflow-hidden shadow-2xl mx-auto mb-4 border-4 border-pink-200">
                               <img 
                                 src={child.avatar_url} 
                                 alt={`Photo de ${child.name}`}
@@ -1359,7 +1360,7 @@ export default function ChildDashboard() {
                                 }}
                               />
                               <div 
-                                className={`w-full h-full flex items-center justify-center text-white text-4xl font-bold ${
+                                className={`w-full h-full flex items-center justify-center text-white text-5xl font-extrabold ${
                                   child.avatar_url ? 'hidden' : ''
                                 }`}
                                 style={{ backgroundColor: child.custom_color }}
@@ -1369,40 +1370,54 @@ export default function ChildDashboard() {
                             </div>
                           ) : (
                             <div 
-                              className="w-32 h-32 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg mx-auto mb-4"
+                              className="w-36 h-36 rounded-full flex items-center justify-center text-white text-5xl font-extrabold shadow-2xl mx-auto mb-4 border-4 border-pink-200"
                               style={{ backgroundColor: child.custom_color }}
                             >
                               {child.name.charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <h3 className="text-2xl font-bold text-gray-800 mb-2">{child.name}</h3>
-                          <p className="text-gray-600 mb-4">{child.age} ans</p>
+                          <h3 className="text-3xl font-extrabold text-gray-800 mb-1">{child.name}</h3>
+                          <p className="text-lg text-gray-500 mb-2">{child.age} {child.age > 1 ? 'ans' : 'an'}</p>
+                          <div className="flex flex-wrap justify-center gap-2">
+                            <span className="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-semibold">
+                              <StarIcon className="w-4 h-4 mr-1 text-yellow-500" />
+                              {child.points} pts
+                            </span>
+                            <span className="inline-flex items-center px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm font-semibold">
+                              <AwardIcon className="w-4 h-4 mr-1 text-pink-500" />
+                              {streak} j 🔥
+                            </span>
+                            <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
+                              <TargetIcon className="w-4 h-4 mr-1 text-green-500" />
+                              {completedTasks}/{totalTasks} missions
+                            </span>
+                          </div>
                         </div>
-                        
-                        <div className="space-y-4">
-                          <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-4 border-2 border-yellow-200">
-                            <div className="flex items-center gap-3 mb-2">
-                              <StarIcon className="w-6 h-6 text-yellow-600" />
+                        {/* Statistiques détaillées */}
+                        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                          <div className="bg-gradient-to-br from-yellow-50 to-orange-100 rounded-2xl p-5 border-2 border-yellow-200 flex flex-col items-center">
+                            <div className="flex items-center gap-2 mb-1">
+                              <StarIcon className="w-7 h-7 text-yellow-600" />
                               <span className="font-semibold text-gray-800">Points actuels</span>
                             </div>
-                            <div className="text-3xl font-bold text-yellow-600">{child.points}</div>
+                            <div className="text-4xl font-extrabold text-yellow-600">{child.points}</div>
                             <div className="text-sm text-yellow-500 mt-1">≈ {convertPointsToEuros(child.points)} €</div>
                           </div>
-                          
-                          <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl p-4 border-2 border-red-200">
-                            <div className="flex items-center gap-3 mb-2">
-                              <AwardIcon className="w-6 h-6 text-red-600" />
+                          <div className="bg-gradient-to-br from-red-50 to-pink-100 rounded-2xl p-5 border-2 border-red-200 flex flex-col items-center">
+                            <div className="flex items-center gap-2 mb-1">
+                              <AwardIcon className="w-7 h-7 text-red-600" />
                               <span className="font-semibold text-gray-800">Série de jours</span>
                             </div>
-                            <div className="text-3xl font-bold text-red-600">{streak} jours 🔥</div>
+                            <div className="text-4xl font-extrabold text-red-600">{streak}</div>
+                            <div className="text-sm text-red-500 mt-1">{streak > 1 ? 'jours' : 'jour'} consécutif{streak > 1 ? 's' : ''} 🔥</div>
                           </div>
-                          
-                          <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-4 border-2 border-green-200">
-                            <div className="flex items-center gap-3 mb-2">
-                              <TargetIcon className="w-6 h-6 text-green-600" />
+                          <div className="bg-gradient-to-br from-green-50 to-blue-100 rounded-2xl p-5 border-2 border-green-200 flex flex-col items-center">
+                            <div className="flex items-center gap-2 mb-1">
+                              <TargetIcon className="w-7 h-7 text-green-600" />
                               <span className="font-semibold text-gray-800">Missions complétées</span>
                             </div>
-                            <div className="text-3xl font-bold text-green-600">{completedTasks}/{totalTasks}</div>
+                            <div className="text-4xl font-extrabold text-green-600">{completedTasks}</div>
+                            <div className="text-sm text-green-500 mt-1">sur {totalTasks} mission{totalTasks > 1 ? 's' : ''}</div>
                           </div>
                         </div>
                       </div>
