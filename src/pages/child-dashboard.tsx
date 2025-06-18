@@ -450,7 +450,7 @@ export default function ChildDashboard() {
       </motion.div>
 
       {/* Contenu principal avec padding-top réduit pour le header compact */}
-      <div className="pt-20 pb-24">
+      <div className="pt-10 pb-24">
         {/* Navigation par onglets */}
         <div className="container mx-auto p-4">
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-2 mb-6 shadow-lg">
