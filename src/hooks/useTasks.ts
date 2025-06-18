@@ -38,11 +38,44 @@ export const useTasks = (child: Child | null, onPointsUpdated: () => void) => {
         }
 
         if (ageAppropriateTasks && ageAppropriateTasks.length > 0) {
-          const selectedTasks = ageAppropriateTasks
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 5);
+          // Grouper les tâches par catégorie
+          const tasksByCategory = {
+            quotidien: ageAppropriateTasks.filter(task => task.category === 'quotidien'),
+            scolaire: ageAppropriateTasks.filter(task => task.category === 'scolaire'),
+            maison: ageAppropriateTasks.filter(task => task.category === 'maison'),
+            personnel: ageAppropriateTasks.filter(task => task.category === 'personnel')
+          };
 
-          for (const task of selectedTasks) {
+          // Sélectionner 15 tâches équilibrées par catégorie
+          const selectedTasks: Task[] = [];
+          const tasksPerCategory = Math.ceil(15 / 4); // 4 catégories, ~4 tâches par catégorie
+
+          Object.entries(tasksByCategory).forEach(([category, tasks]) => {
+            if (tasks.length > 0) {
+              // Mélanger les tâches de cette catégorie
+              const shuffledTasks = tasks.sort(() => Math.random() - 0.5);
+              // Prendre jusqu'à tasksPerCategory tâches de cette catégorie
+              const categoryTasks = shuffledTasks.slice(0, tasksPerCategory);
+              selectedTasks.push(...categoryTasks);
+            }
+          });
+
+          // Si on n'a pas assez de tâches, compléter avec des tâches aléatoires
+          if (selectedTasks.length < 15) {
+            const remainingTasks = ageAppropriateTasks.filter(task => 
+              !selectedTasks.some(selected => selected.id === task.id)
+            );
+            const additionalTasks = remainingTasks
+              .sort(() => Math.random() - 0.5)
+              .slice(0, 15 - selectedTasks.length);
+            selectedTasks.push(...additionalTasks);
+          }
+
+          // Limiter à 15 tâches maximum
+          const finalTasks = selectedTasks.slice(0, 15);
+
+          // Créer les tâches dans la base de données
+          for (const task of finalTasks) {
             const { error: insertError } = await supabase
               .from('child_tasks')
               .insert([{

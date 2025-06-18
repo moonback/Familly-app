@@ -61,7 +61,7 @@ export function MainNav() {
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+    await signOut();
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
       // En cas d'erreur, forcer la redirection
@@ -257,17 +257,17 @@ export function MainNav() {
                     </Button>
                   </motion.div>
                 </Link>
-                <Link to="/auth">
-                  <motion.div whileHover={{ scale: 1.05 }}>
-                    <Button 
-                      variant="default"
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
-                    >
-                      <LogInIcon className="h-5 w-5 mr-2" />
-                      <span className="hidden md:inline font-medium">Connexion</span>
-                    </Button>
-                  </motion.div>
-                </Link>
+              <Link to="/auth">
+                <motion.div whileHover={{ scale: 1.05 }}>
+                  <Button 
+                    variant="default"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
+                  >
+                    <LogInIcon className="h-5 w-5 mr-2" />
+                    <span className="hidden md:inline font-medium">Connexion</span>
+                  </Button>
+                </motion.div>
+              </Link>
               </>
             )}
           </div>

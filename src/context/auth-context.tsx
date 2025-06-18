@@ -55,9 +55,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const signIn = async (email: string, password: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      email,
+      password,
+    });
       
       if (error) throw error;
       
@@ -75,13 +75,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
-      });
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
+    });
       
       if (error) throw error;
       
@@ -96,7 +96,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         description: error.message,
         variant: 'destructive',
       });
-      return { error };
+    return { error };
     }
   };
 
