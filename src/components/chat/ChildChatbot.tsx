@@ -23,7 +23,7 @@ interface ChatMessage {
 
 // Suggestions de questions rapides avec icônes
 const quickQuestions = [
-  { text: "Comment dois-je m’habiller ?", icon: "⭐", color: "from-yellow-400 to-orange-400" },
+  { text: "Comment dois-je m'habiller ?", icon: "⭐", color: "from-yellow-400 to-orange-400" },
   { text: "Quelles sont mes missions ?", icon: "🎯", color: "from-blue-400 to-indigo-400" },
   { text: "Que puis-je acheter ?", icon: "🛒", color: "from-green-400 to-emerald-400" },
   { text: "Quelles récompenses puis-je avoir ?", icon: "🏆", color: "from-purple-400 to-violet-400" },
@@ -80,6 +80,9 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   const [loading, setLoading] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Ajout d'un état pour mémoriser l'attente d'une activité
+  const [pendingActivity, setPendingActivity] = useState<null | { weather: any; age: number | null }>(null);
 
   // Charger l'historique et le nom du chatbot depuis le localStorage au montage
   useEffect(() => {
@@ -145,7 +148,40 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     }]);
     if (!content) setInput('');
     setLoading(true);
-    
+
+    // Si on attend une activité, on la traite ici
+    if (pendingActivity) {
+      try {
+        const activity = messageContent;
+        const { weather, age } = pendingActivity;
+        const prompt = `Voici la météo à Paris aujourd'hui : ${weather.temp}°C, ${weather.description}. L'enfant a ${age ? age + ' ans' : 'un âge inconnu'}. Il/elle va faire l'activité suivante : ${activity}. Quelle tenue conseilles-tu ? Sois bref, donne une suggestion concrète et adaptée à la météo, à l'âge et à l'activité.`;
+        const conversationHistory = messages
+          .slice(1)
+          .concat({ sender: 'user', text: prompt })
+          .map(m => ({
+            role: m.sender === 'user' ? 'user' as const : 'model' as const,
+            content: m.text
+          }));
+        const currentChildName = childName ? decodeURIComponent(childName) : '';
+        const reply = await getChatbotResponse(conversationHistory, user?.id, currentChildName, chatbotName);
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: reply,
+          timestamp: new Date()
+        }]);
+      } catch (e) {
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: `Désolé, je n'arrive pas à générer une suggestion de tenue en ce moment. 😕`,
+          timestamp: new Date()
+        }]);
+      } finally {
+        setPendingActivity(null);
+        setLoading(false);
+      }
+      return;
+    }
+
     // --- INTERCEPTION DES QUESTIONS MÉTÉO ---
     const regexMeteo = /(météo|temps|température|fait-il chaud|froid|quel temps|quelle température)/i;
     if (regexMeteo.test(messageContent)) {
@@ -174,23 +210,42 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     if (regexTenue.test(messageContent)) {
       try {
         const weather = await getWeather('Paris');
-        // Générer un prompt personnalisé pour Gemini
-        const prompt = `Voici la météo à Paris aujourd'hui : ${weather.temp}°C, ${weather.description}. Quelle tenue conseilles-tu pour un enfant aujourd'hui ? Sois bref, donne une suggestion concrète et adaptée à la météo.`;
-        // On envoie ce prompt à Gemini (en gardant l'historique pour le contexte)
-        const conversationHistory = messages
-          .slice(1)
-          .concat({ sender: 'user', text: prompt })
-          .map(m => ({
-            role: m.sender === 'user' ? 'user' as const : 'model' as const,
-            content: m.text
-          }));
-        const currentChildName = childName ? decodeURIComponent(childName) : '';
-        const reply = await getChatbotResponse(conversationHistory, user?.id, currentChildName, chatbotName);
-        setMessages(prev => [...prev, {
-          sender: 'bot',
-          text: reply,
-          timestamp: new Date()
-        }]);
+        // Récupérer l'âge de l'enfant si possible
+        let age: number | null = null;
+        // On va essayer de l'extraire du contexte Gemini (si possible)
+        // Mais on peut aussi le demander à Gemini via le prompt, il le connaît via le contexte
+        // On va essayer de le récupérer via le prompt système, mais si tu veux le forcer, tu peux le passer ici
+        // Pour l'instant, on laisse à null si inconnu
+
+        // Détection de l'activité dans la question
+        const activities = ['école', 'sport', 'maison', 'sortie', 'plage', 'piscine', 'parc', 'anniversaire', 'balade', 'randonnée', 'vacances', 'voyage', 'fête', 'dormir', 'pyjama', 'jeux', 'dehors', 'extérieur', 'intérieur'];
+        const foundActivity = activities.find(act => messageContent.toLowerCase().includes(act));
+        if (foundActivity) {
+          // Générer un prompt personnalisé pour Gemini
+          const prompt = `Voici la météo à Paris aujourd'hui : ${weather.temp}°C, ${weather.description}. L'enfant a ${age ? age + ' ans' : 'un âge inconnu'}. Il/elle va faire l'activité suivante : ${foundActivity}. Quelle tenue conseilles-tu ? Sois bref, donne une suggestion concrète et adaptée à la météo, à l'âge et à l'activité.`;
+          const conversationHistory = messages
+            .slice(1)
+            .concat({ sender: 'user', text: prompt })
+            .map(m => ({
+              role: m.sender === 'user' ? 'user' as const : 'model' as const,
+              content: m.text
+            }));
+          const currentChildName = childName ? decodeURIComponent(childName) : '';
+          const reply = await getChatbotResponse(conversationHistory, user?.id, currentChildName, chatbotName);
+          setMessages(prev => [...prev, {
+            sender: 'bot',
+            text: reply,
+            timestamp: new Date()
+          }]);
+        } else {
+          // On demande à l'utilisateur de préciser l'activité
+          setMessages(prev => [...prev, {
+            sender: 'bot',
+            text: `Pour quelle activité veux-tu une suggestion de tenue ? (école, sport, sortie, maison…)`,
+            timestamp: new Date()
+          }]);
+          setPendingActivity({ weather, age });
+        }
       } catch (e) {
         setMessages(prev => [...prev, {
           sender: 'bot',
