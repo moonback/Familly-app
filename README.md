@@ -30,6 +30,7 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
 - **Personnalisation** : Couleurs, avatars, surnoms, thèmes personnalisés
 - **Système de streaks** : Motivation par les séries de jours consécutifs
 - **Chatbot d'aide** : Assistant interactif pour répondre aux questions et guider l'enfant
+- **Analyse IA des progrès** : Résumé automatique et suggestions personnalisées grâce à Gemini
 - **Manuel enfant intégré** : Guide simplifié accessible depuis le dashboard
 
 ### 🛒 Boutique et achats
@@ -127,7 +128,7 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    VITE_GEMINI_API_KEY=your_google_generative_ai_key
    ```
-   La clé `VITE_GEMINI_API_KEY` est utilisée pour contacter l'API Google Gemini afin de générer automatiquement des suggestions de tâches, règles ou récompenses.
+   La clé `VITE_GEMINI_API_KEY` est utilisée pour contacter l'API Google Gemini afin de générer automatiquement des suggestions de tâches, règles ou récompenses et pour l'analyse IA du tableau de bord enfant.
 
 4. Exécuter les migrations Supabase :
    - `create_initial_schema.sql`
