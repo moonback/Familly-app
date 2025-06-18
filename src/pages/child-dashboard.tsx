@@ -27,6 +27,7 @@ import {
   Minus,
   PackageIcon,
   TrendingUp,
+  Clock,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
@@ -156,7 +157,7 @@ export default function ChildDashboard() {
 
   // Utilisation des hooks personnalisés
   const { childTasks, isLoading: tasksLoading, toggleTask } = useTasks(child, fetchChildData);
-  const { rewards, claimedRewards, claimReward, claiming, isRewardClaimed, getRewardStats, getProgressToNextReward } = useRewards(child, fetchChildData);
+  const { rewards, claimedRewards, claimReward, claiming, isRewardClaimed, isRewardValidated, getRewardStats, getProgressToNextReward } = useRewards(child, fetchChildData);
   const { currentRiddle, riddleSolved, showSuccess, hintPurchased, hintText, submitRiddleAnswer, purchaseHint } = useRiddles(child, fetchChildData);
   const { streak } = useStreak(child);
   const { pointsHistory } = usePointsHistory(child);
@@ -614,19 +615,17 @@ export default function ChildDashboard() {
                           <div className="text-sm text-gray-600">Récompenses disponibles</div>
                         </div>
                         <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
-                          <div className="text-2xl font-bold text-green-600">{claimedRewards.length}</div>
-                          <div className="text-sm text-gray-600">Récompenses réclamées</div>
+                          <div className="text-2xl font-bold text-green-600">{claimedRewards.filter(cr => isRewardValidated(cr.reward_id)).length}</div>
+                          <div className="text-sm text-gray-600">Récompenses validées</div>
+                        </div>
+                        <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border-2 border-orange-200 text-center">
+                          <div className="text-2xl font-bold text-orange-600">{claimedRewards.filter(cr => !isRewardValidated(cr.reward_id)).length}</div>
+                          <div className="text-sm text-gray-600">En attente de validation</div>
                         </div>
                         <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 text-center">
                           <div className="text-2xl font-bold text-purple-600">{child.points}</div>
                           <div className="text-sm text-gray-600">Points disponibles</div>
                           <div className="text-xs text-purple-500 mt-1">≈ {convertPointsToEuros(child.points)} €</div>
-                        </div>
-                        <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4 border-2 border-red-200 text-center">
-                          <div className="text-2xl font-bold text-red-600">
-                            {rewards.filter(r => child.points >= r.cost).length}
-                          </div>
-                          <div className="text-sm text-gray-600">Accessibles maintenant</div>
                         </div>
                       </div>
 
@@ -674,6 +673,9 @@ export default function ChildDashboard() {
                                 const isClaimed = isRewardClaimed(reward.id);
                                 const canAfford = child.points >= reward.cost;
                                 const isClaiming = claiming === reward.id;
+                                
+                                // Ne pas afficher les récompenses déjà réclamées
+                                if (isClaimed) return null;
                                 
                                 return (
                                   <motion.div
@@ -769,24 +771,52 @@ export default function ChildDashboard() {
                                 Récompenses réclamées ({claimedRewards.length})
                               </h3>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {claimedRewards.map((rewardId) => {
-                                  const reward = rewards.find(r => r.id === rewardId);
+                                {claimedRewards.map((claimedReward) => {
+                                  const reward = rewards.find(r => r.id === claimedReward.reward_id);
                                   if (!reward) return null;
+                                  
+                                  const isValidated = isRewardValidated(reward.id);
                                   
                                   return (
                                     <motion.div
-                                      key={rewardId}
+                                      key={claimedReward.id}
                                       initial={{ opacity: 0, scale: 0.9 }}
                                       animate={{ opacity: 1, scale: 1 }}
-                                      className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200"
+                                      className={`rounded-xl p-4 border-2 ${
+                                        isValidated 
+                                          ? 'bg-gradient-to-br from-green-50 to-blue-50 border-green-200' 
+                                          : 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200'
+                                      }`}
                                     >
                                       <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-full bg-green-100 text-green-600">
-                                          <CheckCircleIcon className="w-4 h-4" />
+                                        <div className={`p-2 rounded-full ${
+                                          isValidated 
+                                            ? 'bg-green-100 text-green-600' 
+                                            : 'bg-orange-100 text-orange-600'
+                                        }`}>
+                                          {isValidated ? (
+                                            <CheckCircleIcon className="w-4 h-4" />
+                                          ) : (
+                                            <Clock className="w-4 h-4" />
+                                          )}
                                         </div>
                                         <div className="flex-1">
                                           <h4 className="font-semibold text-gray-800">{reward.label}</h4>
                                           <p className="text-sm text-gray-600">{reward.cost} points</p>
+                                          <div className="flex items-center gap-2 mt-1">
+                                            <Badge className={`text-xs ${
+                                              isValidated 
+                                                ? 'bg-green-100 text-green-700' 
+                                                : 'bg-orange-100 text-orange-700'
+                                            }`}>
+                                              {isValidated ? '✅ Validée' : '⏳ En attente'}
+                                            </Badge>
+                                            {isValidated && claimedReward.validated_at && (
+                                              <span className="text-xs text-green-600">
+                                                le {format(new Date(claimedReward.validated_at), 'dd/MM', { locale: fr })}
+                                              </span>
+                                            )}
+                                          </div>
                                         </div>
                                       </div>
                                     </motion.div>
@@ -1763,9 +1793,19 @@ export default function ChildDashboard() {
                 const piggyStats = getPiggyBankStats();
                 const totalAvailablePoints = child.points + piggyStats.currentBalance;
                 const affordableRewards = rewards.filter(r => totalAvailablePoints >= r.cost && !isRewardClaimed(r.id));
-                const totalUnclaimedRewards = rewards.filter(r => !isRewardClaimed(r.id));
+                const pendingValidation = claimedRewards.filter(cr => !isRewardValidated(cr.reward_id));
                 
-                if (affordableRewards.length > 0) {
+                if (pendingValidation.length > 0) {
+                  return (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-2 -right-2 bg-orange-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
+                    >
+                      {pendingValidation.length}
+                    </motion.div>
+                  );
+                } else if (affordableRewards.length > 0) {
                   return (
                     <motion.div 
                       initial={{ scale: 0 }}
@@ -1773,16 +1813,6 @@ export default function ChildDashboard() {
                       className="absolute -top-2 -right-2 bg-red-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
                     >
                       {affordableRewards.length}
-                    </motion.div>
-                  );
-                } else if (totalUnclaimedRewards.length > 0) {
-                  return (
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-2 -right-2 bg-orange-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold"
-                    >
-                      {totalUnclaimedRewards.length}
                     </motion.div>
                   );
                 }
@@ -1793,12 +1823,12 @@ export default function ChildDashboard() {
                   const piggyStats = getPiggyBankStats();
                   const totalAvailablePoints = child.points + piggyStats.currentBalance;
                   const affordableRewards = rewards.filter(r => totalAvailablePoints >= r.cost && !isRewardClaimed(r.id));
-                  const totalRewards = rewards.filter(r => !isRewardClaimed(r.id));
+                  const pendingValidation = claimedRewards.filter(cr => !isRewardValidated(cr.reward_id));
                   
-                  if (affordableRewards.length > 0) {
+                  if (pendingValidation.length > 0) {
+                    return `${pendingValidation.length} récompense${pendingValidation.length > 1 ? 's' : ''} en attente de validation`;
+                  } else if (affordableRewards.length > 0) {
                     return `${affordableRewards.length} récompense${affordableRewards.length > 1 ? 's' : ''} disponible${affordableRewards.length > 1 ? 's' : ''}`;
-                  } else if (totalRewards.length > 0) {
-                    return `${totalRewards.length} récompense${totalRewards.length > 1 ? 's' : ''} (points insuffisants)`;
                   } else {
                     return 'Aucune récompense disponible';
                   }

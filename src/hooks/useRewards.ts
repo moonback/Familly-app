@@ -26,19 +26,22 @@ interface ClaimedReward {
   child_id: string;
   reward_id: string;
   claimed_at: string;
+  is_validated: boolean;
+  validated_at?: string;
+  validated_by?: string;
   reward: Reward;
 }
 
 export function useRewards(child: Child | null, fetchChildData: () => void) {
   const [rewards, setRewards] = useState<Reward[]>([]);
-  const [claimedRewards, setClaimedRewards] = useState<string[]>([]);
+  const [claimedRewards, setClaimedRewards] = useState<ClaimedReward[]>([]);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
 
   useEffect(() => {
     if (child) {
       fetchRewards();
-      loadClaimedRewards();
+      fetchClaimedRewards();
     }
   }, [child]);
 
@@ -64,68 +67,37 @@ export function useRewards(child: Child | null, fetchChildData: () => void) {
     }
   };
 
-  const loadClaimedRewards = () => {
+  const fetchClaimedRewards = async () => {
     if (!child) return;
     
     try {
-      const stored = localStorage.getItem(`claimed_rewards_${child.id}`);
-      if (stored) {
-        const claimed = JSON.parse(stored) as string[];
-        setClaimedRewards(claimed);
-      }
+      const { data, error } = await supabase
+        .from('claimed_rewards')
+        .select(`
+          *,
+          reward:rewards (*)
+        `)
+        .eq('child_id', child.id)
+        .order('claimed_at', { ascending: false });
+
+      if (error) throw error;
+      setClaimedRewards(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des récompenses réclamées:', error);
       setClaimedRewards([]);
     }
   };
 
-  const saveClaimedRewards = (claimed: string[]) => {
-    if (!child) return;
-    
-    try {
-      localStorage.setItem(`claimed_rewards_${child.id}`, JSON.stringify(claimed));
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde des récompenses réclamées:', error);
-    }
-  };
-
   const claimReward = async (rewardId: string) => {
-    if (!child || claiming) return;
-
-    // Vérifier si la récompense a déjà été réclamée
-    if (claimedRewards.includes(rewardId)) {
-      toast({
-        title: 'Déjà réclamée',
-        description: "Tu as déjà réclamé cette récompense !",
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setClaiming(rewardId);
+    if (!child) return;
 
     try {
+      setClaiming(rewardId);
       const reward = rewards.find(r => r.id === rewardId);
-      if (!reward) {
-        throw new Error('Récompense non trouvée');
-      }
+      if (!reward) throw new Error('Récompense non trouvée');
 
-      // Récupérer le solde de la tirelire pour le calcul total
-      const { data: piggyData } = await supabase
-        .from('piggy_bank_transactions')
-        .select('*')
-        .eq('child_id', child.id);
-
-      const piggyStats = {
-        totalSavings: piggyData?.filter(t => t.type === 'savings').reduce((sum, t) => sum + t.points, 0) || 0,
-        totalSpending: piggyData?.filter(t => t.type === 'spending').reduce((sum, t) => sum + t.points, 0) || 0,
-        totalDonations: piggyData?.filter(t => t.type === 'donation').reduce((sum, t) => sum + t.points, 0) || 0
-      };
-      
-      const piggyBalance = piggyStats.totalSavings - piggyStats.totalSpending - piggyStats.totalDonations;
-      const totalAvailablePoints = child.points + piggyBalance;
-
-      if (totalAvailablePoints < reward.cost) {
+      // Vérifier si l'enfant a assez de points
+      if (child.points < reward.cost) {
         toast({
           title: 'Points insuffisants',
           description: "Tu n'as pas assez de points pour cette récompense",
@@ -134,12 +106,19 @@ export function useRewards(child: Child | null, fetchChildData: () => void) {
         return;
       }
 
-      // Calculer combien de points utiliser de chaque source
-      let pointsFromWallet = Math.min(child.points, reward.cost);
-      let pointsFromPiggy = reward.cost - pointsFromWallet;
+      // Créer l'entrée dans claimed_rewards
+      const { error: claimError } = await supabase
+        .from('claimed_rewards')
+        .insert([{
+          child_id: child.id,
+          reward_id: rewardId,
+          claimed_at: new Date().toISOString()
+        }]);
 
-      // Mettre à jour les points de l'enfant
-      const newWalletPoints = child.points - pointsFromWallet;
+      if (claimError) throw claimError;
+
+      // Déduire les points de l'enfant
+      const newWalletPoints = child.points - reward.cost;
       const { error: updateError } = await supabase
         .from('children')
         .update({ points: newWalletPoints })
@@ -147,42 +126,28 @@ export function useRewards(child: Child | null, fetchChildData: () => void) {
 
       if (updateError) throw updateError;
 
-      // Si on utilise des points épargnés, créer une transaction de dépense
-      if (pointsFromPiggy > 0) {
-        const { error: piggyError } = await supabase
-          .from('piggy_bank_transactions')
-          .insert([{
-            child_id: child.id,
-            type: 'spending',
-            points: pointsFromPiggy,
-            created_at: new Date().toISOString()
-          }]);
+      // Ajouter à l'historique des points
+      const { error: historyError } = await supabase
+        .from('points_history')
+        .insert([{
+          child_id: child.id,
+          user_id: child.user_id,
+          points: -reward.cost,
+          reason: `Réclamation de récompense: ${reward.label}`,
+          reward_id: rewardId,
+          created_at: new Date().toISOString()
+        }]);
 
-        if (piggyError) throw piggyError;
-      }
-
-      // Marquer comme réclamée
-      const newClaimedRewards = [...claimedRewards, rewardId];
-      setClaimedRewards(newClaimedRewards);
-      saveClaimedRewards(newClaimedRewards);
-
-      // Message de confirmation avec détails
-      let message = `Tu as réclamé "${reward.label}" !`;
-      if (pointsFromWallet > 0 && pointsFromPiggy > 0) {
-        message += ` (${pointsFromWallet} points disponibles + ${pointsFromPiggy} points épargnés)`;
-      } else if (pointsFromWallet > 0) {
-        message += ` (${pointsFromWallet} points disponibles)`;
-      } else {
-        message += ` (${pointsFromPiggy} points épargnés)`;
-      }
+      if (historyError) throw historyError;
 
       toast({
         title: '🎉 Récompense réclamée !',
-        description: message,
+        description: `Tu as réclamé "${reward.label}" ! Demande à tes parents de la valider.`,
       });
 
       // Mettre à jour les données
       fetchChildData();
+      fetchClaimedRewards();
     } catch (error) {
       console.error('Erreur lors de la réclamation:', error);
       toast({
@@ -196,63 +161,43 @@ export function useRewards(child: Child | null, fetchChildData: () => void) {
   };
 
   const isRewardClaimed = (rewardId: string) => {
-    return claimedRewards.includes(rewardId);
+    return claimedRewards.some(cr => cr.reward_id === rewardId);
   };
 
-  // Statistiques des récompenses
+  const isRewardValidated = (rewardId: string) => {
+    const claimedReward = claimedRewards.find(cr => cr.reward_id === rewardId);
+    return claimedReward?.is_validated || false;
+  };
+
   const getRewardStats = () => {
     const totalRewards = rewards.length;
     const claimedCount = claimedRewards.length;
-    const availableCount = totalRewards - claimedCount;
-    const affordableCount = rewards.filter(r => child && child.points >= r.cost && !claimedRewards.includes(r.id)).length;
-    const totalSpent = claimedRewards.reduce((total, rewardId) => {
-      const reward = rewards.find(r => r.id === rewardId);
-      return total + (reward?.cost || 0);
-    }, 0);
+    const validatedCount = claimedRewards.filter(cr => cr.is_validated).length;
+    const pendingCount = claimedCount - validatedCount;
 
     return {
       total: totalRewards,
       claimed: claimedCount,
-      available: availableCount,
-      affordable: affordableCount,
-      totalSpent
+      validated: validatedCount,
+      pending: pendingCount
     };
   };
 
-  const getNextReward = () => {
-    if (!child) return null;
-    
-    const affordableRewards = rewards.filter(r => 
-      child.points >= r.cost && !claimedRewards.includes(r.id)
-    );
-    
-    return affordableRewards.length > 0 ? affordableRewards[0] : null;
-  };
-
   const getProgressToNextReward = () => {
-    if (!child) return { progress: 0, pointsNeeded: 0, nextReward: null };
-    
-    const affordableRewards = rewards.filter(r => 
-      child.points >= r.cost && !claimedRewards.includes(r.id)
-    );
-    
-    if (affordableRewards.length > 0) {
-      return { progress: 100, pointsNeeded: 0, nextReward: affordableRewards[0] };
-    }
-    
-    const unclaimedRewards = rewards.filter(r => !claimedRewards.includes(r.id));
+    const unclaimedRewards = rewards.filter(r => !isRewardClaimed(r.id));
     if (unclaimedRewards.length === 0) {
       return { progress: 100, pointsNeeded: 0, nextReward: null };
     }
-    
-    const nextReward = unclaimedRewards.reduce((min, reward) => 
-      reward.cost < min.cost ? reward : min
-    );
-    
-    const progress = Math.min((child.points / nextReward.cost) * 100, 100);
-    const pointsNeeded = Math.max(0, nextReward.cost - child.points);
-    
-    return { progress, pointsNeeded, nextReward };
+
+    const nextReward = unclaimedRewards[0];
+    const progress = Math.min((child?.points || 0) / nextReward.cost * 100, 100);
+    const pointsNeeded = Math.max(0, nextReward.cost - (child?.points || 0));
+
+    return {
+      progress,
+      pointsNeeded,
+      nextReward
+    };
   };
 
   return {
@@ -262,8 +207,9 @@ export function useRewards(child: Child | null, fetchChildData: () => void) {
     claiming,
     claimReward,
     isRewardClaimed,
+    isRewardValidated,
     getRewardStats,
-    getNextReward,
-    getProgressToNextReward
+    getProgressToNextReward,
+    fetchClaimedRewards
   };
 } 

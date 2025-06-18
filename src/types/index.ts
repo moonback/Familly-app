@@ -99,6 +99,9 @@ export interface ChildRewardClaimed {
   reward_id: string;
   claimed_at: string;
   created_at: string;
+  is_validated: boolean;
+  validated_at?: string;
+  validated_by?: string;
 }
 
 export interface DailyRiddle {

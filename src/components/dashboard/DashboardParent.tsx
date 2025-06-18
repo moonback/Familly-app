@@ -55,8 +55,9 @@ import { ChildrenPerformanceTable } from './ChildrenPerformanceTable';
 import { RecentActivities } from './RecentActivities';
 import { PiggyBankChart } from './PiggyBankChart';
 import { ManagementCard } from './ManagementCard';
+import { RewardsValidationManager } from '@/components/rewards/rewards-validation-manager';
 
-type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | 'shop' | 'penalties' | null;
+type View = 'children' | 'tasks' | 'rules' | 'rewards' | 'riddles' | 'shop' | 'penalties' | 'rewards-validation' | null;
 type Period = 'day' | 'week' | 'month';
 
 interface DashboardStats {
@@ -412,6 +413,18 @@ export const DashboardParent = () => {
       borderColor: 'border-gray-200',
       buttonText: 'Gérer',
       accent: 'bg-red-100'
+    },
+    {
+      id: 'rewards-validation',
+      title: 'Gérer les Validations de Récompenses',
+      description: 'Validez les récompenses des enfants.',
+      icon: CheckCircle,
+      color: 'text-emerald-500',
+      hoverColor: 'hover:bg-emerald-50',
+      bgColor: 'bg-white',
+      borderColor: 'border-gray-200',
+      buttonText: 'Gérer',
+      accent: 'bg-emerald-100'
     }
   ];
 
@@ -756,6 +769,34 @@ export const DashboardParent = () => {
               </CardHeader>
               <CardContent className="p-6">
                 <PenaltyManager />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {currentView === 'rewards-validation' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="bg-white/90 backdrop-blur-xl shadow-xl border-0 rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl font-bold text-gray-800">Gestion des Validations de Récompenses</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCurrentView(null)}
+                    className="hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <RewardsValidationManager />
               </CardContent>
             </Card>
           </motion.div>
