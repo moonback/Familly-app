@@ -614,7 +614,7 @@ export default function ChildDashboard() {
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
-                          <div className="text-2xl font-bold text-yellow-600">{rewards.filter(r => !isRewardClaimed(r.id)).length}</div>
+                          <div className="text-2xl font-bold text-yellow-600">{rewards.filter(r => !isRewardClaimed(r.id) && child.points >= r.cost).length}</div>
                           <div className="text-sm text-gray-600">Récompenses disponibles</div>
                         </div>
                         <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
