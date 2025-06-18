@@ -150,7 +150,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
               </div>
               <div>
                 <DialogTitle className="text-xl font-bold">
-                  Assistant Familial
+                  Assistant Personnel
                 </DialogTitle>
                 <p className="text-sm text-white/80">
                   {childName ? decodeURIComponent(childName) : ''}
