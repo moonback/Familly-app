@@ -39,7 +39,8 @@ import {
   PaletteIcon,
   CameraIcon,
   BikeIcon,
-  
+  Plus,
+  Minus,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
@@ -52,6 +53,7 @@ import { useRewards } from '@/hooks/useRewards';
 import { useRiddles } from '@/hooks/useRiddles';
 import { useStreak } from '@/hooks/useStreak';
 import { usePointsHistory } from '@/hooks/usePointsHistory';
+import { usePiggyBank } from '@/hooks/usePiggyBank';
 
 interface Child {
   id: string;
@@ -111,6 +113,8 @@ export default function ChildDashboard() {
   const [selectedShopItem, setSelectedShopItem] = useState<ShopItem | null>(null);
   const [showPiggyDialog, setShowPiggyDialog] = useState(false);
   const [piggyAmount, setPiggyAmount] = useState('');
+  const [showPiggyWithdrawDialog, setShowPiggyWithdrawDialog] = useState(false);
+  const [piggyWithdrawAmount, setPiggyWithdrawAmount] = useState('');
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [shopLoading, setShopLoading] = useState(true);
 
@@ -164,6 +168,7 @@ export default function ChildDashboard() {
   const { currentRiddle, riddleSolved, showSuccess, hintPurchased, hintText, submitRiddleAnswer, purchaseHint } = useRiddles(child, fetchChildData);
   const { streak } = useStreak(child);
   const { pointsHistory } = usePointsHistory(child);
+  const { transactions: piggyTransactions, loading: piggyLoading, depositing, depositPoints, withdrawPoints, getPiggyBankStats } = usePiggyBank(child, fetchChildData);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -202,7 +207,29 @@ export default function ChildDashboard() {
   const handleShopPurchase = async () => {
     if (selectedShopItem && child) {
       try {
-        const { error } = await supabase
+        const piggyStats = getPiggyBankStats();
+        const totalAvailablePoints = child.points + piggyStats.currentBalance;
+        
+        if (totalAvailablePoints < selectedShopItem.price) {
+          toast({
+            title: 'Points insuffisants',
+            description: "Tu n'as pas assez de points pour cet achat",
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Calculer combien de points utiliser de chaque source
+        let pointsFromWallet = Math.min(child.points, selectedShopItem.price);
+        let pointsFromPiggy = selectedShopItem.price - pointsFromWallet;
+
+        // Si on n'a pas assez de points disponibles, utiliser plus de points épargnés
+        if (pointsFromWallet < selectedShopItem.price) {
+          pointsFromPiggy = selectedShopItem.price - pointsFromWallet;
+        }
+
+        // Créer l'achat
+        const { error: purchaseError } = await supabase
           .from('purchases')
           .insert([{
             child_id: child.id,
@@ -210,25 +237,51 @@ export default function ChildDashboard() {
             purchased_at: new Date().toISOString()
           }]);
 
-        if (error) throw error;
+        if (purchaseError) throw purchaseError;
 
         // Mettre à jour les points de l'enfant
+        const newWalletPoints = child.points - pointsFromWallet;
         const { error: updateError } = await supabase
           .from('children')
-          .update({ points: child.points - selectedShopItem.price })
+          .update({ points: newWalletPoints })
           .eq('id', child.id);
 
         if (updateError) throw updateError;
 
+        // Si on utilise des points épargnés, créer une transaction de dépense
+        if (pointsFromPiggy > 0) {
+          const { error: piggyError } = await supabase
+            .from('piggy_bank_transactions')
+            .insert([{
+              child_id: child.id,
+              type: 'spending',
+              points: pointsFromPiggy,
+              created_at: new Date().toISOString()
+            }]);
+
+          if (piggyError) throw piggyError;
+        }
+
+        // Message de confirmation avec détails
+        let message = `Tu as acheté ${selectedShopItem.name} !`;
+        if (pointsFromWallet > 0 && pointsFromPiggy > 0) {
+          message += ` (${pointsFromWallet} points disponibles + ${pointsFromPiggy} points épargnés)`;
+        } else if (pointsFromWallet > 0) {
+          message += ` (${pointsFromWallet} points disponibles)`;
+        } else {
+          message += ` (${pointsFromPiggy} points épargnés)`;
+        }
+
         toast({
           title: 'Achat réussi !',
-          description: `Tu as acheté ${selectedShopItem.name} !`,
+          description: message,
         });
 
         setShowShopDialog(false);
         setSelectedShopItem(null);
         fetchChildData();
       } catch (error) {
+        console.error('Erreur lors de l\'achat:', error);
         toast({
           title: 'Erreur',
           description: "Impossible d'effectuer l'achat",
@@ -241,42 +294,21 @@ export default function ChildDashboard() {
   const handlePiggyDeposit = async () => {
     if (piggyAmount && child) {
       const amount = parseInt(piggyAmount);
-      if (amount > 0 && amount <= child.points) {
-        try {
-          const { error } = await supabase
-            .from('piggy_bank_transactions')
-            .insert([{
-              child_id: child.id,
-              amount: amount,
-              transaction_type: 'deposit',
-              created_at: new Date().toISOString()
-            }]);
+      const success = await depositPoints(amount);
+      if (success) {
+        setShowPiggyDialog(false);
+        setPiggyAmount('');
+      }
+    }
+  };
 
-          if (error) throw error;
-
-          // Mettre à jour les points de l'enfant
-          const { error: updateError } = await supabase
-            .from('children')
-            .update({ points: child.points - amount })
-            .eq('id', child.id);
-
-          if (updateError) throw updateError;
-
-          toast({
-            title: 'Dépôt réussi !',
-            description: `${amount} points ajoutés à ta tirelire !`,
-          });
-
-          setShowPiggyDialog(false);
-          setPiggyAmount('');
-          fetchChildData();
-        } catch (error) {
-          toast({
-            title: 'Erreur',
-            description: "Impossible d'effectuer le dépôt",
-            variant: 'destructive',
-          });
-        }
+  const handlePiggyWithdraw = async () => {
+    if (piggyWithdrawAmount && child) {
+      const amount = parseInt(piggyWithdrawAmount);
+      const success = await withdrawPoints(amount);
+      if (success) {
+        setShowPiggyWithdrawDialog(false);
+        setPiggyWithdrawAmount('');
       }
     }
   };
@@ -301,7 +333,7 @@ export default function ChildDashboard() {
     }
   };
 
-  if (loading || tasksLoading) {
+  if (loading || tasksLoading || piggyLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 to-pink-100">
         <div className="text-center">
@@ -767,54 +799,118 @@ export default function ChildDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {shopLoading ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {Array.from({ length: 3 }).map((_, index) => (
-                          <div key={index} className="bg-gray-100 rounded-2xl p-6 animate-pulse">
-                            <div className="h-8 bg-gray-200 rounded mb-4"></div>
-                            <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                            <div className="h-10 bg-gray-200 rounded"></div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : shopItems.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {shopItems.map((item) => (
-                          <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-6 border-2 border-green-200 shadow-lg"
-                          >
-                            <div className="flex items-center justify-between mb-4">
-                              <ShoppingCartIcon className="w-8 h-8 text-green-600" />
-                              <Badge className="bg-green-100 text-green-800">
-                                {item.price} points
-                              </Badge>
+                    {(() => {
+                      const piggyStats = getPiggyBankStats();
+                      const totalAvailablePoints = child.points + piggyStats.currentBalance;
+                      
+                      return (
+                        <div className="space-y-6">
+                          {/* Informations sur les points */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
+                              <div className="text-2xl font-bold text-yellow-600">{child.points}</div>
+                              <div className="text-sm text-gray-600">Points disponibles</div>
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-800 mb-2">{item.name}</h3>
-                            <p className="text-gray-600 mb-4">Article disponible en boutique</p>
-                            <Button
-                              onClick={() => {
-                                setSelectedShopItem(item);
-                                setShowShopDialog(true);
-                              }}
-                              disabled={child.points < item.price}
-                              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
-                            >
-                              <ShoppingCartIcon className="w-4 h-4 mr-2" />
-                              {child.points >= item.price ? 'Acheter' : 'Points insuffisants'}
-                            </Button>
-                          </motion.div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12">
-                        <div className="text-6xl mb-4">🛒</div>
-                        <h3 className="text-xl font-semibold text-gray-800 mb-2">Boutique vide !</h3>
-                        <p className="text-gray-600">Demande à tes parents d'ajouter des articles à la boutique.</p>
-                      </div>
-                    )}
+                            <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
+                              <div className="text-2xl font-bold text-green-600">{piggyStats.currentBalance}</div>
+                              <div className="text-sm text-gray-600">Points épargnés</div>
+                            </div>
+                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 text-center">
+                              <div className="text-2xl font-bold text-purple-600">{totalAvailablePoints}</div>
+                              <div className="text-sm text-gray-600">Total disponible</div>
+                            </div>
+                          </div>
+
+                          {shopLoading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {Array.from({ length: 3 }).map((_, index) => (
+                                <div key={index} className="bg-gray-100 rounded-2xl p-6 animate-pulse">
+                                  <div className="h-8 bg-gray-200 rounded mb-4"></div>
+                                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                                  <div className="h-10 bg-gray-200 rounded"></div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : shopItems.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {shopItems.map((item) => {
+                                const canAffordWithPoints = child.points >= item.price;
+                                const canAffordWithPiggy = piggyStats.currentBalance >= item.price;
+                                const canAffordTotal = totalAvailablePoints >= item.price;
+                                
+                                return (
+                                  <motion.div
+                                    key={item.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-6 border-2 border-green-200 shadow-lg"
+                                  >
+                                    <div className="flex items-center justify-between mb-4">
+                                      <ShoppingCartIcon className="w-8 h-8 text-green-600" />
+                                      <Badge className="bg-green-100 text-green-800">
+                                        {item.price} points
+                                      </Badge>
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">{item.name}</h3>
+                                    <p className="text-gray-600 mb-4">Article disponible en boutique</p>
+                                    
+                                    {/* Indicateur de source de points */}
+                                    {canAffordTotal && (
+                                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <p className="text-sm text-blue-700 font-medium mb-1">Paiement possible avec :</p>
+                                        <div className="space-y-1">
+                                          {canAffordWithPoints && (
+                                            <div className="flex items-center gap-2 text-sm">
+                                              <StarIcon className="w-4 h-4 text-yellow-600" />
+                                              <span>Points disponibles ({child.points})</span>
+                                            </div>
+                                          )}
+                                          {canAffordWithPiggy && (
+                                            <div className="flex items-center gap-2 text-sm">
+                                              <PiggyBankIcon className="w-4 h-4 text-green-600" />
+                                              <span>Points épargnés ({piggyStats.currentBalance})</span>
+                                            </div>
+                                          )}
+                                          {!canAffordWithPoints && !canAffordWithPiggy && (
+                                            <div className="flex items-center gap-2 text-sm">
+                                              <span className="text-purple-600">Combinaison des deux sources</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    <Button
+                                      onClick={() => {
+                                        setSelectedShopItem(item);
+                                        setShowShopDialog(true);
+                                      }}
+                                      disabled={!canAffordTotal}
+                                      className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
+                                    >
+                                      <ShoppingCartIcon className="w-4 h-4 mr-2" />
+                                      {canAffordTotal ? 'Acheter' : 'Points insuffisants'}
+                                    </Button>
+                                    
+                                    {!canAffordTotal && (
+                                      <div className="text-xs text-gray-500 text-center mt-2">
+                                        Il te faut {item.price - totalAvailablePoints} points de plus
+                                      </div>
+                                    )}
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="text-center py-12">
+                              <div className="text-6xl mb-4">🛒</div>
+                              <h3 className="text-xl font-semibold text-gray-800 mb-2">Boutique vide !</h3>
+                              <p className="text-gray-600">Demande à tes parents d'ajouter des articles à la boutique.</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </div>
@@ -831,52 +927,205 @@ export default function ChildDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center mb-6">
-                      <div className="text-6xl mb-4">🐷</div>
-                      <h3 className="text-2xl font-bold text-gray-800 mb-2">Épargne tes points !</h3>
-                      <p className="text-gray-600">Garde tes points pour des achats plus importants</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border-2 border-orange-200">
-                        <h4 className="text-lg font-semibold text-gray-800 mb-4">Déposer des points</h4>
-                        <div className="space-y-4">
+                    {(() => {
+                      const stats = getPiggyBankStats();
+                      return (
+                        <div className="space-y-6">
+                          {/* Statistiques principales */}
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border-2 border-orange-200 text-center">
+                              <div className="text-2xl font-bold text-orange-600">{stats.currentBalance}</div>
+                              <div className="text-sm text-gray-600">Solde actuel</div>
+                            </div>
+                            <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
+                              <div className="text-2xl font-bold text-green-600">{stats.totalSavings}</div>
+                              <div className="text-sm text-gray-600">Total épargné</div>
+                            </div>
+                            <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4 border-2 border-red-200 text-center">
+                              <div className="text-2xl font-bold text-red-600">{stats.totalSpending}</div>
+                              <div className="text-sm text-gray-600">Total dépensé</div>
+                            </div>
+                            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-200 text-center">
+                              <div className="text-2xl font-bold text-blue-600">{stats.transactionCount}</div>
+                              <div className="text-sm text-gray-600">Transactions</div>
+                            </div>
+                          </div>
+
+                          {/* Section de dépôt */}
+                          <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border-2 border-orange-200">
+                            <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                              <PiggyBankIcon className="w-5 h-5 text-orange-600" />
+                              Déposer des points
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="piggy-amount">Montant à déposer</Label>
+                                <Input
+                                  id="piggy-amount"
+                                  type="number"
+                                  value={piggyAmount}
+                                  onChange={(e) => setPiggyAmount(e.target.value)}
+                                  placeholder="Points à déposer"
+                                  max={child.points}
+                                  disabled={depositing}
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Points disponibles : {child.points}
+                                </p>
+                              </div>
+                              <div className="flex items-end">
+                                <Button
+                                  onClick={() => setShowPiggyDialog(true)}
+                                  disabled={!piggyAmount || parseInt(piggyAmount) <= 0 || parseInt(piggyAmount) > child.points || depositing}
+                                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+                                >
+                                  {depositing ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                      Dépôt en cours...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <PiggyBankIcon className="w-4 h-4 mr-2" />
+                                      Déposer
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Section de retrait */}
+                          {(() => {
+                            const stats = getPiggyBankStats();
+                            if (stats.currentBalance > 0) {
+                              return (
+                                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border-2 border-blue-200">
+                                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                                    <Minus className="w-5 h-5 text-blue-600" />
+                                    Retirer des points
+                                  </h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <Label htmlFor="piggy-withdraw-amount">Montant à retirer</Label>
+                                      <Input
+                                        id="piggy-withdraw-amount"
+                                        type="number"
+                                        value={piggyWithdrawAmount}
+                                        onChange={(e) => setPiggyWithdrawAmount(e.target.value)}
+                                        placeholder="Points à retirer"
+                                        max={stats.currentBalance}
+                                        disabled={depositing}
+                                      />
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Solde épargné : {stats.currentBalance}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-end">
+                                      <Button
+                                        onClick={() => setShowPiggyWithdrawDialog(true)}
+                                        disabled={!piggyWithdrawAmount || parseInt(piggyWithdrawAmount) <= 0 || parseInt(piggyWithdrawAmount) > stats.currentBalance || depositing}
+                                        className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+                                      >
+                                        {depositing ? (
+                                          <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                            Retrait en cours...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Minus className="w-4 h-4 mr-2" />
+                                            Retirer
+                                          </>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+
+                          {/* Historique des transactions */}
                           <div>
-                            <Label htmlFor="piggy-amount">Montant à déposer</Label>
-                            <Input
-                              id="piggy-amount"
-                              type="number"
-                              value={piggyAmount}
-                              onChange={(e) => setPiggyAmount(e.target.value)}
-                              placeholder="Points à déposer"
-                              max={child.points}
-                            />
+                            <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                              <CalendarIcon className="w-5 h-5 text-purple-600" />
+                              Historique des transactions
+                            </h4>
+                            {piggyLoading ? (
+                              <div className="space-y-4">
+                                {Array.from({ length: 3 }).map((_, index) => (
+                                  <div key={index} className="bg-gray-100 rounded-xl p-4 animate-pulse">
+                                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : piggyTransactions.length > 0 ? (
+                              <div className="space-y-3">
+                                {piggyTransactions.map((transaction) => (
+                                  <motion.div
+                                    key={transaction.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className={`flex items-center justify-between p-4 rounded-xl border-2 ${
+                                      transaction.type === 'savings' 
+                                        ? 'bg-green-50 border-green-200' 
+                                        : transaction.type === 'spending'
+                                          ? 'bg-red-50 border-red-200'
+                                          : 'bg-blue-50 border-blue-200'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className={`p-2 rounded-full ${
+                                        transaction.type === 'savings' 
+                                          ? 'bg-green-100 text-green-600' 
+                                          : transaction.type === 'spending'
+                                            ? 'bg-red-100 text-red-600'
+                                            : 'bg-blue-100 text-blue-600'
+                                      }`}>
+                                        {transaction.type === 'savings' ? (
+                                          <Plus className="w-4 h-4" />
+                                        ) : transaction.type === 'spending' ? (
+                                          <Minus className="w-4 h-4" />
+                                        ) : (
+                                          <HeartIcon className="w-4 h-4" />
+                                        )}
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold text-gray-800">
+                                          {transaction.type === 'savings' ? 'Épargne' : 
+                                           transaction.type === 'spending' ? 'Dépense' : 'Don'}
+                                        </p>
+                                        <p className="text-sm text-gray-600">
+                                          {format(new Date(transaction.created_at), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <span className={`font-bold text-lg ${
+                                      transaction.type === 'savings' 
+                                        ? 'text-green-600' 
+                                        : transaction.type === 'spending'
+                                          ? 'text-red-600'
+                                          : 'text-blue-600'
+                                    }`}>
+                                      {transaction.type === 'savings' ? '+' : '-'}{transaction.points} pts
+                                    </span>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center py-8">
+                                <div className="text-6xl mb-4">🐷</div>
+                                <h3 className="text-xl font-semibold text-gray-800 mb-2">Aucune transaction</h3>
+                                <p className="text-gray-600">Commence à épargner tes points !</p>
+                              </div>
+                            )}
                           </div>
-                          <Button
-                            onClick={() => setShowPiggyDialog(true)}
-                            disabled={!piggyAmount || parseInt(piggyAmount) <= 0 || parseInt(piggyAmount) > child.points}
-                            className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
-                          >
-                            <PiggyBankIcon className="w-4 h-4 mr-2" />
-                            Déposer
-                          </Button>
                         </div>
-                      </div>
-                      
-                      <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border-2 border-blue-200">
-                        <h4 className="text-lg font-semibold text-gray-800 mb-4">Statistiques</h4>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Points disponibles :</span>
-                            <span className="font-bold text-blue-600">{child.points}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Total épargné :</span>
-                            <span className="font-bold text-purple-600">0</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </div>
@@ -1101,32 +1350,85 @@ export default function ChildDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {selectedShopItem && (
-              <>
-                <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200">
-                  <h3 className="font-semibold text-gray-800 mb-2">{selectedShopItem.name}</h3>
-                  <p className="text-gray-600 mb-2">Article disponible en boutique</p>
-                  <div className="flex items-center gap-2">
-                    <StarIcon className="w-4 h-4 text-yellow-600" />
-                    <span className="font-bold text-yellow-600">{selectedShopItem.price} points</span>
+            {selectedShopItem && (() => {
+              const piggyStats = getPiggyBankStats();
+              const totalAvailablePoints = child.points + piggyStats.currentBalance;
+              const pointsFromWallet = Math.min(child.points, selectedShopItem.price);
+              const pointsFromPiggy = selectedShopItem.price - pointsFromWallet;
+              
+              return (
+                <>
+                  <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200">
+                    <h3 className="font-semibold text-gray-800 mb-2">{selectedShopItem.name}</h3>
+                    <p className="text-gray-600 mb-2">Article disponible en boutique</p>
+                    <div className="flex items-center gap-2 mb-3">
+                      <StarIcon className="w-4 h-4 text-yellow-600" />
+                      <span className="font-bold text-yellow-600">{selectedShopItem.price} points</span>
+                    </div>
+                    
+                    {/* Détails de l'utilisation des points */}
+                    <div className="bg-white/50 rounded-lg p-3 border border-green-200">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Répartition du paiement :</p>
+                      <div className="space-y-1">
+                        {pointsFromWallet > 0 && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="flex items-center gap-1">
+                              <StarIcon className="w-3 h-3 text-yellow-600" />
+                              Points disponibles
+                            </span>
+                            <span className="font-medium">{pointsFromWallet} pts</span>
+                          </div>
+                        )}
+                        {pointsFromPiggy > 0 && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="flex items-center gap-1">
+                              <PiggyBankIcon className="w-3 h-3 text-green-600" />
+                              Points épargnés
+                            </span>
+                            <span className="font-medium">{pointsFromPiggy} pts</span>
+                          </div>
+                        )}
+                        <div className="border-t border-green-200 pt-1 mt-1">
+                          <div className="flex items-center justify-between text-sm font-bold">
+                            <span>Total</span>
+                            <span>{selectedShopItem.price} pts</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleShopPurchase}
-                    className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
-                  >
-                    Acheter
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowShopDialog(false)}
-                  >
-                    Annuler
-                  </Button>
-                </div>
-              </>
-            )}
+                  
+                  {/* Avertissement si utilisation des points épargnés */}
+                  {pointsFromPiggy > 0 && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2 text-yellow-800">
+                        <PiggyBankIcon className="w-4 h-4" />
+                        <span className="text-sm font-medium">Attention</span>
+                      </div>
+                      <p className="text-sm text-yellow-700 mt-1">
+                        Cet achat utilisera {pointsFromPiggy} points de ta tirelire.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleShopPurchase}
+                      className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
+                    >
+                      <ShoppingCartIcon className="w-4 h-4 mr-2" />
+                      Confirmer l'achat
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowShopDialog(false)}
+                    >
+                      Annuler
+                    </Button>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </DialogContent>
       </Dialog>
@@ -1158,6 +1460,41 @@ export default function ChildDashboard() {
               <Button
                 variant="outline"
                 onClick={() => setShowPiggyDialog(false)}
+              >
+                Annuler
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialogue Tirelire */}
+      <Dialog open={showPiggyWithdrawDialog} onOpenChange={setShowPiggyWithdrawDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PiggyBankIcon className="w-5 h-5 text-orange-600" />
+              Confirmer le retrait
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border-2 border-orange-200">
+              <p className="text-gray-800 mb-2">Tu vas retirer :</p>
+              <div className="flex items-center gap-2">
+                <StarIcon className="w-4 h-4 text-yellow-600" />
+                <span className="font-bold text-yellow-600">{piggyWithdrawAmount} points</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handlePiggyWithdraw}
+                className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+              >
+                Confirmer
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowPiggyWithdrawDialog(false)}
               >
                 Annuler
               </Button>
