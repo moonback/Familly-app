@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -77,6 +77,8 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Charger l'historique et le nom du chatbot depuis le localStorage au montage
   useEffect(() => {
@@ -197,6 +199,13 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
       minute: '2-digit' 
     });
   };
+
+  // Scroll automatique en bas à chaque nouveau message ou loading
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, loading]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -353,6 +362,8 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
               </div>
             </motion.div>
           )}
+          {/* Ajout du ref pour le scroll automatique */}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Suggestions de questions rapides */}
