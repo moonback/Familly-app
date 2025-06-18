@@ -62,6 +62,7 @@ type Period = 'day' | 'week' | 'month';
 
 interface DashboardStats {
   totalPoints: number;
+  totalSavings: number;
   totalTasks: number;
   totalRewards: number;
   totalChildren: number;
@@ -102,6 +103,7 @@ export const DashboardParent = () => {
   const [period, setPeriod] = useState<Period>('week');
   const [stats, setStats] = useState<DashboardStats>({
     totalPoints: 0,
+    totalSavings: 0,
     totalTasks: 0,
     totalRewards: 0,
     totalChildren: 0,
@@ -201,6 +203,15 @@ export const DashboardParent = () => {
         ? Math.round((totalCompletedTasks / (totalCompletedTasks + totalPendingTasks)) * 100)
         : 100;
 
+      // Récupérer l'épargne totale (toutes les transactions de type 'savings' dans piggy_bank_transactions)
+      const { data: allPiggy } = await supabase
+        .from('piggy_bank_transactions')
+        .select('points, type')
+        .in('child_id', childrenStatsWithStreak.map(child => child.id));
+      const totalSavings = allPiggy
+        ? allPiggy.filter(e => e.type === 'savings').reduce((sum, e) => sum + (e.points > 0 ? e.points : 0), 0)
+        : 0;
+
       // Récupérer l'historique des transactions de la tirelire
       const { data: piggyHistory } = await supabase
         .from('piggy_bank_transactions')
@@ -241,6 +252,7 @@ export const DashboardParent = () => {
 
       setStats({
         totalPoints,
+        totalSavings,
         totalTasks: totalCompletedTasks + totalPendingTasks,
         totalRewards: availableRewardsCount || 0,
         totalChildren: childrenStatsWithStreak.length,
@@ -463,20 +475,19 @@ export const DashboardParent = () => {
 
   const renderStats = () => (
     <div className="space-y-8">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-        >
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">Aperçu des performances</h3>
-          <p className="text-gray-600">Suivez les progrès de votre famille en temps réel</p>
-        </motion.div>
-        
-        <motion.div 
-          className="flex items-center gap-4"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-        >
+      <div className="relative rounded-3xl bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 border border-purple-100 shadow-lg px-6 py-8 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="bg-gradient-to-br from-purple-400 to-pink-400 rounded-full p-4 shadow-md flex items-center justify-center">
+            <TrendingUp className="w-10 h-10 text-white drop-shadow" />
+          </div>
+          <div>
+            <h3 className="text-3xl font-extrabold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 bg-clip-text text-transparent mb-1 flex items-center gap-2">
+              Aperçu des performances
+            </h3>
+            <p className="text-gray-600 text-base font-medium">Suivez les progrès de votre famille en temps réel et encouragez chaque victoire !</p>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-4 md:ml-auto">
           <Select value={period} onValueChange={(value: Period) => setPeriod(value)}>
             <SelectTrigger className="w-[180px] bg-white/80 backdrop-blur-sm border-2 hover:bg-white transition-colors">
               <Calendar className="h-4 w-4 mr-2" />
@@ -488,7 +499,6 @@ export const DashboardParent = () => {
               <SelectItem value="month">30 derniers jours</SelectItem>
             </SelectContent>
           </Select>
-          
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -502,9 +512,8 @@ export const DashboardParent = () => {
               <RefreshCw className="h-4 w-4" />
             </Button>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
@@ -544,6 +553,18 @@ export const DashboardParent = () => {
           subtitle="gagnés par la famille"
           details={[
             { label: 'En Euros', value: parseFloat((stats.totalPoints / 100).toFixed(2)) }
+          ]}
+        />
+        <StatCard
+          title="Épargne Totale"
+          value={stats.totalSavings}
+          icon={<PiggyBankIcon className="h-6 w-6 text-white" />}
+          color="from-orange-400 to-pink-500"
+          isLoading={stats.isLoading}
+          trend={0}
+          subtitle="points actuellement épargnés (tirelires cumulées)"
+          details={[
+            { label: 'En Euros', value: parseFloat((stats.totalSavings / 100).toFixed(2)) }
           ]}
         />
       </div>
