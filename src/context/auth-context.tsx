@@ -29,6 +29,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           setUser(null);
         } else {
           setUser(session?.user || null);
+          
+          // Vérifier s'il y a un code parental temporaire à créer
+          if (session?.user) {
+            const tempParentCode = localStorage.getItem('temp_parent_code');
+            if (tempParentCode) {
+              try {
+                const { error: codeError } = await supabase
+                  .from('parent_codes')
+                  .insert({ user_id: session.user.id, code: tempParentCode });
+
+                if (codeError) {
+                  console.error('Erreur lors de la création du code parental:', codeError);
+                  toast({
+                    title: 'Attention',
+                    description: 'Votre compte a été créé mais il y a eu un problème avec le code parental. Vous pourrez le configurer plus tard.',
+                    variant: 'destructive',
+                  });
+                } else {
+                  toast({
+                    title: 'Code parental configuré !',
+                    description: 'Votre code parental a été créé avec succès.',
+                  });
+                }
+                localStorage.removeItem('temp_parent_code');
+              } catch (codeError) {
+                console.error('Erreur lors de la création du code parental:', codeError);
+                localStorage.removeItem('temp_parent_code');
+              }
+            }
+          }
         }
       } catch (error) {
         console.error('Erreur lors de la vérification de la session:', error);
@@ -52,6 +82,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           sessionStorage.clear();
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           setUser(session?.user || null);
+          
+          // Vérifier s'il y a un code parental temporaire à créer
+          if (session?.user) {
+            const tempParentCode = localStorage.getItem('temp_parent_code');
+            if (tempParentCode) {
+              try {
+                const { error: codeError } = await supabase
+                  .from('parent_codes')
+                  .insert({ user_id: session.user.id, code: tempParentCode });
+
+                if (codeError) {
+                  console.error('Erreur lors de la création du code parental:', codeError);
+                  toast({
+                    title: 'Attention',
+                    description: 'Votre compte a été créé mais il y a eu un problème avec le code parental. Vous pourrez le configurer plus tard.',
+                    variant: 'destructive',
+                  });
+                } else {
+                  toast({
+                    title: 'Code parental configuré !',
+                    description: 'Votre code parental a été créé avec succès.',
+                  });
+                }
+                localStorage.removeItem('temp_parent_code');
+              } catch (codeError) {
+                console.error('Erreur lors de la création du code parental:', codeError);
+                localStorage.removeItem('temp_parent_code');
+              }
+            }
+          }
         } else if (event === 'INITIAL_SESSION') {
           setUser(session?.user || null);
         }
@@ -96,18 +156,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       
       if (error) throw error;
       
-      toast({
-        title: 'Inscription réussie',
-        description: 'Veuillez vérifier votre email pour confirmer votre compte.',
-      });
       return { error: null };
     } catch (error: any) {
-      toast({
-        title: "Erreur d'inscription",
-        description: error.message,
-        variant: 'destructive',
-      });
-    return { error };
+      return { error };
     }
   };
 

@@ -5,23 +5,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff, Mail, Lock, UserPlus, LogIn } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Mail, Lock, UserPlus, LogIn, Shield } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
 export function AuthForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [parentCode, setParentCode] = useState('');
+  const [confirmParentCode, setConfirmParentCode] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showParentCode, setShowParentCode] = useState(false);
+  const [showConfirmParentCode, setShowConfirmParentCode] = useState(false);
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState<{
     email?: string;
     password?: string;
     confirmPassword?: string;
+    parentCode?: string;
+    confirmParentCode?: string;
   }>({});
 
   const { signIn, signUp } = useAuth();
@@ -54,6 +61,22 @@ export function AuthForm() {
       } else if (password !== confirmPassword) {
         errors.confirmPassword = 'Les mots de passe ne correspondent pas';
       }
+
+      // Validation code parental
+      if (!parentCode) {
+        errors.parentCode = 'Le code parental est requis';
+      } else if (parentCode.length !== 4) {
+        errors.parentCode = 'Le code parental doit contenir exactement 4 chiffres';
+      } else if (!/^\d+$/.test(parentCode)) {
+        errors.parentCode = 'Le code parental ne doit contenir que des chiffres';
+      }
+
+      // Validation confirmation code parental
+      if (!confirmParentCode) {
+        errors.confirmParentCode = 'La confirmation du code parental est requise';
+      } else if (parentCode !== confirmParentCode) {
+        errors.confirmParentCode = 'Les codes parentaux ne correspondent pas';
+      }
     }
 
     setValidationErrors(errors);
@@ -72,11 +95,27 @@ export function AuthForm() {
     
     try {
       if (isSignUp) {
-        await signUp(email, password);
-        toast({
-          title: 'Succès',
-          description: 'Votre compte a été créé avec succès',
-        });
+        console.log('Tentative d\'inscription avec code parental:', parentCode);
+        const result = await signUp(email, password);
+        
+        if (!result.error) {
+          // Stocker temporairement le code parental
+          localStorage.setItem('temp_parent_code', parentCode);
+          console.log('Code parental stocké temporairement:', parentCode);
+          
+          toast({
+            title: 'Compte créé avec succès !',
+            description: 'Votre compte a été créé. Vérifiez votre email pour confirmer votre compte. Votre code parental sera configuré automatiquement.',
+          });
+        } else {
+          console.error('Erreur lors de l\'inscription:', result.error);
+          setError(result.error.message || 'Erreur lors de la création du compte');
+          toast({
+            title: 'Erreur',
+            description: result.error.message || 'Erreur lors de la création du compte',
+            variant: 'destructive',
+          });
+        }
       } else {
         await signIn(email, password);
         toast({
@@ -85,6 +124,7 @@ export function AuthForm() {
         });
       }
     } catch (err) {
+      console.error('Erreur complète:', err);
       const errorMessage = err instanceof Error 
         ? err.message 
         : isSignUp 
@@ -108,6 +148,8 @@ export function AuthForm() {
     setValidationErrors({});
     setConfirmPassword('');
     setPassword('');
+    setParentCode('');
+    setConfirmParentCode('');
   };
 
   const getPasswordStrength = (pwd: string) => {
@@ -318,6 +360,115 @@ export function AuthForm() {
                   </motion.p>
               )}
             </div>
+          )}
+
+          {isSignUp && (
+            <>
+              <div className="grid gap-2">
+                <Label htmlFor="parentCode" className="text-gray-700">Code parental (4 chiffres)</Label>
+                <div className="relative">
+                  <Shield className="absolute left-3 top-3 h-4 w-4 text-purple-500" aria-hidden="true" />
+                  <Input
+                    id="parentCode"
+                    type={showParentCode ? 'text' : 'password'}
+                    placeholder="1234"
+                    className={`pl-10 pr-10 bg-white/50 backdrop-blur-sm border-2 ${
+                      validationErrors.parentCode ? 'border-red-500' : 'border-purple-100'
+                    } focus:border-purple-500 focus:ring-purple-500`}
+                    value={parentCode}
+                    onChange={(e) => {
+                      setParentCode(e.target.value);
+                      if (validationErrors.parentCode) {
+                        setValidationErrors(prev => ({ ...prev, parentCode: undefined }));
+                      }
+                    }}
+                    maxLength={4}
+                    aria-invalid={!!validationErrors.parentCode}
+                    aria-describedby={validationErrors.parentCode ? 'parent-code-error' : undefined}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowParentCode(!showParentCode)}
+                    aria-label={showParentCode ? 'Masquer le code parental' : 'Afficher le code parental'}
+                  >
+                    {showParentCode ? (
+                      <EyeOff className="h-4 w-4 text-purple-500" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-purple-500" aria-hidden="true" />
+                    )}
+                  </Button>
+                </div>
+                {validationErrors.parentCode && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    id="parent-code-error"
+                    className="text-sm text-red-500"
+                    role="alert"
+                  >
+                    {validationErrors.parentCode}
+                  </motion.p>
+                )}
+                <p className="text-xs text-gray-500">
+                  Ce code vous permettra de accéder aux fonctionnalités parentales
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="confirmParentCode" className="text-gray-700">Confirmer le code parental</Label>
+                <div className="relative">
+                  <Shield className="absolute left-3 top-3 h-4 w-4 text-purple-500" aria-hidden="true" />
+                  <Input
+                    id="confirmParentCode"
+                    type={showConfirmParentCode ? 'text' : 'password'}
+                    placeholder="1234"
+                    className={`pl-10 pr-10 bg-white/50 backdrop-blur-sm border-2 ${
+                      validationErrors.confirmParentCode ? 'border-red-500' : 'border-purple-100'
+                    } focus:border-purple-500 focus:ring-purple-500`}
+                    value={confirmParentCode}
+                    onChange={(e) => {
+                      setConfirmParentCode(e.target.value);
+                      if (validationErrors.confirmParentCode) {
+                        setValidationErrors(prev => ({ ...prev, confirmParentCode: undefined }));
+                      }
+                    }}
+                    maxLength={4}
+                    aria-invalid={!!validationErrors.confirmParentCode}
+                    aria-describedby={validationErrors.confirmParentCode ? 'confirm-parent-code-error' : undefined}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowConfirmParentCode(!showConfirmParentCode)}
+                    aria-label={showConfirmParentCode ? 'Masquer la confirmation du code parental' : 'Afficher la confirmation du code parental'}
+                  >
+                    {showConfirmParentCode ? (
+                      <EyeOff className="h-4 w-4 text-purple-500" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-purple-500" aria-hidden="true" />
+                    )}
+                  </Button>
+                </div>
+                {validationErrors.confirmParentCode && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    id="confirm-parent-code-error"
+                    className="text-sm text-red-500"
+                    role="alert"
+                  >
+                    {validationErrors.confirmParentCode}
+                  </motion.p>
+                )}
+              </div>
+            </>
           )}
 
           <Button 
