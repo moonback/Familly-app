@@ -25,10 +25,8 @@ const quickQuestions = [
   { text: "Combien de points ai-je ?", icon: "⭐", color: "from-yellow-400 to-orange-400" },
   { text: "Quelles sont mes missions ?", icon: "🎯", color: "from-blue-400 to-indigo-400" },
   { text: "Que puis-je acheter ?", icon: "🛒", color: "from-green-400 to-emerald-400" },
-  { text: "Comment va ma tirelire ?", icon: "🐷", color: "from-pink-400 to-rose-400" },
   { text: "Quelles récompenses puis-je avoir ?", icon: "🏆", color: "from-purple-400 to-violet-400" },
   { text: "Quelles règles dois-je respecter ?", icon: "📋", color: "from-red-400 to-pink-400" },
-  { text: "Qu'ai-je acheté récemment ?", icon: "📦", color: "from-indigo-400 to-purple-400" },
   { text: "Donne-moi des conseils !", icon: "💡", color: "from-cyan-400 to-blue-400" }
 ];
 
@@ -166,7 +164,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg flex flex-col h-[80vh] p-0 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 border-0 shadow-2xl">
+      <DialogContent className="max-w-[90%] flex flex-col h-[80vh] p-0 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 border-0 shadow-2xl">
         {/* Header avec gradient */}
         <DialogHeader className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white p-6 rounded-t-lg">
           <div className="flex items-center justify-between">
@@ -281,22 +279,34 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
             animate={{ opacity: 1, y: 0 }}
             className="px-6 pb-4"
           >
-            <p className="text-sm text-gray-600 mb-3 font-medium">💡 Questions rapides :</p>
+            <p className="text-xs text-gray-600 mb-2 font-medium">💡 Questions rapides :</p>
             <div className="grid grid-cols-2 gap-2">
-              {quickQuestions.map((question, index) => (
+              {quickQuestions.slice(0, 4).map((question, index) => (
                 <motion.button
                   key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.05 }}
                   onClick={() => handleQuickQuestion(question.text)}
                   disabled={loading}
-                  className={`p-3 rounded-xl text-left text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95 bg-gradient-to-r ${question.color} text-white shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`
+                    flex items-center gap-2 w-full
+                    p-2.5 rounded-lg font-medium text-sm
+                    bg-white border-2 border-transparent
+                    shadow hover:shadow-md
+                    transition-all duration-150
+                    hover:scale-105 active:scale-95
+                    ${question.color ? `bg-gradient-to-r ${question.color} text-white` : 'border-purple-200'}
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                  `}
+                  style={{
+                    boxShadow: question.color
+                      ? '0 2px 8px 0 rgba(180, 100, 255, 0.10)'
+                      : undefined,
+                  }}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{question.icon}</span>
-                    <span>{question.text}</span>
-                  </div>
+                  <span className="text-lg">{question.icon}</span>
+                  <span className="flex-1 text-left">{question.text}</span>
                 </motion.button>
               ))}
             </div>
