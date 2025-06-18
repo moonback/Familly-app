@@ -408,7 +408,7 @@ export default function ChildDashboard() {
             <div className="flex flex-wrap items-center gap-4 justify-center">
               <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
                 <StarIcon className="inline-block w-5 h-5 mr-2" />
-                {child.points} points
+                {child.points} points 
               </div>
               {/* Points épargnés */}
               <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
@@ -703,6 +703,7 @@ export default function ChildDashboard() {
                           <div className="flex items-center gap-2 text-yellow-600 font-bold">
                             <StarIcon className="w-4 h-4" />
                             {childTask.task.points_reward} points
+                            <span className="text-xs text-gray-500">(≈ {convertPointsToEuros(childTask.task.points_reward)} €)</span>
                           </div>
                           <div className="text-sm text-gray-500">
                             {format(new Date(childTask.due_date), 'dd/MM', { locale: fr })}
@@ -775,7 +776,7 @@ export default function ChildDashboard() {
                             </div>
                             <div className="mb-2">
                               <div className="text-sm text-gray-700 mb-1">
-                                {nextReward.label} ({nextReward.cost} points)
+                                {nextReward.label} ({nextReward.cost} points ≈ {convertPointsToEuros(nextReward.cost)} €)
                               </div>
                               <Progress value={progress} className="h-2" />
                             </div>
@@ -1008,6 +1009,7 @@ export default function ChildDashboard() {
                                         {item.price} points
                                       </Badge>
                                     </div>
+                                    <div className="text-xs text-gray-500 mb-2 text-center">≈ {convertPointsToEuros(item.price)} €</div>
                                     <h3 className="text-lg font-semibold text-gray-800 mb-2">{item.name}</h3>
                                     <p className="text-gray-600 mb-4">Article disponible en boutique</p>
                                     
@@ -1272,6 +1274,9 @@ export default function ChildDashboard() {
                                     }`}>
                                       {transaction.type === 'savings' ? '+' : '-'}{transaction.points} pts
                                     </span>
+                                    <div className="text-xs text-gray-500">
+                                      ≈ {convertPointsToEuros(transaction.points)} €
+                                    </div>
                                   </motion.div>
                                 ))}
                               </div>
@@ -1311,7 +1316,7 @@ export default function ChildDashboard() {
                             : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
                         }`}>
                           <h3 className="text-xl font-semibold text-gray-800 mb-4">{currentRiddle.question}</h3>
-                          <p className="text-gray-600 mb-4">Récompense : {currentRiddle.points} points</p>
+                          <p className="text-gray-600 mb-4">Récompense : {currentRiddle.points} points (≈ {convertPointsToEuros(currentRiddle.points)} €)</p>
                           
                           {/* Affichage de l'indice si acheté */}
                           {hintPurchased && !riddleSolved && (
@@ -1537,6 +1542,9 @@ export default function ChildDashboard() {
                                           <StarIcon className="w-4 h-4" />
                                           <span>{purchase.item?.price || 0} pts</span>
                                         </div>
+                                        <div className="text-xs text-gray-500">
+                                          ≈ {convertPointsToEuros(purchase.item?.price || 0)} €
+                                        </div>
                                         <p className="text-xs text-gray-500">
                                           Achat #{purchase.id.slice(0, 8)}
                                         </p>
@@ -1587,6 +1595,10 @@ export default function ChildDashboard() {
                                           <div className="flex justify-between text-sm">
                                             <span className="text-gray-600">Points :</span>
                                             <span className="font-medium text-green-600">{data.total}</span>
+                                          </div>
+                                          <div className="flex justify-between text-xs">
+                                            <span className="text-gray-500">Valeur :</span>
+                                            <span className="text-green-500">≈ {convertPointsToEuros(data.total)} €</span>
                                           </div>
                                         </div>
                                       </div>
@@ -1757,6 +1769,7 @@ export default function ChildDashboard() {
               <div className="flex items-center gap-2">
                 <StarIcon className="w-4 h-4 text-yellow-600" />
                 <span className="font-bold text-yellow-600">{piggyAmount} points</span>
+                <span className="text-sm text-gray-500">(≈ {convertPointsToEuros(parseInt(piggyAmount) || 0)} €)</span>
               </div>
             </div>
             <div className="flex gap-2">
@@ -1792,6 +1805,7 @@ export default function ChildDashboard() {
               <div className="flex items-center gap-2">
                 <StarIcon className="w-4 h-4 text-yellow-600" />
                 <span className="font-bold text-yellow-600">{piggyWithdrawAmount} points</span>
+                <span className="text-sm text-gray-500">(≈ {convertPointsToEuros(parseInt(piggyWithdrawAmount) || 0)} €)</span>
               </div>
             </div>
             <div className="flex gap-2">
