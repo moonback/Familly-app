@@ -561,14 +561,7 @@ export default function ChildDashboard() {
                 </div>
               </div>
               
-              <Button
-                variant="outline"
-                onClick={() => navigate('/')}
-                className="bg-white/50 hover:bg-white/80"
-              >
-                <HomeIcon className="w-4 h-4 mr-2" />
-                Accueil
-              </Button>
+              
             </div>
           </div>
         </div>
