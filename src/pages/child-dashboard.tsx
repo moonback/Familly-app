@@ -1780,6 +1780,40 @@ export default function ChildDashboard() {
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
               </div>
             </div>
+            {/* Récompenses validées */}
+            <div className="relative group">
+              <div 
+                className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                onClick={() => setActiveTab('rewards')}
+              >
+                <CheckCircleIcon className="w-6 h-6" />
+              </div>
+              {(() => {
+                const validatedRewards = claimedRewards.filter(cr => isRewardValidated(cr.reward_id));
+                
+                if (validatedRewards.length > 0) {
+                  return (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-2 -right-2 bg-green-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold"
+                    >
+                      {validatedRewards.length}
+                    </motion.div>
+                  );
+                }
+                return null;
+              })()}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                {(() => {
+                  const validatedRewards = claimedRewards.filter(cr => isRewardValidated(cr.reward_id));
+                  return validatedRewards.length > 0 
+                    ? `${validatedRewards.length} récompense${validatedRewards.length > 1 ? 's' : ''} validée${validatedRewards.length > 1 ? 's' : ''}`
+                    : 'Aucune récompense validée';
+                })()}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+              </div>
+            </div>
 
             {/* Récompenses disponibles */}
             <div className="relative group">
