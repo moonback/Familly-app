@@ -1036,6 +1036,32 @@ export default function ChildDashboard() {
                                       max={child.points}
                                       disabled={depositing}
                                     />
+                                    {/* Boutons rapides pour le dépôt */}
+                                    <div className="flex gap-2 mt-2">
+                                    {[1, 5, 10, 20, 50, 100].map((val) => (
+                                        <Button
+                                          key={val}
+                                          type="button"
+                                          size="sm"
+                                          variant="outline"
+                                          className="px-3 py-1"
+                                          onClick={() => setPiggyAmount(String(val))}
+                                          disabled={depositing || val > child.points}
+                                        >
+                                          {val}
+                                        </Button>
+                                      ))}
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="px-3 py-1 font-semibold"
+                                        onClick={() => setPiggyAmount(String(child.points))}
+                                        disabled={depositing || child.points === 0}
+                                      >
+                                        Tout
+                                      </Button>
+                                    </div>
                                     <p className="text-xs text-gray-500 mt-1">
                                       Points disponibles : {child.points}
                                     </p>
@@ -1079,6 +1105,32 @@ export default function ChildDashboard() {
                                       max={stats.currentBalance}
                                       disabled={depositing}
                                     />
+                                    {/* Boutons rapides pour le retrait */}
+                                    <div className="flex gap-2 mt-2">
+                                      {[1, 5, 10, 20, 50, 100].map((val) => (
+                                        <Button
+                                          key={val}
+                                          type="button"
+                                          size="sm"
+                                          variant="outline"
+                                          className="px-3 py-1"
+                                          onClick={() => setPiggyWithdrawAmount(String(val))}
+                                          disabled={depositing || val > stats.currentBalance}
+                                        >
+                                          {val}
+                                        </Button>
+                                      ))}
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="px-3 py-1 font-semibold"
+                                        onClick={() => setPiggyWithdrawAmount(String(stats.currentBalance))}
+                                        disabled={depositing || stats.currentBalance === 0}
+                                      >
+                                        Tout
+                                      </Button>
+                                    </div>
                                     <p className="text-xs text-gray-500 mt-1">
                                       Solde épargné : {stats.currentBalance}
                                     </p>
