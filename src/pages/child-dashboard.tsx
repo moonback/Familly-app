@@ -48,6 +48,7 @@ import { usePurchases } from '@/hooks/usePurchases';
 import { useAiAnalysis } from '@/hooks/useAiAnalysis';
 import { ChildAnalysis } from '@/components/analysis/ChildAnalysis';
 import ChildChatbot from '@/components/chat/ChildChatbot';
+import WeatherWidget from '@/components/WeatherWidget';
 
 interface Child {
   id: string;
@@ -460,8 +461,11 @@ export default function ChildDashboard() {
                 {getPiggyBankStats().currentBalance} épargnés ({convertPointsToEuros(getPiggyBankStats().currentBalance)}€)
               </div>
             </div>
-            
-            
+
+            {/* Section droite - Météo */}
+            <div className="hidden md:block">
+              <WeatherWidget city="Paris" />
+            </div>
           </div>
         </div>
       </motion.div>
