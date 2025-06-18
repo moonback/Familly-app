@@ -23,12 +23,14 @@ interface ChatMessage {
 
 // Suggestions de questions rapides avec icônes
 const quickQuestions = [
-  { text: "Comment dois-je m'habiller ?", icon: "⭐", color: "from-yellow-400 to-orange-400" },
+  { text: "Comment dois-je m'habiller ?", icon: "🧥", color: "from-yellow-400 to-orange-400" },
   { text: "Quelles sont mes missions ?", icon: "🎯", color: "from-blue-400 to-indigo-400" },
   { text: "Que puis-je acheter ?", icon: "🛒", color: "from-green-400 to-emerald-400" },
   { text: "Quelles récompenses puis-je avoir ?", icon: "🏆", color: "from-purple-400 to-violet-400" },
   { text: "Quelles règles dois-je respecter ?", icon: "📋", color: "from-red-400 to-pink-400" },
-  { text: "Donne-moi des conseils !", icon: "💡", color: "from-cyan-400 to-blue-400" }
+  { text: "Donne-moi des conseils !", icon: "💡", color: "from-cyan-400 to-blue-400" },
+  { text: "Quelle est la météo ?", icon: "☀️", color: "from-blue-200 to-blue-400" },
+  { text: "Combien de points ai-je ?", icon: "⭐", color: "from-yellow-200 to-yellow-400" },
 ];
 
 // Nouveau composant FormattedMessage simple et compatible HTML
@@ -485,21 +487,21 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="px-6 pb-4"
+            className="px-3 pb-2"
           >
             <p className="text-xs text-gray-600 mb-2 font-medium">💡 Questions rapides :</p>
-            <div className="grid grid-cols-2 gap-2">
-              {quickQuestions.slice(0, 4).map((question, index) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {quickQuestions.map((question, index) => (
                 <motion.button
                   key={index}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: index * 0.03 }}
                   onClick={() => handleQuickQuestion(question.text)}
                   disabled={loading}
                   className={`
-                    flex items-center gap-2 w-full
-                    p-2.5 rounded-lg font-medium text-sm
+                    flex flex-col items-center justify-center w-full
+                    p-2 rounded-lg font-medium text-xs
                     bg-white border-2 border-transparent
                     shadow hover:shadow-md
                     transition-all duration-150
@@ -508,13 +510,14 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
                     disabled:opacity-50 disabled:cursor-not-allowed
                   `}
                   style={{
+                    minHeight: '48px',
                     boxShadow: question.color
                       ? '0 2px 8px 0 rgba(180, 100, 255, 0.10)'
                       : undefined,
                   }}
                 >
-                  <span className="text-lg">{question.icon}</span>
-                  <span className="flex-1 text-left">{question.text}</span>
+                  <span className="text-lg mb-0.5">{question.icon}</span>
+                  <span className="text-[11px] leading-tight text-center">{question.text}</span>
                 </motion.button>
               ))}
             </div>
