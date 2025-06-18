@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -64,6 +64,7 @@ const FormattedMessage = ({ text }: { text: string }) => {
 export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   const { user } = useAuth();
   const { childName } = useParams();
+  const storageKey = `chatbot_history_${childName || 'default'}`;
   const [messages, setMessages] = useState<ChatMessage[]>([{
     sender: 'bot',
     text: `Bonjour ${childName ? decodeURIComponent(childName) : ''} ! 👋 Je suis ton assistant familial intelligent. Je peux t'aider avec tes missions, tes points, tes récompenses et bien plus encore ! Que puis-je faire pour toi aujourd'hui ?`,
@@ -71,6 +72,29 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Charger l'historique depuis le localStorage au montage
+  useEffect(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setMessages(parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: msg.timestamp ? new Date(msg.timestamp) : undefined
+        })));
+      } catch {
+        // Si erreur, on garde le message de bienvenue
+      }
+    }
+    // eslint-disable-next-line
+  }, [childName]);
+
+  // Sauvegarder l'historique à chaque changement
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(messages));
+    // eslint-disable-next-line
+  }, [messages, childName]);
 
   const sendMessage = async (content?: string) => {
     const messageContent = content || input.trim();
@@ -119,12 +143,14 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   };
 
   const resetConversation = () => {
-    setMessages([{
-      sender: 'bot',
-      text: `Bonjour ${childName ? decodeURIComponent(childName) : ''} ! 👋 Je suis ton assistant familial intelligent. Je peux t'aider avec tes missions, tes points, tes récompenses et bien plus encore ! Que puis-je faire pour toi aujourd'hui ?`,
+    const welcome = [{
+      sender: 'bot' as const,
+      text: `Bonjour ${childName ? decodeURIComponent(childName) : ''} ! 👋 Je suis ton assistant personnel. Je peux t'aider avec tes missions, tes points, tes récompenses et bien plus encore ! Que puis-je faire pour toi aujourd'hui ?`,
       timestamp: new Date()
-    }]);
+    }];
+    setMessages(welcome);
     setInput('');
+    localStorage.setItem(storageKey, JSON.stringify(welcome));
   };
 
   const askForStats = () => {
