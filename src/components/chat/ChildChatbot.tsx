@@ -8,6 +8,7 @@ import { getChatbotResponse } from '@/lib/gemini';
 import { useAuth } from '@/context/auth-context';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getWeather } from '@/lib/utils';
 
 interface ChatbotProps {
   open: boolean;
@@ -145,6 +146,29 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     if (!content) setInput('');
     setLoading(true);
     
+    // --- INTERCEPTION DES QUESTIONS MÉTÉO ---
+    const regexMeteo = /(météo|temps|température|fait-il chaud|froid|quel temps|quelle température)/i;
+    if (regexMeteo.test(messageContent)) {
+      try {
+        const weather = await getWeather('Paris');
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: `À Paris, il fait actuellement ${weather.temp}°C avec un temps « ${weather.description} ». ☀️🌡️`,
+          timestamp: new Date()
+        }]);
+      } catch (e) {
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: `Désolé, je n'arrive pas à récupérer la météo en ce moment. 😕`,
+          timestamp: new Date()
+        }]);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    // --- FIN INTERCEPTION ---
+
     try {
       // Créer l'historique pour Gemini en excluant le message de bienvenue initial
       const conversationHistory = messages

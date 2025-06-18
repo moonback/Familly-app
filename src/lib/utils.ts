@@ -73,3 +73,17 @@ export function debounce<T extends (...args: any[]) => any>(
 export function formatNumber(num: number): string {
   return new Intl.NumberFormat('fr-FR').format(num);
 }
+
+// Fonction utilitaire pour obtenir la météo actuelle d'une ville (OpenWeatherMap)
+export async function getWeather(city: string = 'Paris') {
+  const API_KEY = '942c1a83a2948447b2ba4e057708b506';
+  const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=fr`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Erreur lors de la récupération de la météo');
+  const data = await res.json();
+  return {
+    name: data.name,
+    temp: Math.round(data.main.temp),
+    description: data.weather[0].description
+  };
+}
