@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { MessageCircleIcon, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { getChatbotResponse } from '@/lib/gemini';
+import { useAuth } from '@/context/auth-context';
+import { useParams } from 'react-router-dom';
 
 interface ChatbotProps {
   open: boolean;
@@ -17,9 +19,11 @@ interface ChatMessage {
 }
 
 export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
+  const { user } = useAuth();
+  const { childName } = useParams();
   const [messages, setMessages] = useState<ChatMessage[]>([{
     sender: 'bot',
-    text: "Bonjour ! Je suis ton assistant. Comment puis-je t'aider aujourd'hui ?"
+    text: `Bonjour ${childName ? decodeURIComponent(childName) : ''} ! Je suis ton assistant familial. Je peux t'aider avec tes missions, tes points, tes récompenses et bien plus encore ! Que puis-je faire pour toi aujourd'hui ?`
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,7 +48,9 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
           content: m.text
         }));
       
-      const reply = await getChatbotResponse(conversationHistory);
+      // Passer l'ID de l'utilisateur et le nom de l'enfant pour accéder aux données de la famille
+      const currentChildName = childName ? decodeURIComponent(childName) : '';
+      const reply = await getChatbotResponse(conversationHistory, user?.id, currentChildName);
       setMessages(prev => [...prev, { sender: 'bot', text: reply }]);
     } catch (error) {
       console.error('Erreur chatbot:', error);
@@ -64,7 +70,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageCircleIcon className="w-5 h-5" />
-            Assistant
+            Assistant Familial - {childName ? decodeURIComponent(childName) : ''}
           </DialogTitle>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto space-y-3 pb-2">
