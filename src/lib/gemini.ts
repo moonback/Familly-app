@@ -207,11 +207,35 @@ export async function getChatbotResponse(history: ChatHistoryEntry[]): Promise<s
 
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
 
+  // Filtrer l'historique pour s'assurer qu'il commence par un message utilisateur
+  // et alterner correctement entre user et model
+  const validHistory = [];
+  for (let i = 0; i < history.length; i++) {
+    const message = history[i];
+    if (i === 0 && message.role === 'model') {
+      // Ignorer le premier message s'il est du modèle
+      continue;
+    }
+    validHistory.push(message);
+  }
+
+  // S'assurer qu'il y a au moins un message utilisateur
+  if (validHistory.length === 0 || validHistory[0].role !== 'user') {
+    throw new Error('L\'historique doit commencer par un message utilisateur');
+  }
+
+  // Préparer l'historique pour Gemini (exclure le dernier message utilisateur)
+  const chatHistory = validHistory.slice(0, -1).map((m) => ({ 
+    role: m.role, 
+    parts: [{ text: m.content }] 
+  }));
+
   const chat = model.startChat({
-    history: history.slice(0, -1).map((m) => ({ role: m.role, parts: [{ text: m.content }] }))
+    history: chatHistory
   });
 
-  const userMessage = history[history.length - 1].content;
+  // Envoyer le dernier message utilisateur
+  const userMessage = validHistory[validHistory.length - 1].content;
   const result = await chat.sendMessage(userMessage);
   const response = await result.response;
   return response.text();

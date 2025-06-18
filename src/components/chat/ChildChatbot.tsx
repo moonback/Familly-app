@@ -27,15 +27,24 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   const sendMessage = async () => {
     const content = input.trim();
     if (!content) return;
+    
+    // Ajouter le message utilisateur à l'historique local
     setMessages(prev => [...prev, { sender: 'user', text: content }]);
     setInput('');
     setLoading(true);
+    
     try {
-      const history = messages.concat({ sender: 'user', text: content }).map(m => ({
-        role: m.sender === 'user' ? 'user' as const : 'model' as const,
-        content: m.text
-      }));
-      const reply = await getChatbotResponse(history);
+      // Créer l'historique pour Gemini en excluant le message de bienvenue initial
+      // et en ne gardant que les messages réels de la conversation
+      const conversationHistory = messages
+        .slice(1) // Exclure le message de bienvenue initial
+        .concat({ sender: 'user', text: content })
+        .map(m => ({
+          role: m.sender === 'user' ? 'user' as const : 'model' as const,
+          content: m.text
+        }));
+      
+      const reply = await getChatbotResponse(conversationHistory);
       setMessages(prev => [...prev, { sender: 'bot', text: reply }]);
     } catch (error) {
       console.error('Erreur chatbot:', error);
