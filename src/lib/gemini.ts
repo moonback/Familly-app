@@ -193,3 +193,26 @@ export async function generateSuggestions(type: 'task' | 'rule' | 'reward'): Pro
     .map((s) => s.replace(/^[-\d.\)\s]+/, '').trim())
     .filter(Boolean);
 }
+
+interface ChatHistoryEntry {
+  role: 'user' | 'model';
+  content: string;
+}
+
+export async function getChatbotResponse(history: ChatHistoryEntry[]): Promise<string> {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing VITE_GEMINI_API_KEY');
+  }
+
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
+
+  const chat = model.startChat({
+    history: history.slice(0, -1).map((m) => ({ role: m.role, parts: [{ text: m.content }] }))
+  });
+
+  const userMessage = history[history.length - 1].content;
+  const result = await chat.sendMessage(userMessage);
+  const response = await result.response;
+  return response.text();
+}
