@@ -1651,22 +1651,41 @@ export default function ChildDashboard() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-blue-600" />
-              Analyse IA
-            </DialogTitle>
-          </DialogHeader>
-          {analysisLoading && (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin" />
+      {showAnalysis && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          style={{ backdropFilter: 'blur(2px)' }}
+        >
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl flex flex-col"
+            style={{ width: '90vw', height: '90vh', maxWidth: 1200, maxHeight: '90vh' }}
+          >
+            {/* Bouton de fermeture */}
+            <button
+              onClick={() => setShowAnalysis(false)}
+              className="absolute top-4 right-4 z-10 text-gray-500 hover:text-red-500 text-2xl font-bold"
+              aria-label="Fermer"
+            >
+              ×
+            </button>
+            {/* Header */}
+            <div className="flex items-center gap-3 px-8 pt-8 pb-4 border-b">
+              <BarChart3 className="w-7 h-7 text-blue-600" />
+              <h2 className="text-2xl font-bold text-gray-800">Analyse IA</h2>
             </div>
-          )}
-          {!analysisLoading && analysis && <ChildAnalysis analysis={analysis} />}
-        </DialogContent>
-      </Dialog>
+            {/* Contenu */}
+            <div className="flex-1 overflow-y-auto p-8">
+              {analysisLoading ? (
+                <div className="flex justify-center items-center h-full">
+                  <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+                </div>
+              ) : (
+                analysis && <ChildAnalysis analysis={analysis} />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <ChildChatbot open={showChatbot} onOpenChange={setShowChatbot} />
 
