@@ -23,7 +23,7 @@ interface ChatMessage {
 
 // Suggestions de questions rapides avec icônes
 const quickQuestions = [
-  { text: "Combien de points ai-je ?", icon: "⭐", color: "from-yellow-400 to-orange-400" },
+  { text: "Comment dois-je m’habiller ?", icon: "⭐", color: "from-yellow-400 to-orange-400" },
   { text: "Quelles sont mes missions ?", icon: "🎯", color: "from-blue-400 to-indigo-400" },
   { text: "Que puis-je acheter ?", icon: "🛒", color: "from-green-400 to-emerald-400" },
   { text: "Quelles récompenses puis-je avoir ?", icon: "🏆", color: "from-purple-400 to-violet-400" },
@@ -168,6 +168,41 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
       return;
     }
     // --- FIN INTERCEPTION ---
+
+    // --- INTERCEPTION DES QUESTIONS TENUE/VÊTEMENTS ---
+    const regexTenue = /(tenue|vêtements?|habiller|porter|comment m'habiller|comment dois-je m'habiller|comment dois-je m\s?habiller|comment s'habiller|comment s\s?habiller|que dois-je porter|quelle tenue)/i;
+    if (regexTenue.test(messageContent)) {
+      try {
+        const weather = await getWeather('Paris');
+        // Générer un prompt personnalisé pour Gemini
+        const prompt = `Voici la météo à Paris aujourd'hui : ${weather.temp}°C, ${weather.description}. Quelle tenue conseilles-tu pour un enfant aujourd'hui ? Sois bref, donne une suggestion concrète et adaptée à la météo.`;
+        // On envoie ce prompt à Gemini (en gardant l'historique pour le contexte)
+        const conversationHistory = messages
+          .slice(1)
+          .concat({ sender: 'user', text: prompt })
+          .map(m => ({
+            role: m.sender === 'user' ? 'user' as const : 'model' as const,
+            content: m.text
+          }));
+        const currentChildName = childName ? decodeURIComponent(childName) : '';
+        const reply = await getChatbotResponse(conversationHistory, user?.id, currentChildName, chatbotName);
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: reply,
+          timestamp: new Date()
+        }]);
+      } catch (e) {
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: `Désolé, je n'arrive pas à récupérer la météo ou à générer une suggestion de tenue en ce moment. 😕`,
+          timestamp: new Date()
+        }]);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    // --- FIN INTERCEPTION TENUE ---
 
     try {
       // Créer l'historique pour Gemini en excluant le message de bienvenue initial
