@@ -405,30 +405,29 @@ export default function ChildDashboard() {
                 <p className="text-gray-600">Prêt pour de nouvelles aventures ?</p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-4 justify-center">
-              <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
-                <StarIcon className="inline-block w-5 h-5 mr-2" />
-                {child.points} points 
+            <div className="flex flex-col lg:flex-row items-center gap-4 justify-center">
+              {/* Points et épargne - Layout optimisé tablette */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg w-full sm:w-auto text-center">
+                  <StarIcon className="inline-block w-6 h-6 mr-2" />
+                  {child.points} points ({convertPointsToEuros(child.points)}€)
+                </div>
+                {/* Points épargnés */}
+                <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg w-full sm:w-auto text-center">
+                  <PiggyBankIcon className="inline-block w-6 h-6 mr-2" />
+                  {getPiggyBankStats().currentBalance} points épargnés ({convertPointsToEuros(getPiggyBankStats().currentBalance)}€)
+                </div>
               </div>
-              {/* Points épargnés */}
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
-                <PiggyBankIcon className="inline-block w-5 h-5 mr-2" />
-                {getPiggyBankStats().currentBalance} points épargnés
-              </div>
-              {/* Conversion en euros */}
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
-                <span className="text-xl mr-1">€</span>
-                {convertPointsToEuros(child.points + getPiggyBankStats().currentBalance)}
-              </div>
-              {/* Indicateurs de récompenses et produits */}
-              <div className="flex items-center gap-3">
+              
+              {/* Indicateurs de récompenses et produits - Optimisé pour tablette */}
+              <div className="flex items-center gap-4 justify-center flex-wrap">
                 {/* Missions non complétées */}
                 <div className="relative group">
                   <div 
-                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
                     onClick={() => setActiveTab('tasks')}
                   >
-                    <TargetIcon className="w-5 h-5" />
+                    <TargetIcon className="w-6 h-6" />
                   </div>
                   {(() => {
                     const incompleteTasks = childTasks.filter(t => !t.is_completed);
@@ -437,7 +436,7 @@ export default function ChildDashboard() {
                         <motion.div 
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse"
+                          className="absolute -top-2 -right-2 bg-blue-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
                         >
                           {incompleteTasks.length}
                         </motion.div>
@@ -445,8 +444,8 @@ export default function ChildDashboard() {
                     }
                     return null;
                   })()}
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  {/* Tooltip amélioré pour tablette */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                     {(() => {
                       const incompleteTasks = childTasks.filter(t => !t.is_completed);
                       return incompleteTasks.length > 0 
@@ -460,10 +459,10 @@ export default function ChildDashboard() {
                 {/* Récompenses disponibles */}
                 <div className="relative group">
                   <div 
-                    className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                    className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
                     onClick={() => setActiveTab('rewards')}
                   >
-                    <TrophyIcon className="w-5 h-5" />
+                    <TrophyIcon className="w-6 h-6" />
                   </div>
                   {(() => {
                     const piggyStats = getPiggyBankStats();
@@ -476,7 +475,7 @@ export default function ChildDashboard() {
                         <motion.div 
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse"
+                          className="absolute -top-2 -right-2 bg-red-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
                         >
                           {affordableRewards.length}
                         </motion.div>
@@ -486,7 +485,7 @@ export default function ChildDashboard() {
                         <motion.div 
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                          className="absolute -top-2 -right-2 bg-orange-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold"
                         >
                           {totalUnclaimedRewards.length}
                         </motion.div>
@@ -494,8 +493,8 @@ export default function ChildDashboard() {
                     }
                     return null;
                   })()}
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  {/* Tooltip amélioré pour tablette */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                     {(() => {
                       const piggyStats = getPiggyBankStats();
                       const totalAvailablePoints = child.points + piggyStats.currentBalance;
@@ -517,22 +516,22 @@ export default function ChildDashboard() {
                 {/* Produits en boutique */}
                 <div className="relative group">
                   <div 
-                    className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                    className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
                     onClick={() => setActiveTab('shop')}
                   >
-                    <ShoppingCartIcon className="w-5 h-5" />
+                    <ShoppingCartIcon className="w-6 h-6" />
                   </div>
                   {shopItems.length > 0 && (
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                      className="absolute -top-2 -right-2 bg-blue-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold"
                     >
                       {shopItems.length}
                     </motion.div>
                   )}
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  {/* Tooltip amélioré pour tablette */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                     {shopItems.length > 0 
                       ? `${shopItems.length} produit${shopItems.length > 1 ? 's' : ''} en boutique`
                       : 'Boutique vide'
@@ -544,22 +543,22 @@ export default function ChildDashboard() {
                 {/* Devinette du jour */}
                 <div className="relative group">
                   <div 
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
                     onClick={() => setActiveTab('riddles')}
                   >
-                    <BrainIcon className="w-5 h-5" />
+                    <BrainIcon className="w-6 h-6" />
                   </div>
                   {currentRiddle && !riddleSolved && (
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-bounce"
+                      className="absolute -top-2 -right-2 bg-purple-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-bounce"
                     >
                       !
                     </motion.div>
                   )}
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  {/* Tooltip amélioré pour tablette */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                     {currentRiddle && !riddleSolved 
                       ? 'Nouvelle devinette disponible !'
                       : riddleSolved 
