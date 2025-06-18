@@ -5,37 +5,65 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
 ## ✨ Fonctionnalités
 
 ### 🎯 Pour les Parents
-- **Gestion des enfants** : Ajout, modification et suppression des profils enfants avec avatars personnalisés
+- **Gestion des enfants** : Ajout, modification et suppression des profils enfants avec avatars et couleurs personnalisés
 - **Système de tâches** : Création de tâches adaptées à l'âge avec catégories (quotidien, scolaire, maison, personnel)
 - **Règles de comportement** : Définition des règles avec système de pénalités
 - **Récompenses** : Création d'un catalogue de récompenses échangeables contre des points
 - **Devinettes quotidiennes** : Système de devinettes pour gagner des points bonus
-- **Tableau de bord analytique** : Statistiques détaillées, graphiques de progression, historique des activités
-- **Suivi des performances** : Streaks, dernières activités, progression par enfant
-- **Code parental sécurisé** : Protection du dashboard et validation des actions sensibles via un code à 4 chiffres
+- **Boutique** : Ajout et gestion d'articles dans la boutique interne, visualisation de l'historique des achats
 - **Validation des récompenses** : Les parents confirment les récompenses réclamées par les enfants
+- **Tableau de bord analytique** : Statistiques détaillées, graphiques de progression, historique des activités et des points
+- **Suivi des performances** : Streaks, dernières activités, progression par enfant
+- **Code parental sécurisé** : Protection du dashboard et validation des actions sensibles via un code à 4 chiffres
 - **Journal d'accès** : Enregistrement des tentatives de connexion et modifications de code parental
+- **Suggestions automatiques** : Idées de tâches, règles et récompenses générées par l'IA (Google Gemini)
 
 ### 🌟 Pour les Enfants
-- **Interface ludique** : Design coloré et interactif avec animations
-- **Système de points** : Gain de points pour les tâches accomplies
+- **Interface ludique** : Design coloré et interactif avec animations, badges, micro-interactions et confettis
+- **Système de points** : Gain de points pour les tâches accomplies, visualisation de la progression
 - **Progression visuelle** : Barres de progression, badges, animations de célébration
-- **Récompenses** : Échange de points contre des récompenses
-- **Devinettes** : Défis quotidiens pour gagner des points bonus
-- **Personnalisation** : Couleurs et avatars personnalisés
+- **Récompenses** : Échange de points contre des récompenses, suivi des récompenses réclamées et validées
+- **Devinettes** : Défis quotidiens pour gagner des points bonus, achat d'indices
+- **Boutique** : Achat d'articles avec points, historique des achats, répartition automatique entre points disponibles et points épargnés
+- **Tirelire** : Épargne et retrait de points, conversion points/€ (100 pts = 1 € fictif), historique détaillé, boutons rapides (10, 20, 50, 100, Tout)
+- **Historique** : Visualisation de toutes les transactions de points et achats
+- **Personnalisation** : Couleurs, avatars, surnoms, thèmes personnalisés
 - **Système de streaks** : Motivation par les séries de jours consécutifs
+- **Chatbot d'aide** : Assistant interactif pour répondre aux questions et guider l'enfant
+- **Manuel enfant intégré** : Guide simplifié accessible depuis le dashboard
 
 ### 🛒 Boutique et achats
-Gestion d'une boutique interne où les parents ajoutent des articles dans `shop_items`. Les enfants peuvent dépenser leurs points pour les acheter. Chaque opération est enregistrée dans la table `purchases`.
+- Gestion d'une boutique interne où les parents ajoutent des articles dans `shop_items`
+- Les enfants peuvent acheter des articles avec leurs points (points disponibles et/ou points épargnés)
+- Historique détaillé des achats, statistiques mensuelles, visualisation des dépenses
 
 ### 🐷 Tirelire
-Les enfants disposent d'une tirelire virtuelle pour épargner ou dépenser leurs points. La conversion est fixée à **100 points = 1 €** fictif et toutes les opérations sont historisées dans `piggy_bank_transactions`.
+- Tirelire virtuelle pour épargner ou retirer des points
+- Conversion automatique points/€ (100 pts = 1 € )
+- Historique complet des transactions (épargne, retrait, dépenses)
+- Boutons rapides pour faciliter les dépôts/retraits (10, 20, 50, 100, Tout)
+- Visualisation du solde actuel, total épargné, total dépensé
 
 ### 📘 Manuel pour enfants
-Un manuel simplifié est intégré à l'interface afin d'aider les plus jeunes à comprendre le fonctionnement de l'application. Il est disponible dans le fichier `public/manuel.md` et consultable depuis le tableau de bord.
+- Manuel simplifié intégré à l'interface pour aider les plus jeunes à comprendre le fonctionnement
+- Disponible dans le fichier `public/manuel.md` et consultable depuis le tableau de bord
 
 ### 🤖 Suggestions automatiques
-L'application propose des idées de tâches, de règles et de récompenses grâce à l'API Google Gemini pour simplifier la configuration par les parents.
+- Propositions d'idées de tâches, règles et récompenses grâce à l'API Google Gemini
+
+### 💬 Chatbot d'aide
+- Assistant conversationnel intégré pour guider les enfants dans l'utilisation de l'application
+
+### 👤 Profil et personnalisation
+- Affichage détaillé du profil enfant : avatar, âge, points, missions, série de jours, points épargnés
+- Personnalisation avancée (avatar, couleur, surnom)
+
+### 🏆 Streaks, badges et micro-interactions
+- Système de streaks (séries de jours), badges, animations de succès et feedback immédiat
+
+### 📱 Responsive & Accessibilité
+- Interface adaptée à tous les écrans (mobile, tablette, desktop)
+- Contraste élevé, navigation clavier, accessibilité renforcée
 
 ## 🛠️ Technologies Utilisées
 
