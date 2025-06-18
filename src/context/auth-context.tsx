@@ -21,8 +21,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     // Vérifier la session au chargement
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user || null);
+        setLoading(true);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Erreur lors de la vérification de la session:', error);
+          setUser(null);
+        } else {
+          setUser(session?.user || null);
+        }
       } catch (error) {
         console.error('Erreur lors de la vérification de la session:', error);
         setUser(null);
@@ -36,12 +43,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
+        
         if (event === 'SIGNED_OUT') {
           setUser(null);
           // Supprimer toutes les données de session
           localStorage.clear();
           sessionStorage.clear();
-        } else {
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setUser(session?.user || null);
+        } else if (event === 'INITIAL_SESSION') {
           setUser(session?.user || null);
         }
       }
@@ -103,7 +114,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const signOut = async () => {
     try {
       // Déconnecter l'utilisateur
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Erreur lors de la déconnexion:', error);
+      }
       
       // Réinitialiser l'état
       setUser(null);
@@ -112,7 +127,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       localStorage.clear();
       sessionStorage.clear();
       
-      // Forcer un rechargement complet
+      // Rediriger vers l'accueil sans forcer le rechargement
       window.location.href = '/';
       
       return { error: null };

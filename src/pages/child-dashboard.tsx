@@ -335,13 +335,35 @@ export default function ChildDashboard() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 to-pink-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-xl text-purple-600 font-semibold">Chargement...</p>
+          <p className="text-xl text-purple-600 font-semibold">
+            {loading ? 'Vérification de la session...' : 'Chargement...'}
+          </p>
         </div>
       </div>
     );
   }
 
   if (!user || !child) {
+    if (!loading && user && childName) {
+      // L'utilisateur est connecté mais l'enfant n'existe pas
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 to-pink-100">
+          <div className="text-center">
+            <div className="text-6xl mb-4">😕</div>
+            <h1 className="text-2xl font-bold text-gray-800 mb-4">Enfant non trouvé</h1>
+            <p className="text-gray-600 mb-6">
+              L'enfant "{childName}" n'existe pas ou vous n'avez pas les permissions pour y accéder.
+            </p>
+            <button
+              onClick={() => navigate('/dashboard/parent')}
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
+            >
+              Retour au dashboard parent
+            </button>
+          </div>
+        </div>
+      );
+    }
     return null;
   }
 

@@ -4,14 +4,15 @@ import { useAuth } from '@/context/auth-context';
 import { motion } from 'framer-motion';
 
 const HomePage = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
+    // Ne rediriger que si l'utilisateur est chargé et authentifié
+    if (!loading && user) {
       navigate('/dashboard/parent');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   const features = [
     {
