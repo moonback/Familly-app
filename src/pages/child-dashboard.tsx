@@ -24,6 +24,8 @@ import {
   CalendarIcon,
   UsersIcon,
   AwardIcon,
+  BarChart3,
+  Loader2,
   Plus,
   Minus,
   PackageIcon,
@@ -43,6 +45,8 @@ import { useStreak } from '@/hooks/useStreak';
 import { usePointsHistory } from '@/hooks/usePointsHistory';
 import { usePiggyBank } from '@/hooks/usePiggyBank';
 import { usePurchases } from '@/hooks/usePurchases';
+import { useAiAnalysis } from '@/hooks/useAiAnalysis';
+import { ChildAnalysis } from '@/components/analysis/ChildAnalysis';
 import ChildChatbot from '@/components/chat/ChildChatbot';
 
 interface Child {
@@ -108,6 +112,13 @@ export default function ChildDashboard() {
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [shopLoading, setShopLoading] = useState(true);
   const [showChatbot, setShowChatbot] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+
+  const {
+    analysis,
+    loading: analysisLoading,
+    getAnalysis,
+  } = useAiAnalysis(user?.id);
 
   // Fonction de conversion des points en euros
   const convertPointsToEuros = (points: number) => {
@@ -312,6 +323,12 @@ export default function ChildDashboard() {
         setPiggyWithdrawAmount('');
       }
     }
+  };
+
+  const handleOpenAnalysis = async () => {
+    if (!child) return;
+    setShowAnalysis(true);
+    await getAnalysis(child.id);
   };
 
   const getCategoryIcon = (category: string) => {
@@ -1634,6 +1651,23 @@ export default function ChildDashboard() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+              Analyse IA
+            </DialogTitle>
+          </DialogHeader>
+          {analysisLoading && (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin" />
+            </div>
+          )}
+          {!analysisLoading && analysis && <ChildAnalysis analysis={analysis} />}
+        </DialogContent>
+      </Dialog>
+
       <ChildChatbot open={showChatbot} onOpenChange={setShowChatbot} />
 
       {/* Dialogue Boutique */}
@@ -1997,6 +2031,20 @@ export default function ChildDashboard() {
                     : 'Aucune devinette disponible'
                 }
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+              </div>
+            </div>
+
+            {/* Analyse IA */}
+            <div className="relative group">
+              <div
+                className="bg-gradient-to-r from-sky-500 to-blue-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                onClick={handleOpenAnalysis}
+              >
+                <BarChart3 className="w-6 h-6" />
+              </div>
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                Analyse IA
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
               </div>
             </div>
 
