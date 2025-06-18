@@ -12,6 +12,9 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
 - **Devinettes quotidiennes** : Système de devinettes pour gagner des points bonus
 - **Tableau de bord analytique** : Statistiques détaillées, graphiques de progression, historique des activités
 - **Suivi des performances** : Streaks, dernières activités, progression par enfant
+- **Code parental sécurisé** : Protection du dashboard et validation des actions sensibles via un code à 4 chiffres
+- **Validation des récompenses** : Les parents confirment les récompenses réclamées par les enfants
+- **Journal d'accès** : Enregistrement des tentatives de connexion et modifications de code parental
 
 ### 🌟 Pour les Enfants
 - **Interface ludique** : Design coloré et interactif avec animations
@@ -127,6 +130,20 @@ L'application propose des idées de tâches, de règles et de récompenses grâc
 - **Système de streaks** : Motivation par les séries de réussite
 - **Analytics** : Suivi détaillé des performances et de la progression
 - **Personnalisation** : Couleurs et thèmes personnalisés par enfant
+
+## 👪 Parcours Parent & Enfant
+
+### Côté parent
+1. **Création du compte** et configuration du **code parental**.
+2. **Ajout des enfants** avec avatar et couleur personnalisée.
+3. **Définition des tâches**, règles et récompenses adaptées à chaque âge.
+4. **Suivi quotidien** via le tableau de bord (statistiques, journal des points, validation des récompenses).
+
+### Côté enfant
+1. Connexion au **dashboard enfant** pour voir les missions du jour.
+2. Marquage des tâches accomplies et gain de points.
+3. Consultation des **récompenses**, de la boutique et de la tirelire.
+4. Participation à la **devinette du jour** pour gagner des points bonus.
 
 ## 🎨 Design et UX
 
