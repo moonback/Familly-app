@@ -363,8 +363,8 @@ export default function ChildDashboard() {
         className="bg-white/80 backdrop-blur-sm border-b border-purple-200 sticky top-0 z-50"
       >
         <div className="container mx-auto p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-4 justify-center md:justify-start">
               {child.avatar_url ? (
                 <div className="w-16 h-16 rounded-full overflow-hidden shadow-lg">
                   <img 
@@ -400,7 +400,7 @@ export default function ChildDashboard() {
                 <p className="text-gray-600">Prêt pour de nouvelles aventures ?</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4 justify-center">
               <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
                 <StarIcon className="inline-block w-5 h-5 mr-2" />
                 {child.points} points
@@ -577,7 +577,7 @@ export default function ChildDashboard() {
       {/* Navigation par onglets */}
       <div className="container mx-auto p-4">
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-2 mb-6 shadow-lg">
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -620,7 +620,7 @@ export default function ChildDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       <div className="text-center">
                         <div className="text-4xl font-bold text-blue-600 mb-2">{completedTasks}</div>
                         <div className="text-gray-600">Missions accomplies</div>
@@ -734,7 +734,7 @@ export default function ChildDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                       <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
                         <div className="text-2xl font-bold text-yellow-600">{rewards.filter(r => !isRewardClaimed(r.id)).length}</div>
                         <div className="text-sm text-gray-600">Récompenses disponibles</div>
@@ -955,7 +955,7 @@ export default function ChildDashboard() {
                       return (
                         <div className="space-y-6">
                           {/* Informations sur les points */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                             <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
                               <div className="text-2xl font-bold text-yellow-600">{child.points}</div>
                               <div className="text-sm text-gray-600">Points disponibles</div>
@@ -1081,7 +1081,7 @@ export default function ChildDashboard() {
                       return (
                         <div className="space-y-6">
                           {/* Statistiques principales */}
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border-2 border-orange-200 text-center">
                               <div className="text-2xl font-bold text-orange-600">{stats.currentBalance}</div>
                               <div className="text-sm text-gray-600">Solde actuel</div>
@@ -1460,7 +1460,7 @@ export default function ChildDashboard() {
                       return (
                         <div className="space-y-6">
                           {/* Statistiques des achats */}
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border-2 border-indigo-200 text-center">
                               <div className="text-2xl font-bold text-indigo-600">{stats.totalPurchases}</div>
                               <div className="text-sm text-gray-600">Total des achats</div>
