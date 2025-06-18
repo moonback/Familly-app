@@ -105,6 +105,11 @@ export default function ChildDashboard() {
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [shopLoading, setShopLoading] = useState(true);
 
+  // Fonction de conversion des points en euros
+  const convertPointsToEuros = (points: number) => {
+    return (points / 100).toFixed(2);
+  };
+
   const fetchChildData = useCallback(async () => {
     try {
       const { data: childData, error: childError } = await supabase
@@ -409,6 +414,11 @@ export default function ChildDashboard() {
               <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
                 <PiggyBankIcon className="inline-block w-5 h-5 mr-2" />
                 {getPiggyBankStats().currentBalance} points épargnés
+              </div>
+              {/* Conversion en euros */}
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full font-bold text-lg shadow-lg">
+                <span className="text-xl mr-1">€</span>
+                {convertPointsToEuros(child.points + getPiggyBankStats().currentBalance)}
               </div>
               {/* Indicateurs de récompenses et produits */}
               <div className="flex items-center gap-3">
@@ -739,6 +749,7 @@ export default function ChildDashboard() {
                       <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 text-center">
                         <div className="text-2xl font-bold text-purple-600">{child.points}</div>
                         <div className="text-sm text-gray-600">Points disponibles</div>
+                        <div className="text-xs text-purple-500 mt-1">≈ {convertPointsToEuros(child.points)} €</div>
                       </div>
                       <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4 border-2 border-red-200 text-center">
                         <div className="text-2xl font-bold text-red-600">
@@ -825,6 +836,7 @@ export default function ChildDashboard() {
                                     }`}>
                                       {reward.cost} points
                                     </Badge>
+                                    <div className="text-xs text-gray-500 mt-1">≈ {convertPointsToEuros(reward.cost)} €</div>
                                   </div>
                                   <h3 className="text-lg font-semibold text-gray-800 mb-3">{reward.label}</h3>
                                   
@@ -952,14 +964,17 @@ export default function ChildDashboard() {
                             <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
                               <div className="text-2xl font-bold text-yellow-600">{child.points}</div>
                               <div className="text-sm text-gray-600">Points disponibles</div>
+                              <div className="text-xs text-yellow-500 mt-1">≈ {convertPointsToEuros(child.points)} €</div>
                             </div>
                             <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
                               <div className="text-2xl font-bold text-green-600">{piggyStats.currentBalance}</div>
                               <div className="text-sm text-gray-600">Points épargnés</div>
+                              <div className="text-xs text-green-500 mt-1">≈ {convertPointsToEuros(piggyStats.currentBalance)} €</div>
                             </div>
                             <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 text-center">
                               <div className="text-2xl font-bold text-purple-600">{totalAvailablePoints}</div>
                               <div className="text-sm text-gray-600">Total disponible</div>
+                              <div className="text-xs text-purple-500 mt-1">≈ {convertPointsToEuros(totalAvailablePoints)} €</div>
                             </div>
                           </div>
 
@@ -1078,14 +1093,17 @@ export default function ChildDashboard() {
                             <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border-2 border-orange-200 text-center">
                               <div className="text-2xl font-bold text-orange-600">{stats.currentBalance}</div>
                               <div className="text-sm text-gray-600">Solde actuel</div>
+                              <div className="text-xs text-orange-500 mt-1">≈ {convertPointsToEuros(stats.currentBalance)} €</div>
                             </div>
                             <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
                               <div className="text-2xl font-bold text-green-600">{stats.totalSavings}</div>
                               <div className="text-sm text-gray-600">Total épargné</div>
+                              <div className="text-xs text-green-500 mt-1">≈ {convertPointsToEuros(stats.totalSavings)} €</div>
                             </div>
                             <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4 border-2 border-red-200 text-center">
                               <div className="text-2xl font-bold text-red-600">{stats.totalSpending}</div>
                               <div className="text-sm text-gray-600">Total dépensé</div>
+                              <div className="text-xs text-red-500 mt-1">≈ {convertPointsToEuros(stats.totalSpending)} €</div>
                             </div>
                             <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-200 text-center">
                               <div className="text-2xl font-bold text-blue-600">{stats.transactionCount}</div>
@@ -1413,6 +1431,7 @@ export default function ChildDashboard() {
                             <span className="font-semibold text-gray-800">Points actuels</span>
                           </div>
                           <div className="text-3xl font-bold text-yellow-600">{child.points}</div>
+                          <div className="text-sm text-yellow-500 mt-1">≈ {convertPointsToEuros(child.points)} €</div>
                         </div>
                         
                         <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl p-4 border-2 border-red-200">
@@ -1461,6 +1480,7 @@ export default function ChildDashboard() {
                             <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
                               <div className="text-2xl font-bold text-green-600">{stats.totalSpent}</div>
                               <div className="text-sm text-gray-600">Points dépensés</div>
+                              <div className="text-xs text-green-500 mt-1">≈ {convertPointsToEuros(stats.totalSpent)} €</div>
                             </div>
                             <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
                               <div className="text-2xl font-bold text-yellow-600">{stats.uniqueItems}</div>
@@ -1652,6 +1672,7 @@ export default function ChildDashboard() {
                     <div className="flex items-center gap-2 mb-3">
                       <StarIcon className="w-4 h-4 text-yellow-600" />
                       <span className="font-bold text-yellow-600">{selectedShopItem.price} points</span>
+                      <span className="text-sm text-gray-500">(≈ {convertPointsToEuros(selectedShopItem.price)} €)</span>
                     </div>
                     
                     {/* Détails de l'utilisation des points */}
