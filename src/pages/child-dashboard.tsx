@@ -18,6 +18,7 @@ import {
   ShoppingCartIcon,
   HomeIcon,
   HeartIcon,
+  MessageCircleIcon,
   TargetIcon,
   CheckCircleIcon,
   CalendarIcon,
@@ -42,6 +43,7 @@ import { useStreak } from '@/hooks/useStreak';
 import { usePointsHistory } from '@/hooks/usePointsHistory';
 import { usePiggyBank } from '@/hooks/usePiggyBank';
 import { usePurchases } from '@/hooks/usePurchases';
+import ChildChatbot from '@/components/chat/ChildChatbot';
 
 interface Child {
   id: string;
@@ -105,6 +107,7 @@ export default function ChildDashboard() {
   const [piggyWithdrawAmount, setPiggyWithdrawAmount] = useState('');
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [shopLoading, setShopLoading] = useState(true);
+  const [showChatbot, setShowChatbot] = useState(false);
 
   // Fonction de conversion des points en euros
   const convertPointsToEuros = (points: number) => {
@@ -611,7 +614,7 @@ export default function ChildDashboard() {
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
-                          <div className="text-2xl font-bold text-yellow-600">{rewards.filter(r => !isRewardClaimed(r.id)).length}</div>
+                          <div className="text-2xl font-bold text-yellow-600">{rewards.filter(r => !isRewardClaimed(r.id) && child.points >= r.cost).length}</div>
                           <div className="text-sm text-gray-600">Récompenses disponibles</div>
                         </div>
                         <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
@@ -1561,6 +1564,8 @@ export default function ChildDashboard() {
         </DialogContent>
       </Dialog>
 
+      <ChildChatbot open={showChatbot} onOpenChange={setShowChatbot} />
+
       {/* Dialogue Boutique */}
       <Dialog open={showShopDialog} onOpenChange={setShowShopDialog}>
         <DialogContent className="max-w-md">
@@ -1899,7 +1904,7 @@ export default function ChildDashboard() {
 
             {/* Devinette du jour */}
             <div className="relative group">
-              <div 
+              <div
                 className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
                 onClick={() => setActiveTab('riddles')}
               >
@@ -1921,6 +1926,20 @@ export default function ChildDashboard() {
                     ? 'Devinette résolue aujourd\'hui'
                     : 'Aucune devinette disponible'
                 }
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+              </div>
+            </div>
+
+            {/* Assistant */}
+            <div className="relative group">
+              <div
+                className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                onClick={() => setShowChatbot(true)}
+              >
+                <MessageCircleIcon className="w-6 h-6" />
+              </div>
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                Besoin d'aide ?
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
               </div>
             </div>

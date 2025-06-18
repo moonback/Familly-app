@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { supabase } from './supabase';
 
 // Initialiser l'API Gemini
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
@@ -16,6 +17,187 @@ interface TaskSuggestion {
   age_min: number;
   age_max: number;
   is_daily: boolean;
+}
+
+// Interface pour les données de la base de données
+interface FamilyData {
+  children: any[];
+  tasks: any[];
+  rules: any[];
+  rewards: any[];
+  childTasks: any[];
+  childRulesViolations: any[];
+  childRewardsClaimed: any[];
+  riddles: any[];
+  dailyRiddles: any[];
+  pointsHistory: any[];
+  shopItems: any[];
+  purchases: any[];
+  piggyBankTransactions: any[];
+}
+
+// Interface pour un enfant
+interface Child {
+  id: string;
+  name: string;
+  age: number;
+  points: number;
+  avatar_url: string;
+  custom_color: string;
+  user_id: string;
+  created_at: string;
+}
+
+// Fonction pour récupérer toutes les données de la famille
+export async function getFamilyData(userId: string): Promise<FamilyData> {
+  try {
+    // Récupérer les enfants
+    const { data: children } = await supabase
+      .from('children')
+      .select('*')
+      .eq('user_id', userId);
+
+    // Récupérer les tâches
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('user_id', userId);
+
+    // Récupérer les règles
+    const { data: rules } = await supabase
+      .from('rules')
+      .select('*')
+      .eq('user_id', userId);
+
+    // Récupérer les récompenses
+    const { data: rewards } = await supabase
+      .from('rewards')
+      .select('*')
+      .eq('user_id', userId);
+
+    // Récupérer les devinettes
+    const { data: riddles } = await supabase
+      .from('riddles')
+      .select('*')
+      .eq('user_id', userId);
+
+    // Récupérer les articles de la boutique
+    const { data: shopItems } = await supabase
+      .from('shop_items')
+      .select('*')
+      .eq('user_id', userId);
+
+    // Récupérer les données liées aux enfants
+    const childIds = children?.map(child => child.id) || [];
+    
+    let childTasks: any[] = [];
+    let childRulesViolations: any[] = [];
+    let childRewardsClaimed: any[] = [];
+    let dailyRiddles: any[] = [];
+    let pointsHistory: any[] = [];
+    let purchases: any[] = [];
+    let piggyBankTransactions: any[] = [];
+
+    if (childIds.length > 0) {
+      // Récupérer les tâches des enfants
+      const { data: childTasksData } = await supabase
+        .from('child_tasks')
+        .select(`
+          *,
+          task:tasks(*)
+        `)
+        .in('child_id', childIds);
+
+      // Récupérer les violations de règles
+      const { data: violationsData } = await supabase
+        .from('child_rules_violations')
+        .select(`
+          *,
+          rule:rules(*)
+        `)
+        .in('child_id', childIds);
+
+      // Récupérer les récompenses réclamées
+      const { data: claimedData } = await supabase
+        .from('child_rewards_claimed')
+        .select(`
+          *,
+          reward:rewards(*)
+        `)
+        .in('child_id', childIds);
+
+      // Récupérer les devinettes quotidiennes
+      const { data: dailyRiddlesData } = await supabase
+        .from('daily_riddles')
+        .select(`
+          *,
+          riddle:riddles(*)
+        `)
+        .in('child_id', childIds);
+
+      // Récupérer l'historique des points
+      const { data: pointsHistoryData } = await supabase
+        .from('points_history')
+        .select('*')
+        .eq('user_id', userId);
+
+      // Récupérer les achats
+      const { data: purchasesData } = await supabase
+        .from('purchases')
+        .select(`
+          *,
+          item:shop_items(*)
+        `)
+        .in('child_id', childIds);
+
+      // Récupérer les transactions de la tirelire
+      const { data: piggyData } = await supabase
+        .from('piggy_bank_transactions')
+        .select('*')
+        .in('child_id', childIds);
+
+      childTasks = childTasksData || [];
+      childRulesViolations = violationsData || [];
+      childRewardsClaimed = claimedData || [];
+      dailyRiddles = dailyRiddlesData || [];
+      pointsHistory = pointsHistoryData || [];
+      purchases = purchasesData || [];
+      piggyBankTransactions = piggyData || [];
+    }
+
+    return {
+      children: children || [],
+      tasks: tasks || [],
+      rules: rules || [],
+      rewards: rewards || [],
+      childTasks,
+      childRulesViolations,
+      childRewardsClaimed,
+      riddles: riddles || [],
+      dailyRiddles,
+      pointsHistory,
+      shopItems: shopItems || [],
+      purchases,
+      piggyBankTransactions
+    };
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données familiales:', error);
+    return {
+      children: [],
+      tasks: [],
+      rules: [],
+      rewards: [],
+      childTasks: [],
+      childRulesViolations: [],
+      childRewardsClaimed: [],
+      riddles: [],
+      dailyRiddles: [],
+      pointsHistory: [],
+      shopItems: [],
+      purchases: [],
+      piggyBankTransactions: []
+    };
+  }
 }
 
 export async function generateRiddle(difficulty: 'facile' | 'moyen' | 'difficile'): Promise<GeneratedRiddle | null> {
@@ -192,4 +374,246 @@ export async function generateSuggestions(type: 'task' | 'rule' | 'reward'): Pro
     .split('\n')
     .map((s) => s.replace(/^[-\d.\)\s]+/, '').trim())
     .filter(Boolean);
+}
+
+interface ChatHistoryEntry {
+  role: 'user' | 'model';
+  content: string;
+}
+
+export async function getChatbotResponse(history: ChatHistoryEntry[], userId?: string, childName?: string, chatbotName?: string): Promise<string> {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing VITE_GEMINI_API_KEY');
+  }
+
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
+
+  // Filtrer l'historique pour s'assurer qu'il commence par un message utilisateur
+  // et alterner correctement entre user et model
+  const validHistory = [];
+  for (let i = 0; i < history.length; i++) {
+    const message = history[i];
+    if (i === 0 && message.role === 'model') {
+      // Ignorer le premier message s'il est du modèle
+      continue;
+    }
+    validHistory.push(message);
+  }
+
+  // S'assurer qu'il y a au moins un message utilisateur
+  if (validHistory.length === 0 || validHistory[0].role !== 'user') {
+    throw new Error('L\'historique doit commencer par un message utilisateur');
+  }
+
+  // Récupérer les données de la famille si un userId est fourni
+  let familyDataContext = '';
+  let currentChildData: Child | null = null;
+  
+  if (userId) {
+    try {
+      const familyData = await getFamilyData(userId);
+      
+      // Identifier l'enfant actuel si un nom est fourni
+      if (childName) {
+        currentChildData = familyData.children.find((child: Child) => 
+          child.name.toLowerCase() === childName.toLowerCase()
+        ) || null;
+      }
+      
+      // Créer un contexte détaillé avec toutes les données
+      familyDataContext = `
+=== DONNÉES DE LA FAMILLE ===
+
+ENFANTS (${familyData.children.length}):
+${familyData.children.map(child => 
+  `- ${child.name} (${child.age} ans): ${child.points} points, couleur: ${child.custom_color || 'défaut'}`
+).join('\n')}
+
+${currentChildData ? `
+=== ENFANT ACTUEL ===
+Nom: ${currentChildData.name}
+Âge: ${currentChildData.age} ans
+Points actuels: ${currentChildData.points}
+Couleur: ${currentChildData.custom_color || 'défaut'}
+
+TÂCHES DE ${currentChildData.name.toUpperCase()} (${familyData.childTasks.filter(ct => ct.child_id === currentChildData?.id).length}):
+${familyData.childTasks
+  .filter(ct => ct.child_id === currentChildData?.id)
+  .map(ct => 
+    `- ${ct.task?.label}: ${ct.is_completed ? '✅ Terminée' : '⏳ En cours'} (échéance: ${ct.due_date}, ${ct.task?.points_reward} points)`
+  ).join('\n')}
+
+VIOLATIONS DE RÈGLES DE ${currentChildData.name.toUpperCase()} (${familyData.childRulesViolations.filter(v => v.child_id === currentChildData?.id).length}):
+${familyData.childRulesViolations
+  .filter(v => v.child_id === currentChildData?.id)
+  .map(violation => 
+    `- ${violation.rule?.label} le ${violation.violated_at}`
+  ).join('\n')}
+
+RÉCOMPENSES RÉCLAMÉES PAR ${currentChildData.name.toUpperCase()} (${familyData.childRewardsClaimed.filter(cr => cr.child_id === currentChildData?.id).length}):
+${familyData.childRewardsClaimed
+  .filter(cr => cr.child_id === currentChildData?.id)
+  .map(claimed => 
+    `- ${claimed.reward?.label} le ${claimed.claimed_at}`
+  ).join('\n')}
+
+DEvinettes de ${currentChildData.name.toUpperCase()} (${familyData.dailyRiddles.filter(dr => dr.child_id === currentChildData?.id).length}):
+${familyData.dailyRiddles
+  .filter(dr => dr.child_id === currentChildData?.id)
+  .map(dr => 
+    `- ${dr.riddle?.question}: ${dr.is_solved ? '✅ Résolue' : '❓ Non résolue'}`
+  ).join('\n')}
+
+ACHATS DE ${currentChildData.name.toUpperCase()} (${familyData.purchases.filter(p => p.child_id === currentChildData?.id).length}):
+${familyData.purchases
+  .filter(p => p.child_id === currentChildData?.id)
+  .map(purchase => 
+    `- ${purchase.item?.name} le ${purchase.purchased_at}`
+  ).join('\n')}
+
+TRANSACTIONS TIRELIRE DE ${currentChildData.name.toUpperCase()} (${familyData.piggyBankTransactions.filter(tx => tx.child_id === currentChildData?.id).length}):
+${familyData.piggyBankTransactions
+  .filter(tx => tx.child_id === currentChildData?.id)
+  .map(tx => 
+    `- ${tx.type === 'savings' ? '+' : '-'}${tx.points} points (${tx.type}) le ${tx.created_at}`
+  ).join('\n')}
+` : ''}
+
+TÂCHES DISPONIBLES (${familyData.tasks.length}):
+${familyData.tasks.map(task => 
+  `- ${task.label} (${task.points_reward} points, ${task.category}, ${task.is_daily ? 'quotidienne' : 'ponctuelle'})`
+).join('\n')}
+
+RÈGLES (${familyData.rules.length}):
+${familyData.rules.map(rule => 
+  `- ${rule.label} (${rule.points_penalty} points de pénalité)`
+).join('\n')}
+
+RÉCOMPENSES (${familyData.rewards.length}):
+${familyData.rewards.map(reward => 
+  `- ${reward.label} (${reward.cost} points)`
+).join('\n')}
+
+TÂCHES DES ENFANTS (${familyData.childTasks.length}):
+${familyData.childTasks.map(ct => 
+  `- ${ct.task?.label} pour ${familyData.children.find(c => c.id === ct.child_id)?.name}: ${ct.is_completed ? '✅ Terminée' : '⏳ En cours'} (échéance: ${ct.due_date})`
+).join('\n')}
+
+VIOLATIONS DE RÈGLES (${familyData.childRulesViolations.length}):
+${familyData.childRulesViolations.map(violation => 
+  `- ${violation.rule?.label} par ${familyData.children.find(c => c.id === violation.child_id)?.name} le ${violation.violated_at}`
+).join('\n')}
+
+RÉCOMPENSES RÉCLAMÉES (${familyData.childRewardsClaimed.length}):
+${familyData.childRewardsClaimed.map(claimed => 
+  `- ${claimed.reward?.label} par ${familyData.children.find(c => c.id === claimed.child_id)?.name} le ${claimed.claimed_at}`
+).join('\n')}
+
+DEVINETTES (${familyData.riddles.length}):
+${familyData.riddles.map(riddle => 
+  `- ${riddle.question} (${riddle.points} points)`
+).join('\n')}
+
+DEVINETTES QUOTIDIENNES (${familyData.dailyRiddles.length}):
+${familyData.dailyRiddles.map(dr => 
+  `- ${dr.riddle?.question} pour ${familyData.children.find(c => c.id === dr.child_id)?.name}: ${dr.is_solved ? '✅ Résolue' : '❓ Non résolue'}`
+).join('\n')}
+
+HISTORIQUE DES POINTS (${familyData.pointsHistory.length}):
+${familyData.pointsHistory.slice(-10).map(ph => 
+  `- ${familyData.children.find(c => c.id === ph.child_id)?.name}: ${ph.points > 0 ? '+' : ''}${ph.points} points - ${ph.reason}`
+).join('\n')}
+
+ARTICLES DE LA BOUTIQUE (${familyData.shopItems.length}):
+${familyData.shopItems.map(item => 
+  `- ${item.name} (${item.price} points)`
+).join('\n')}
+
+ACHATS (${familyData.purchases.length}):
+${familyData.purchases.map(purchase => 
+  `- ${purchase.item?.name} acheté par ${familyData.children.find(c => c.id === purchase.child_id)?.name} le ${purchase.purchased_at}`
+).join('\n')}
+
+TRANSACTIONS TIRELIRE (${familyData.piggyBankTransactions.length}):
+${familyData.piggyBankTransactions.map(tx => 
+  `- ${familyData.children.find(c => c.id === tx.child_id)?.name}: ${tx.type === 'savings' ? '+' : '-'}${tx.points} points (${tx.type})`
+).join('\n')}
+
+=== FIN DES DONNÉES ===
+`;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données familiales:', error);
+      familyDataContext = 'Impossible de récupérer les données de la famille.';
+    }
+  }
+
+  // Créer le prompt système avec les données de la famille
+  const systemPrompt = `Tu es ${chatbotName || 'un assistant familial intelligent et bienveillant'} pour une application de gestion de récompenses pour enfants. 
+
+${currentChildData ? `Tu parles actuellement avec ${currentChildData.name} (${currentChildData.age} ans) qui a ${currentChildData.points} points.` : ''}
+
+Tu as accès à toutes les données de la famille et tu peux aider les enfants et les parents avec :
+
+**FONCTIONNALITÉS PRINCIPALES :**
+- 📊 **Analyse des points** : Expliquer le système de points, calculer les gains potentiels
+- 🎯 **Gestion des missions** : Aider à prioriser les tâches, expliquer les récompenses
+- 💰 **Conseils financiers** : Aider à gérer la tirelire, conseiller sur les achats
+- 🏆 **Motivation** : Encourager l'enfant, célébrer les succès
+- 📈 **Progression** : Analyser les tendances, suggérer des améliorations
+- 🎁 **Récompenses** : Expliquer les coûts, conseiller sur les choix
+- 📋 **Règles** : Rappeler les règles importantes, expliquer les conséquences
+
+**STYLE DE COMMUNICATION :**
+- Réponds toujours en français de manière amicale et encourageante
+- Tutoie toujours l'enfant (utilise "tu")
+- Sois bref, direct et positif dans tes réponses (jamais de texte long)
+- Personnalise chaque réponse en utilisant le prénom de l'enfant si possible
+- Utilise le nom choisi par l'enfant pour te désigner si c'est le cas
+- Adapte ton langage à l'âge de l'enfant (${currentChildData ? currentChildData.age : 'enfant'} ans)
+- Utilise des emojis pour rendre tes réponses plus attrayantes
+- Sois positif et constructif, même en cas de difficultés
+- Donne des conseils pratiques et réalisables
+- Célèbre les succès et encourage les efforts
+- **Ne commence pas tes réponses par une salutation comme 'Bonjour' ou 'Salut', sauf pour le tout premier message de la conversation.**
+- **Si l'enfant t'a donné un nom personnalisé, utilise ce nom pour te présenter et te référer à toi-même dans tes réponses.**
+
+${currentChildData ? `**PERSONNALISATION POUR ${currentChildData.name.toUpperCase()} :**
+- Adresse-toi directement à ${currentChildData.name}
+- Utilise ses données personnelles pour personnaliser tes conseils
+- Prends en compte son âge (${currentChildData.age} ans) pour adapter tes suggestions
+- Analyse ses habitudes et propose des améliorations personnalisées` : ''}
+
+**EXEMPLES DE RÉPONSES UTILES :**
+- "Bravo ${currentChildData?.name || 'mon ami'} ! Tu as déjà ${currentChildData?.points || 'X'} points !"
+- "Pour gagner plus de points, tu peux essayer [suggestion basée sur les tâches disponibles]"
+- "Ta tirelire contient [montant] points. C'est une excellente habitude d'épargner !"
+- "Voici tes missions prioritaires pour aujourd'hui : [liste personnalisée]"
+
+${familyDataContext}
+
+Réponds à la question de l'utilisateur en utilisant ces informations quand c'est pertinent. Sois toujours encourageant et utile !`;
+
+  // Préparer l'historique pour Gemini (exclure le dernier message utilisateur)
+  const chatHistory = validHistory.slice(0, -1).map((m) => ({ 
+    role: m.role, 
+    parts: [{ text: m.content }] 
+  }));
+
+  const chat = model.startChat({
+    history: chatHistory,
+    generationConfig: {
+      temperature: 0.7,
+      topP: 0.8,
+      topK: 40,
+    },
+  });
+
+  // Envoyer le message système suivi du dernier message utilisateur
+  const userMessage = validHistory[validHistory.length - 1].content;
+  const fullMessage = `${systemPrompt}\n\nQuestion de l'utilisateur: ${userMessage}`;
+  
+  const result = await chat.sendMessage(fullMessage);
+  const response = await result.response;
+  return response.text();
 }
