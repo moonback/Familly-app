@@ -72,6 +72,12 @@ generateTaskSuggestions().then(console.log);
 - **Points équilibrés** (5-50 points par tâche)
 - **Âges appropriés** (3-18 ans)
 
+### Analyse IA des progrès
+
+1. Ouvrez le tableau de bord d'un enfant
+2. Appuyez sur le bouton avec l'icône graphique
+3. Patientez quelques secondes pour recevoir un résumé et des suggestions
+
 ## 🔍 Diagnostic des Problèmes
 
 ### Erreur : "Clé API Gemini manquante"

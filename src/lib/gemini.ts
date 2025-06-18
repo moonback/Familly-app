@@ -617,3 +617,84 @@ Réponds à la question de l'utilisateur en utilisant ces informations quand c'e
   const response = await result.response;
   return response.text();
 }
+
+export interface AnalysisResult {
+  summary: string;
+  task_suggestions: TaskSuggestion[];
+  reward_suggestions: string[];
+}
+
+export async function analyzeChildProgress(childId: string, userId: string): Promise<AnalysisResult> {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing VITE_GEMINI_API_KEY');
+  }
+
+  const familyData = await getFamilyData(userId);
+  const child = familyData.children.find((c) => c.id === childId);
+  if (!child) {
+    throw new Error('Child not found');
+  }
+
+  const completedTasks = familyData.childTasks
+    .filter((t) => t.child_id === childId && t.is_completed)
+    .slice(-5)
+    .map((t) => t.task?.label)
+    .filter(Boolean);
+
+  const claimedRewards = familyData.childRewardsClaimed
+    .filter((r) => r.child_id === childId)
+    .slice(-5)
+    .map((r) => r.reward?.label)
+    .filter(Boolean);
+
+  const prompt = `Analyse les progrès de l'enfant suivant et propose des idées pour l'aider à progresser.
+Nom: ${child.name}
+Age: ${child.age}
+Points actuels: ${child.points}
+Tâches récemment complétées: ${completedTasks.join(', ') || 'Aucune'}
+Récompenses réclamées: ${claimedRewards.join(', ') || 'Aucune'}
+
+Réponds uniquement en JSON au format suivant:
+{
+  "summary": "Résumé en quelques phrases",
+  "task_suggestions": [{ "label": "...", "points_reward": 10, "category": "...", "age_min": 8, "age_max": 12, "is_daily": true }],
+  "reward_suggestions": ["..."]
+}
+`;
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('Format de réponse invalide');
+  }
+
+  const result = JSON.parse(jsonMatch[0]);
+
+  if (
+    !result ||
+    typeof result.summary !== 'string' ||
+    !Array.isArray(result.task_suggestions) ||
+    !Array.isArray(result.reward_suggestions)
+  ) {
+    throw new Error('Invalid analysis result');
+  }
+
+  return result as AnalysisResult;
+}
