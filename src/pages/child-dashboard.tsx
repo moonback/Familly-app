@@ -440,158 +440,13 @@ export default function ChildDashboard() {
               </div>
             </div>
             
-            {/* Section droite - Indicateurs */}
-            <div className="flex items-center gap-2">
-              {/* Missions non complétées */}
-              <div className="relative group">
-                <div 
-                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                  onClick={() => setActiveTab('tasks')}
-                >
-                  <TargetIcon className="w-5 h-5" />
-                </div>
-                {(() => {
-                  const incompleteTasks = childTasks.filter(t => !t.is_completed);
-                  if (incompleteTasks.length > 0) {
-                    return (
-                      <motion.div 
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse"
-                      >
-                        {incompleteTasks.length}
-                      </motion.div>
-                    );
-                  }
-                  return null;
-                })()}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                  {(() => {
-                    const incompleteTasks = childTasks.filter(t => !t.is_completed);
-                    return incompleteTasks.length > 0 
-                      ? `${incompleteTasks.length} mission${incompleteTasks.length > 1 ? 's' : ''} à accomplir`
-                      : 'Toutes les missions sont accomplies !';
-                  })()}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                </div>
-              </div>
-
-              {/* Récompenses disponibles */}
-              <div className="relative group">
-                <div 
-                  className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                  onClick={() => setActiveTab('rewards')}
-                >
-                  <TrophyIcon className="w-5 h-5" />
-                </div>
-                {(() => {
-                  const piggyStats = getPiggyBankStats();
-                  const totalAvailablePoints = child.points + piggyStats.currentBalance;
-                  const affordableRewards = rewards.filter(r => totalAvailablePoints >= r.cost && !isRewardClaimed(r.id));
-                  const totalUnclaimedRewards = rewards.filter(r => !isRewardClaimed(r.id));
-                  
-                  if (affordableRewards.length > 0) {
-                    return (
-                      <motion.div 
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse"
-                      >
-                        {affordableRewards.length}
-                      </motion.div>
-                    );
-                  } else if (totalUnclaimedRewards.length > 0) {
-                    return (
-                      <motion.div 
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
-                      >
-                        {totalUnclaimedRewards.length}
-                      </motion.div>
-                    );
-                  }
-                  return null;
-                })()}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                  {(() => {
-                    const piggyStats = getPiggyBankStats();
-                    const totalAvailablePoints = child.points + piggyStats.currentBalance;
-                    const affordableRewards = rewards.filter(r => totalAvailablePoints >= r.cost && !isRewardClaimed(r.id));
-                    const totalRewards = rewards.filter(r => !isRewardClaimed(r.id));
-                    
-                    if (affordableRewards.length > 0) {
-                      return `${affordableRewards.length} récompense${affordableRewards.length > 1 ? 's' : ''} disponible${affordableRewards.length > 1 ? 's' : ''}`;
-                    } else if (totalRewards.length > 0) {
-                      return `${totalRewards.length} récompense${totalRewards.length > 1 ? 's' : ''} (points insuffisants)`;
-                    } else {
-                      return 'Aucune récompense disponible';
-                    }
-                  })()}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                </div>
-              </div>
-
-              {/* Produits en boutique */}
-              <div className="relative group">
-                <div 
-                  className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                  onClick={() => setActiveTab('shop')}
-                >
-                  <ShoppingCartIcon className="w-5 h-5" />
-                </div>
-                {shopItems.length > 0 && (
-                  <motion.div 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
-                  >
-                    {shopItems.length}
-                  </motion.div>
-                )}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                  {shopItems.length > 0 
-                    ? `${shopItems.length} produit${shopItems.length > 1 ? 's' : ''} en boutique`
-                    : 'Boutique vide'
-                  }
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                </div>
-              </div>
-
-              {/* Devinette du jour */}
-              <div className="relative group">
-                <div 
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                  onClick={() => setActiveTab('riddles')}
-                >
-                  <BrainIcon className="w-5 h-5" />
-                </div>
-                {currentRiddle && !riddleSolved && (
-                  <motion.div 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-bounce"
-                  >
-                    !
-                  </motion.div>
-                )}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                  {currentRiddle && !riddleSolved 
-                    ? 'Nouvelle devinette disponible !'
-                    : riddleSolved 
-                      ? 'Devinette résolue aujourd\'hui'
-                      : 'Aucune devinette disponible'
-                  }
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
       </motion.div>
 
       {/* Contenu principal avec padding-top réduit pour le header compact */}
-      <div className="pt-20">
+      <div className="pt-20 pb-24">
         {/* Navigation par onglets */}
         <div className="container mx-auto p-4">
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-2 mb-6 shadow-lg">
@@ -1857,6 +1712,157 @@ export default function ChildDashboard() {
           </div>
         </div>
       )}
+
+      {/* Indicateurs flottants fixes en bas */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm border-t border-purple-200 shadow-lg">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-center gap-4">
+            {/* Missions non complétées */}
+            <div className="relative group">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                onClick={() => setActiveTab('tasks')}
+              >
+                <TargetIcon className="w-6 h-6" />
+              </div>
+              {(() => {
+                const incompleteTasks = childTasks.filter(t => !t.is_completed);
+                if (incompleteTasks.length > 0) {
+                  return (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-2 -right-2 bg-blue-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
+                    >
+                      {incompleteTasks.length}
+                    </motion.div>
+                  );
+                }
+                return null;
+              })()}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                {(() => {
+                  const incompleteTasks = childTasks.filter(t => !t.is_completed);
+                  return incompleteTasks.length > 0 
+                    ? `${incompleteTasks.length} mission${incompleteTasks.length > 1 ? 's' : ''} à accomplir`
+                    : 'Toutes les missions sont accomplies !';
+                })()}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+              </div>
+            </div>
+
+            {/* Récompenses disponibles */}
+            <div className="relative group">
+              <div 
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                onClick={() => setActiveTab('rewards')}
+              >
+                <TrophyIcon className="w-6 h-6" />
+              </div>
+              {(() => {
+                const piggyStats = getPiggyBankStats();
+                const totalAvailablePoints = child.points + piggyStats.currentBalance;
+                const affordableRewards = rewards.filter(r => totalAvailablePoints >= r.cost && !isRewardClaimed(r.id));
+                const totalUnclaimedRewards = rewards.filter(r => !isRewardClaimed(r.id));
+                
+                if (affordableRewards.length > 0) {
+                  return (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
+                    >
+                      {affordableRewards.length}
+                    </motion.div>
+                  );
+                } else if (totalUnclaimedRewards.length > 0) {
+                  return (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-2 -right-2 bg-orange-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold"
+                    >
+                      {totalUnclaimedRewards.length}
+                    </motion.div>
+                  );
+                }
+                return null;
+              })()}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                {(() => {
+                  const piggyStats = getPiggyBankStats();
+                  const totalAvailablePoints = child.points + piggyStats.currentBalance;
+                  const affordableRewards = rewards.filter(r => totalAvailablePoints >= r.cost && !isRewardClaimed(r.id));
+                  const totalRewards = rewards.filter(r => !isRewardClaimed(r.id));
+                  
+                  if (affordableRewards.length > 0) {
+                    return `${affordableRewards.length} récompense${affordableRewards.length > 1 ? 's' : ''} disponible${affordableRewards.length > 1 ? 's' : ''}`;
+                  } else if (totalRewards.length > 0) {
+                    return `${totalRewards.length} récompense${totalRewards.length > 1 ? 's' : ''} (points insuffisants)`;
+                  } else {
+                    return 'Aucune récompense disponible';
+                  }
+                })()}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+              </div>
+            </div>
+
+            {/* Produits en boutique */}
+            <div className="relative group">
+              <div 
+                className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                onClick={() => setActiveTab('shop')}
+              >
+                <ShoppingCartIcon className="w-6 h-6" />
+              </div>
+              {shopItems.length > 0 && (
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-2 -right-2 bg-blue-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold"
+                >
+                  {shopItems.length}
+                </motion.div>
+              )}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                {shopItems.length > 0 
+                  ? `${shopItems.length} produit${shopItems.length > 1 ? 's' : ''} en boutique`
+                  : 'Boutique vide'
+                }
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+              </div>
+            </div>
+
+            {/* Devinette du jour */}
+            <div className="relative group">
+              <div 
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                onClick={() => setActiveTab('riddles')}
+              >
+                <BrainIcon className="w-6 h-6" />
+              </div>
+              {currentRiddle && !riddleSolved && (
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-2 -right-2 bg-purple-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-bounce"
+                >
+                  !
+                </motion.div>
+              )}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                {currentRiddle && !riddleSolved 
+                  ? 'Nouvelle devinette disponible !'
+                  : riddleSolved 
+                    ? 'Devinette résolue aujourd\'hui'
+                    : 'Aucune devinette disponible'
+                }
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 } 
