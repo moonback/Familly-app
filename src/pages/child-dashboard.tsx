@@ -99,7 +99,7 @@ export default function ChildDashboard() {
   const navigate = useNavigate();
   const { childName } = useParams();
   const [child, setChild] = useState<Child | null>(null);
-  const [activeTab, setActiveTab] = useState<'tasks' | 'rewards' | 'shop' | 'piggy' | 'riddles' | 'profile' | 'purchases'>('tasks');
+  const [activeTab, setActiveTab] = useState<'tasks' | 'rewards' | 'shop' | 'piggy' | 'riddles' | 'weather' | 'profile' | 'purchases'>('tasks');
   const [showConfetti, setShowConfetti] = useState(false);
   const [completedTaskId, setCompletedTaskId] = useState<string | null>(null);
   const [showRiddleDialog, setShowRiddleDialog] = useState(false);
@@ -393,15 +393,16 @@ export default function ChildDashboard() {
   const completedTasks = childTasks.filter(t => t.is_completed).length;
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-  const tabs = [
-    { id: 'tasks', label: 'Mes Missions', icon: TargetIcon, color: 'text-blue-600' },
-    { id: 'rewards', label: 'Mes Récompenses', icon: TrophyIcon, color: 'text-yellow-600' },
-    { id: 'shop', label: 'Boutique', icon: ShoppingCartIcon, color: 'text-green-600' },
-    { id: 'purchases', label: 'Mes Achats', icon: PackageIcon, color: 'text-indigo-600' },
-    { id: 'piggy', label: 'Ma Tirelire', icon: PiggyBankIcon, color: 'text-orange-600' },
-    { id: 'riddles', label: 'Devinettes', icon: BrainIcon, color: 'text-purple-600' },
-    { id: 'profile', label: 'Mon Profil', icon: UsersIcon, color: 'text-pink-600' }
-  ];
+  // const tabs = [
+  //   { id: 'tasks', label: 'Mes Missions', icon: TargetIcon, color: 'text-blue-600' },
+  //   { id: 'rewards', label: 'Mes Récompenses', icon: TrophyIcon, color: 'text-yellow-600' },
+  //   { id: 'shop', label: 'Boutique', icon: ShoppingCartIcon, color: 'text-green-600' },
+  //   { id: 'purchases', label: 'Mes Achats', icon: PackageIcon, color: 'text-indigo-600' },
+  //   { id: 'piggy', label: 'Ma Tirelire', icon: PiggyBankIcon, color: 'text-orange-600' },
+  //   { id: 'riddles', label: 'Devinettes', icon: BrainIcon, color: 'text-purple-600' },
+  //   { id: 'weather', label: 'Météo', icon: CalendarIcon, color: 'text-sky-600' },
+  //   { id: 'profile', label: 'Mon Profil', icon: UsersIcon, color: 'text-pink-600' }
+  // ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100">
@@ -474,28 +475,7 @@ export default function ChildDashboard() {
       <div className="pt-10 pb-24">
         {/* Navigation par onglets */}
         <div className="container mx-auto p-4">
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-2 mb-6 shadow-lg">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <Button
-                    key={tab.id}
-                    variant={activeTab === tab.id ? 'default' : 'ghost'}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`h-12 rounded-xl font-medium transition-all duration-300 ${
-                      activeTab === tab.id 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
-                        : 'hover:bg-white/50'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 mr-2 ${activeTab === tab.id ? 'text-white' : tab.color}`} />
-                    {tab.label}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
+          
 
           {/* Contenu des onglets */}
           <AnimatePresence mode="wait">
@@ -1353,6 +1333,25 @@ export default function ChildDashboard() {
                 </div>
               )}
 
+              {/* Onglet Météo */}
+              {activeTab === 'weather' && (
+                <div className="space-y-6">
+                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-3 text-2xl">
+                        <CalendarIcon className="w-8 h-8 text-sky-600" />
+                        Météo complète
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="max-w-md mx-auto">
+                        <WeatherWidget city="Paris" mode="full" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               {/* Onglet Profil */}
               {activeTab === 'profile' && (
                 <div className="space-y-8">
@@ -2062,6 +2061,32 @@ export default function ChildDashboard() {
               </div>
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 Besoin d'aide ?
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+              </div>
+            </div>
+            {/* Tirelire */}
+            <div className="relative group">
+              <div 
+                className="bg-gradient-to-r from-orange-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                onClick={() => setActiveTab('piggy')}
+              >
+                <PiggyBankIcon className="w-6 h-6" />
+              </div>
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                Ma Tirelire
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+              </div>
+            </div>
+            {/* Profil */}
+            <div className="relative group">
+              <div 
+                className="bg-gradient-to-r from-pink-500 to-purple-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                onClick={() => setActiveTab('profile')}
+              >
+                <UsersIcon className="w-6 h-6" />
+              </div>
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                Mon Profil
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
               </div>
             </div>
