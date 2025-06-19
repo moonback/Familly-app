@@ -1858,14 +1858,17 @@ export default function ChildDashboard() {
       {/* Indicateurs flottants fixes en bas */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-purple-200 shadow-2xl sm:shadow-lg">
         <div className="max-w-full px-1 sm:container sm:mx-auto sm:px-4 py-2 sm:py-3">
-          <div className="flex items-center justify-between gap-1 sm:justify-center sm:gap-4">
+          <div className="flex items-center justify-between gap-2 sm:justify-center sm:gap-4">
             {/* Missions non complétées */}
             <div className="relative group">
               <div 
-                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 sm:p-3.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer text-2xl sm:text-base"
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-4 sm:p-3.5 rounded-full shadow-2xl sm:shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer text-3xl sm:text-base w-14 h-14 sm:w-auto sm:h-auto flex items-center justify-center focus-visible:ring-2 focus-visible:ring-blue-400"
                 onClick={() => setActiveTab('tasks')}
+                tabIndex={0}
+                role="button"
+                aria-label="Missions"
               >
-                <TargetIcon className="w-6 h-6" />
+                <TargetIcon className="w-8 h-8 sm:w-6 sm:h-6" />
               </div>
               {(() => {
                 const incompleteTasks = childTasks.filter(t => !t.is_completed);
@@ -1874,7 +1877,7 @@ export default function ChildDashboard() {
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-2 -right-2 bg-blue-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
+                      className="absolute -top-3 -right-3 bg-blue-500 text-white text-base sm:text-sm rounded-full w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center font-bold animate-pulse shadow-lg"
                     >
                       {incompleteTasks.length}
                     </motion.div>
