@@ -472,7 +472,7 @@ export default function ChildDashboard() {
       </motion.div>
 
       {/* Contenu principal avec padding-top réduit pour le header compact */}
-      <div className="pt-10 pb-24">
+      <div className="pt-10 pb-24 pb-[env(safe-area-inset-bottom)]">
         {/* Navigation par onglets */}
         <div className="container mx-auto p-4">
           
@@ -1856,7 +1856,7 @@ export default function ChildDashboard() {
       )}
 
       {/* Indicateurs flottants fixes en bas */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm border-t border-purple-200 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm border-t border-purple-200 shadow-lg pb-[env(safe-area-inset-bottom)]">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-center gap-4">
             {/* Missions non complétées */}
