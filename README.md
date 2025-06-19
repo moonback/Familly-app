@@ -127,8 +127,10 @@ Une application moderne et interactive pour aider les parents à gérer les tâc
    VITE_SUPABASE_URL=your_supabase_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    VITE_GEMINI_API_KEY=your_google_generative_ai_key
+   VITE_OPENWEATHER_KEY=your_openweather_key
    ```
    La clé `VITE_GEMINI_API_KEY` est utilisée pour contacter l'API Google Gemini afin de générer automatiquement des suggestions de tâches, règles ou récompenses et pour l'analyse IA du tableau de bord enfant.
+   La clé `VITE_OPENWEATHER_KEY` permet de récupérer les données météo depuis OpenWeatherMap.
 
 4. Exécuter les migrations Supabase :
    - `create_initial_schema.sql`

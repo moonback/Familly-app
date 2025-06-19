@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 interface WeatherData {
   name: string;
@@ -22,19 +23,30 @@ interface WeatherWidgetProps {
   mode?: 'full';
 }
 
-const API_KEY = '942c1a83a2948447b2ba4e057708b506';
 
 export default function WeatherWidget({ city = 'Paris', mode }: WeatherWidgetProps) {
   const [weather, setWeather] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const apiKey = import.meta.env.VITE_OPENWEATHER_KEY;
 
   useEffect(() => {
     setLoading(true);
     setError(null);
+    if (!apiKey) {
+      toast({
+        title: 'Erreur',
+        description: 'Clé API OpenWeather manquante',
+        variant: 'destructive',
+      });
+      setError('Clé API OpenWeather manquante');
+      setLoading(false);
+      return;
+    }
+
     if (mode === 'full') {
       fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=fr`
+        `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric&lang=fr`
       )
         .then((res) => {
           if (!res.ok) throw new Error('Erreur lors de la récupération de la météo');
@@ -50,7 +62,7 @@ export default function WeatherWidget({ city = 'Paris', mode }: WeatherWidgetPro
         });
     } else {
       fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=fr`
+        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric&lang=fr`
       )
         .then((res) => {
           if (!res.ok) throw new Error('Erreur lors de la récupération de la météo');
