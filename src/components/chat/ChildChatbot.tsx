@@ -8,7 +8,7 @@ import { getChatbotResponse } from '@/lib/gemini';
 import { useAuth } from '@/context/auth-context';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getWeather } from '@/lib/utils';
+import { getWeather, getDailyForecast } from '@/lib/utils';
 
 interface ChatbotProps {
   open: boolean;
@@ -224,10 +224,28 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     const regexMeteo = /(météo|temps|température|fait-il chaud|froid|quel temps|quelle température)/i;
     if (regexMeteo.test(messageContent)) {
       try {
-        const weather = await getWeather(city);
+        const forecast = await getDailyForecast(city);
+        // Choix de l'emoji météo
+        let emoji = '🌤️';
+        const desc = forecast.description.toLowerCase();
+        if (desc.includes('pluie')) emoji = '🌧️';
+        else if (desc.includes('orage')) emoji = '⛈️';
+        else if (desc.includes('neige')) emoji = '❄️';
+        else if (desc.includes('nuage')) emoji = '☁️';
+        else if (desc.includes('soleil') || desc.includes('dégagé')) emoji = '☀️';
+        else if (desc.includes('brume') || desc.includes('brouillard')) emoji = '🌫️';
+
+        // Conseil météo simple
+        let conseil = '';
+        if (forecast.temp_max >= 28) conseil = "Pense à bien t'hydrater et mets une casquette si tu sors !";
+        else if (forecast.temp_min <= 5) conseil = "Couvre-toi bien, il fait frais aujourd'hui !";
+        else if (desc.includes('pluie')) conseil = "N'oublie pas ton parapluie ou un imperméable !";
+        else if (desc.includes('vent')) conseil = "Attention au vent, prends une veste !";
+        else conseil = "Passe une super journée !";
+
         setMessages(prev => [...prev, {
           sender: 'bot',
-          text: `À ${city}, il fait actuellement ${weather.temp}°C avec un temps « ${weather.description} ». ☀️🌡️`,
+          text: `${emoji} Coucou ! Voici la météo prévue aujourd'hui à ${city} :\n- **Matin** : ${forecast.morning !== null ? forecast.morning + '°C' : 'N/A'}\n- **Après-midi** : ${forecast.afternoon !== null ? forecast.afternoon + '°C' : 'N/A'}\n- **Soir** : ${forecast.evening !== null ? forecast.evening + '°C' : 'N/A'}\nTempératures de la journée : de **${forecast.temp_min}°C** à **${forecast.temp_max}°C**.\nTemps dominant : **${forecast.description}**.\n${conseil}`,
           timestamp: new Date()
         }]);
       } catch (e) {
