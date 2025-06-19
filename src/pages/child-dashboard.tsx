@@ -410,14 +410,14 @@ export default function ChildDashboard() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-sm border-b border-purple-200 fixed top-0 left-0 right-0 z-50"
+        className="bg-white/90 backdrop-blur-sm border-b border-purple-200 fixed top-0 left-0 right-0 z-50"
       >
-        <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-between gap-3">
+        <div className="container mx-auto px-2 py-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
             {/* Section gauche - Avatar et nom */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {child.avatar_url ? (
-                <div className="w-12 h-12 rounded-full overflow-hidden shadow-lg">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden shadow-lg">
                   <img 
                     src={child.avatar_url} 
                     alt={`Photo de ${child.name}`}
@@ -429,7 +429,7 @@ export default function ChildDashboard() {
                     }}
                   />
                   <div 
-                    className={`w-full h-full flex items-center justify-center text-white text-xl font-bold ${
+                    className={`w-full h-full flex items-center justify-center text-white text-lg sm:text-xl font-bold ${
                       child.avatar_url ? 'hidden' : ''
                     }`}
                     style={{ backgroundColor: child.custom_color }}
@@ -439,25 +439,25 @@ export default function ChildDashboard() {
                 </div>
               ) : (
                 <div 
-                  className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center text-white text-xl font-bold shadow-lg"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center text-white text-lg sm:text-xl font-bold shadow-lg"
                   style={{ backgroundColor: child.custom_color }}
                 >
                   {child.name.charAt(0).toUpperCase()}
                 </div>
               )}
               <div>
-                <h1 className="text-lg font-bold text-gray-800">Salut {child.name} ! 👋</h1>
-                <p className="text-sm text-gray-600">Prêt pour de nouvelles aventures ?</p>
+                <h1 className="text-base sm:text-lg font-bold text-gray-800">Salut {child.name} ! 👋</h1>
+                <p className="text-xs sm:text-sm text-gray-600">Prêt pour de nouvelles aventures ?</p>
               </div>
             </div>
 
             {/* Section centrale - Points */}
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1.5 rounded-full font-bold text-sm shadow-lg">
+            <div className="flex items-center gap-1 sm:gap-2 mt-2 sm:mt-0">
+              <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold text-xs sm:text-sm shadow-lg">
                 <StarIcon className="inline-block w-4 h-4 mr-1" />
                 {child.points} pts ({convertPointsToEuros(child.points)}€)
               </div>
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1.5 rounded-full font-bold text-sm shadow-lg">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full font-bold text-xs sm:text-sm shadow-lg">
                 <PiggyBankIcon className="inline-block w-4 h-4 mr-1" />
                 {getPiggyBankStats().currentBalance} épargnés ({convertPointsToEuros(getPiggyBankStats().currentBalance)}€)
               </div>
@@ -472,9 +472,9 @@ export default function ChildDashboard() {
       </motion.div>
 
       {/* Contenu principal avec padding-top réduit pour le header compact */}
-      <div className="pt-10 pb-24">
+      <div className="pt-14 pb-28 sm:pt-10 sm:pb-24">
         {/* Navigation par onglets */}
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto p-2 sm:p-4">
           
 
           {/* Contenu des onglets */}
@@ -490,7 +490,7 @@ export default function ChildDashboard() {
               {activeTab === 'tasks' && (
                 <div className="space-y-6">
                   {/* Progression générale */}
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl p-2 sm:p-4">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-3 text-2xl">
                         <TargetIcon className="w-8 h-8 text-blue-600" />
@@ -568,19 +568,19 @@ export default function ChildDashboard() {
                             </Button>
                           </div>
                           
-                          <h3 className={`text-lg font-semibold mb-3 ${
+                          <h3 className={`text-base sm:text-lg font-semibold mb-2 sm:mb-3 ${
                             childTask.is_completed ? 'line-through text-gray-500' : 'text-gray-800'
                           }`}>
                             {childTask.task.label}
                           </h3>
                           
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-yellow-600 font-bold">
+                            <div className="flex items-center gap-1 sm:gap-2 text-yellow-600 font-bold text-sm sm:text-base">
                               <StarIcon className="w-4 h-4" />
                               {childTask.task.points_reward} points
                               <span className="text-xs text-gray-500">(≈ {convertPointsToEuros(childTask.task.points_reward)} €)</span>
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-xs sm:text-sm text-gray-500">
                               {format(new Date(childTask.due_date), 'dd/MM', { locale: fr })}
                             </div>
                           </div>
@@ -774,7 +774,7 @@ export default function ChildDashboard() {
                                 <CheckCircleIcon className="w-5 h-5 text-green-600" />
                                 Récompenses réclamées ({claimedRewards.length})
                               </h3>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                 {claimedRewards.map((claimedReward) => {
                                   const reward = rewards.find(r => r.id === claimedReward.reward_id);
                                   if (!reward) return null;
@@ -1569,7 +1569,7 @@ export default function ChildDashboard() {
                                   <TrendingUp className="w-5 h-5 text-green-600" />
                                   Statistiques mensuelles
                                 </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                   {Object.entries(stats.monthlyStats)
                                     .sort(([a], [b]) => b.localeCompare(a))
                                     .slice(0, 6)
@@ -1856,13 +1856,13 @@ export default function ChildDashboard() {
       )}
 
       {/* Indicateurs flottants fixes en bas */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm border-t border-purple-200 shadow-lg">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-center gap-4">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-purple-200 shadow-2xl sm:shadow-lg">
+        <div className="max-w-full px-1 sm:container sm:mx-auto sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center justify-between gap-1 sm:justify-center sm:gap-4">
             {/* Missions non complétées */}
             <div className="relative group">
               <div 
-                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 sm:p-3.5 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer text-2xl sm:text-base"
                 onClick={() => setActiveTab('tasks')}
               >
                 <TargetIcon className="w-6 h-6" />
