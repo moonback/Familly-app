@@ -46,7 +46,7 @@ import { usePointsHistory } from '@/hooks/usePointsHistory';
 import { usePiggyBank } from '@/hooks/usePiggyBank';
 import { usePurchases } from '@/hooks/usePurchases';
 import { useAiAnalysis } from '@/hooks/useAiAnalysis';
-import { ChildAnalysis } from '@/components/analysis/ChildAnalysis';
+import ChildAnalysis from '@/components/analysis/ChildAnalysis';
 import ChildChatbot from '@/components/chat/ChildChatbot';
 import WeatherWidget from '@/components/WeatherWidget';
 
@@ -1655,7 +1655,7 @@ export default function ChildDashboard() {
       </Dialog>
 
       <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[90vw] h-[90vh] max-w-none max-h-none p-0 md:p-0">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-blue-600" />
