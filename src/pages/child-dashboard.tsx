@@ -119,6 +119,8 @@ export default function ChildDashboard() {
     analysis,
     loading: analysisLoading,
     getAnalysis,
+    refreshAnalysis,
+    getAnalysisFromStorage,
   } = useAiAnalysis(user?.id);
 
   // Fonction de conversion des points en euros
@@ -178,6 +180,10 @@ export default function ChildDashboard() {
   const { pointsHistory } = usePointsHistory(child);
   const { transactions: piggyTransactions, loading: piggyLoading, depositing, depositPoints, withdrawPoints, getPiggyBankStats } = usePiggyBank(child, fetchChildData);
   const { purchases, loading: purchasesLoading, getPurchaseStats } = usePurchases(child);
+
+  // États pour l'analyse IA
+  const [isFromCache, setIsFromCache] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -329,7 +335,34 @@ export default function ChildDashboard() {
   const handleOpenAnalysis = async () => {
     if (!child) return;
     setShowAnalysis(true);
+    
+    // Vérifier d'abord s'il y a une analyse en cache
+    const cachedAnalysis = getAnalysisFromStorage(child.id);
+    if (cachedAnalysis) {
+      setIsFromCache(true);
+      setLastUpdated(new Date().toISOString());
+    } else {
+      setIsFromCache(false);
+      setLastUpdated(null);
+    }
+    
     await getAnalysis(child.id);
+  };
+
+  const handleRefreshAnalysis = async () => {
+    if (!child) return;
+    
+    setIsFromCache(false);
+    setLastUpdated(null);
+    
+    const result = await refreshAnalysis(child.id);
+    if (result) {
+      setLastUpdated(new Date().toISOString());
+      toast({
+        title: 'Analyse actualisée',
+        description: 'L\'analyse IA a été mise à jour avec les dernières données',
+      });
+    }
   };
 
   const getCategoryIcon = (category: string) => {
@@ -1666,12 +1699,27 @@ export default function ChildDashboard() {
           </DialogHeader>
           
           {analysisLoading && (
-            <div className="flex flex-col items-center justify-center py-16 space-y-4">
+            <div className="flex flex-col items-center justify-center py-20 space-y-6">
               <div className="relative">
-                <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-                <div className="absolute inset-0 w-12 h-12 border-4 border-blue-200 rounded-full animate-ping"></div>
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                  <Loader2 className="w-8 h-8 animate-spin text-white" />
+                </div>
+                <div className="absolute inset-0 w-16 h-16 border-4 border-blue-300/50 rounded-full animate-ping"></div>
+                <div className="absolute inset-0 w-16 h-16 border-2 border-purple-400/30 rounded-full animate-pulse"></div>
               </div>
-              <p className="text-gray-600 font-medium animate-pulse">Analyse en cours...</p>
+              <div className="text-center space-y-2">
+                <p className="text-gray-700 font-semibold text-lg animate-pulse">
+                  Analyse IA en cours...
+                </p>
+                <p className="text-gray-500 text-sm">
+                  Nous analysons tes données pour des recommandations personnalisées
+                </p>
+              </div>
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              </div>
             </div>
           )}
           
@@ -1686,6 +1734,9 @@ export default function ChildDashboard() {
                 streak={streak}
                 piggyBankStats={getPiggyBankStats()}
                 purchaseStats={getPurchaseStats()}
+                onRefreshAnalysis={handleRefreshAnalysis}
+                isFromCache={isFromCache}
+                lastUpdated={lastUpdated}
               />
             </div>
           )}

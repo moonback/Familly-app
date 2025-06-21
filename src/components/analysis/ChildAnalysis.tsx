@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, Lightbulb, Gift, Star, Target, Sparkles, Trophy, Zap, Heart, Rocket, TrendingUp, Award, Brain, CheckCircle, Clock, AlertCircle, Users, Calendar, TrendingDown, Activity, Target as TargetIcon, Award as AwardIcon, PiggyBank, ShoppingCart, Package, Brain as BrainIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BarChart3, Lightbulb, Gift, Star, Target, Sparkles, Trophy, Zap, Heart, Rocket, TrendingUp, Award, Brain, CheckCircle, Clock, AlertCircle, Users, Calendar, TrendingDown, Activity, Target as TargetIcon, Award as AwardIcon, PiggyBank, ShoppingCart, Package, Brain as BrainIcon, RefreshCw, Database } from 'lucide-react';
 import { ChildTask, Reward } from '@/types/dashboard';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -37,6 +38,9 @@ interface Props {
     uniqueItems: number;
     monthlyStats: Record<string, { count: number; total: number }>;
   };
+  onRefreshAnalysis?: () => void;
+  isFromCache?: boolean;
+  lastUpdated?: string | null;
 }
 
 export default function ChildAnalysis({ 
@@ -51,7 +55,10 @@ export default function ChildAnalysis({
   child,
   streak = 0,
   piggyBankStats = { currentBalance: 0, totalSavings: 0, totalSpending: 0, transactionCount: 0 },
-  purchaseStats = { totalPurchases: 0, totalSpent: 0, uniqueItems: 0, monthlyStats: {} }
+  purchaseStats = { totalPurchases: 0, totalSpent: 0, uniqueItems: 0, monthlyStats: {} },
+  onRefreshAnalysis,
+  isFromCache = false,
+  lastUpdated
 }: Props) {
   const [hoveredTask, setHoveredTask] = useState<number | null>(null);
   const [hoveredReward, setHoveredReward] = useState<number | null>(null);
@@ -265,12 +272,42 @@ export default function ChildAnalysis({
           <div className="flex-1 w-full px-4 py-6 md:px-10 md:py-12 space-y-8 md:space-y-12 overflow-y-auto">
             {/* Enhanced Summary with 3D card effect */}
             <section className={`relative ${animationStage >= 1 ? 'animate-slide-up' : 'opacity-0'}`}>
-              <h2 className="flex items-center gap-3 text-2xl md:text-3xl font-bold text-purple-700 mb-6">
-                <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl shadow-lg">
-                  <Sparkles className="w-6 h-6 text-purple-500" />
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="flex items-center gap-3 text-2xl md:text-3xl font-bold text-purple-700">
+                  <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl shadow-lg">
+                    <Sparkles className="w-6 h-6 text-purple-500" />
+                  </div>
+                  Résumé de l'analyse
+                </h2>
+                
+                {/* Informations sur le cache et bouton de rafraîchissement */}
+                <div className="flex items-center gap-3">
+                  {isFromCache && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                      <Database className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm text-blue-700 font-medium">Cache</span>
+                      {lastUpdated && (
+                        <span className="text-xs text-blue-600">
+                          {format(new Date(lastUpdated), 'dd/MM à HH:mm', { locale: fr })}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  
+                  {onRefreshAnalysis && (
+                    <Button
+                      onClick={onRefreshAnalysis}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2 bg-white/80 hover:bg-white border-blue-200 hover:border-blue-300"
+                    >
+                      <RefreshCw className="w-4 h-4 text-blue-600" />
+                      <span className="text-blue-700 font-medium">Actualiser</span>
+                    </Button>
+                  )}
                 </div>
-                Résumé de l'analyse
-              </h2>
+              </div>
+              
               <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-6 md:p-8 border-2 border-purple-100 shadow-xl relative overflow-hidden hover-lift">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-200/20 to-pink-200/20 rounded-full blur-2xl"></div>
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-blue-200/15 to-purple-200/15 rounded-full blur-xl"></div>
@@ -666,6 +703,91 @@ export default function ChildAnalysis({
                 </div>
               </section>
             )}
+
+            {/* Enhanced Animated Separator */}
+            <div className="relative">
+              <div className="h-1.5 w-full bg-gradient-to-r from-blue-300 via-purple-300 via-pink-300 to-orange-300 rounded-full shadow-lg"></div>
+              <div className="absolute inset-0 h-1.5 bg-gradient-to-r from-blue-400 via-purple-400 via-pink-400 to-orange-400 rounded-full animate-pulse opacity-60"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-lg">
+                <Star className="w-3 h-3 text-purple-500" />
+              </div>
+            </div>
+
+            {/* Informations sur le cache et les performances */}
+            <section className={`relative ${animationStage >= 1 ? 'animate-slide-up' : 'opacity-0'}`}>
+              <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-2xl p-6 border-2 border-slate-200 shadow-lg">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-gradient-to-br from-slate-100 to-blue-100 rounded-lg">
+                    <Database className="w-5 h-5 text-slate-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-700">Informations techniques</h3>
+                </div>
+                
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Source des données :</span>
+                      <span className={`font-semibold ${isFromCache ? 'text-blue-600' : 'text-green-600'}`}>
+                        {isFromCache ? 'Cache local' : 'Analyse en temps réel'}
+                      </span>
+                    </div>
+                    
+                    {lastUpdated && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Dernière mise à jour :</span>
+                        <span className="font-semibold text-gray-800">
+                          {format(new Date(lastUpdated), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Durée de validité :</span>
+                      <span className="font-semibold text-gray-800">24 heures</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Tâches analysées :</span>
+                      <span className="font-semibold text-gray-800">{childTasks.length}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Récompenses disponibles :</span>
+                      <span className="font-semibold text-gray-800">{availableRewards.length}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Points totaux :</span>
+                      <span className="font-semibold text-gray-800">{childPoints + piggyBankStats.currentBalance}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {isFromCache && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-blue-800">
+                      <Database className="w-4 h-4" />
+                      <span className="text-sm font-medium">Analyse mise en cache</span>
+                    </div>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Cette analyse a été sauvegardée localement pour un accès plus rapide. 
+                      Clique sur "Actualiser" pour obtenir une analyse fraîche avec les dernières données.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Enhanced Animated Separator */}
+            <div className="relative">
+              <div className="h-1.5 w-full bg-gradient-to-r from-green-300 via-blue-300 via-purple-300 to-pink-300 rounded-full shadow-lg"></div>
+              <div className="absolute inset-0 h-1.5 bg-gradient-to-r from-green-400 via-blue-400 via-purple-400 to-pink-400 rounded-full animate-pulse opacity-60"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-lg">
+                <Gift className="w-3 h-3 text-pink-500" />
+              </div>
+            </div>
           </div>
 
           {/* Enhanced Bottom gradient border */}
