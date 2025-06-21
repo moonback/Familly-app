@@ -443,14 +443,14 @@ export default function ChildDashboard() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-sm border-b border-purple-200 fixed top-0 left-0 right-0 z-50"
+        className="bg-white/90 backdrop-blur-md border-b border-gray-200/50 fixed top-0 left-0 right-0 z-50 shadow-sm"
       >
-        <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-between gap-3">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
             {/* Section gauche - Avatar et nom */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {child.avatar_url ? (
-                <div className="w-12 h-12 rounded-full overflow-hidden shadow-lg">
+                <div className="w-10 h-10 rounded-full overflow-hidden shadow-md ring-2 ring-purple-100">
                   <img 
                     src={child.avatar_url} 
                     alt={`Photo de ${child.name}`}
@@ -462,7 +462,7 @@ export default function ChildDashboard() {
                     }}
                   />
                   <div 
-                    className={`w-full h-full flex items-center justify-center text-white text-xl font-bold ${
+                    className={`w-full h-full flex items-center justify-center text-white text-lg font-bold ${
                       child.avatar_url ? 'hidden' : ''
                     }`}
                     style={{ backgroundColor: child.custom_color }}
@@ -472,32 +472,34 @@ export default function ChildDashboard() {
                 </div>
               ) : (
                 <div 
-                  className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center text-white text-xl font-bold shadow-lg"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md ring-2 ring-purple-100"
                   style={{ backgroundColor: child.custom_color }}
                 >
                   {child.name.charAt(0).toUpperCase()}
                 </div>
               )}
-              <div>
-                <h1 className="text-lg font-bold text-gray-800">Salut {child.name} ! 👋</h1>
-                <p className="text-sm text-gray-600">Prêt pour de nouvelles aventures ?</p>
+              <div className="hidden sm:block">
+                <h1 className="text-base font-semibold text-gray-900">Salut {child.name} ! 👋</h1>
+                <p className="text-xs text-gray-500">Prêt pour de nouvelles aventures ?</p>
               </div>
             </div>
 
             {/* Section centrale - Points */}
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1.5 rounded-full font-bold text-sm shadow-lg">
-                <StarIcon className="inline-block w-4 h-4 mr-1" />
-                {child.points} pts ({convertPointsToEuros(child.points)}€)
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1.5 rounded-lg font-semibold text-sm shadow-sm flex items-center gap-1.5">
+                <StarIcon className="w-3.5 h-3.5" />
+                <span>{child.points} pts</span>
+                <span className="text-xs opacity-90">({convertPointsToEuros(child.points)}€)</span>
               </div>
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1.5 rounded-full font-bold text-sm shadow-lg">
-                <PiggyBankIcon className="inline-block w-4 h-4 mr-1" />
-                {getPiggyBankStats().currentBalance} épargnés ({convertPointsToEuros(getPiggyBankStats().currentBalance)}€)
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-3 py-1.5 rounded-lg font-semibold text-sm shadow-sm flex items-center gap-1.5">
+                <PiggyBankIcon className="w-3.5 h-3.5" />
+                <span>{getPiggyBankStats().currentBalance}</span>
+                <span className="text-xs opacity-90">({convertPointsToEuros(getPiggyBankStats().currentBalance)}€)</span>
               </div>
             </div>
 
             {/* Section droite - Météo */}
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <WeatherWidget city="Paris" />
             </div>
           </div>
@@ -505,7 +507,7 @@ export default function ChildDashboard() {
       </motion.div>
 
       {/* Contenu principal avec padding-top réduit pour le header compact */}
-      <div className="pt-10 pb-24">
+      <div className="pt-8 pb-24">
         {/* Navigation par onglets */}
         <div className="container mx-auto p-4">
           
