@@ -1677,7 +1677,16 @@ export default function ChildDashboard() {
           
           {!analysisLoading && analysis && (
             <div className="h-full overflow-hidden">
-              <ChildAnalysis analysis={analysis} />
+              <ChildAnalysis 
+                analysis={analysis} 
+                childTasks={childTasks}
+                availableRewards={rewards}
+                childPoints={child?.points || 0}
+                child={child}
+                streak={streak}
+                piggyBankStats={getPiggyBankStats()}
+                purchaseStats={getPurchaseStats()}
+              />
             </div>
           )}
         </DialogContent>
