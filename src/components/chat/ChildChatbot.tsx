@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MessageCircleIcon, Loader2, SparklesIcon, RotateCcw, BarChart3, Send, Bot, User, Star, Trophy, Target, PiggyBank, ShoppingCart, Gift, AlertCircle, CheckCircle, Clock, Edit3, LocateIcon } from 'lucide-react';
+import { MessageCircleIcon, Loader2, SparklesIcon, RotateCcw, BarChart3, Send, Bot, User, Star, Trophy, Target, PiggyBank, ShoppingCart, Gift, AlertCircle, CheckCircle, Clock, Edit3, LocateIcon, Volume2, Zap, Heart } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { getChatbotResponse } from '@/lib/gemini';
 import { useAuth } from '@/context/auth-context';
@@ -21,44 +21,81 @@ interface ChatMessage {
   timestamp?: Date;
 }
 
-// Suggestions de questions rapides avec icônes
+// Suggestions améliorées avec animations et couleurs
 const quickQuestions = [
-  { text: "Comment dois-je m'habiller ?", icon: "🧥", color: "from-yellow-400 to-orange-400" },
-  { text: "Quelles sont mes missions ?", icon: "🎯", color: "from-blue-400 to-indigo-400" },
-  { text: "Que puis-je acheter ?", icon: "🛒", color: "from-green-400 to-emerald-400" },
-  { text: "Quelles récompenses puis-je avoir ?", icon: "🏆", color: "from-purple-400 to-violet-400" },
-  { text: "Quelles règles dois-je respecter ?", icon: "📋", color: "from-red-400 to-pink-400" },
-  { text: "Donne-moi des conseils !", icon: "💡", color: "from-cyan-400 to-blue-400" },
-  { text: "Quelle est la météo ?", icon: "☀️", color: "from-blue-200 to-blue-400" },
-  { text: "Combien de points ai-je ?", icon: "⭐", color: "from-yellow-200 to-yellow-400" },
+  { text: "Comment dois-je m'habiller ?", icon: "🧥", color: "from-amber-400 via-orange-400 to-red-400", glow: "shadow-amber-200" },
+  { text: "Quelles sont mes missions ?", icon: "🎯", color: "from-blue-400 via-indigo-400 to-purple-400", glow: "shadow-blue-200" },
+  { text: "Que puis-je acheter ?", icon: "🛒", color: "from-emerald-400 via-green-400 to-teal-400", glow: "shadow-emerald-200" },
+  { text: "Quelles récompenses puis-je avoir ?", icon: "🏆", color: "from-purple-400 via-violet-400 to-pink-400", glow: "shadow-purple-200" },
+  { text: "Quelles règles dois-je respecter ?", icon: "📋", color: "from-red-400 via-pink-400 to-rose-400", glow: "shadow-red-200" },
+  { text: "Donne-moi des conseils !", icon: "💡", color: "from-cyan-400 via-sky-400 to-blue-400", glow: "shadow-cyan-200" },
+  { text: "Quelle est la météo ?", icon: "☀️", color: "from-yellow-300 via-yellow-400 to-orange-400", glow: "shadow-yellow-200" },
+  { text: "Combien de points ai-je ?", icon: "⭐", color: "from-yellow-400 via-amber-400 to-orange-400", glow: "shadow-yellow-200" },
 ];
 
-// Nouveau composant FormattedMessage simple et compatible HTML
+// Messages d'encouragement animés
+const encouragementMessages = [
+  "Tu es formidable ! 🌟",
+  "Continue comme ça ! 🚀",
+  "Tu fais du super travail ! ✨",
+  "Je suis fier de toi ! 🎉"
+];
+
+// Nouveau composant FormattedMessage avec animations
 const FormattedMessage = ({ text }: { text: string }) => {
   let formatted = text
-    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // gras markdown
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-purple-600">$1</strong>')
     .replace(/\n/g, '<br />')
-    .replace(/(\d+) points?/gi, '<span style="background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:8px;font-weight:bold;">⭐ $1 points</span>')
-    .replace(/récompense[s]?/gi, '<span style="background:#EDE9FE;color:#6D28D9;padding:2px 6px;border-radius:8px;font-weight:bold;">🏆 récompense</span>')
-    .replace(/mission[s]?/gi, '<span style="background:#DBEAFE;color:#1D4ED8;padding:2px 6px;border-radius:8px;font-weight:bold;">🎯 mission</span>')
-    .replace(/tirelire/gi, '<span style="background:#FCE7F3;color:#BE185D;padding:2px 6px;border-radius:8px;font-weight:bold;">🐷 tirelire</span>')
-    .replace(/achat[s]?/gi, '<span style="background:#DCFCE7;color:#166534;padding:2px 6px;border-radius:8px;font-weight:bold;">🛒 achat</span>')
-    .replace(/cadeau[x]?/gi, '<span style="background:#FFEDD5;color:#C2410C;padding:2px 6px;border-radius:8px;font-weight:bold;">🎁 cadeau</span>')
-    .replace(/✅|terminé[e]?|complété[e]?/gi, '<span style="background:#D1FAE5;color:#065F46;padding:2px 6px;border-radius:8px;font-weight:bold;">✅ Terminé</span>')
-    .replace(/⏳|en cours|en attente/gi, '<span style="background:#FEF9C3;color:#92400E;padding:2px 6px;border-radius:8px;font-weight:bold;">⏳ En cours</span>')
-    .replace(/❌|erreur|problème/gi, '<span style="background:#FECACA;color:#991B1B;padding:2px 6px;border-radius:8px;font-weight:bold;">❌ Attention</span>')
-    // liens
-    .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:#2563EB;text-decoration:underline;">$1</a>');
-
-  // Listes à la main (optionnel)
-  formatted = formatted.replace(/(?:^|\n)[-•*] (.+)/g, '<ul style="margin:8px 0 8px 16px;"><li>$1</li></ul>');
+    .replace(/(\d+) points?/gi, '<span class="inline-flex items-center gap-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-bold border border-amber-200 shadow-sm animate-pulse">⭐ $1 points</span>')
+    .replace(/récompense[s]?/gi, '<span class="inline-flex items-center gap-1 bg-gradient-to-r from-purple-100 to-violet-100 text-purple-800 px-3 py-1 rounded-full text-sm font-bold border border-purple-200 shadow-sm">🏆 récompense</span>')
+    .replace(/mission[s]?/gi, '<span class="inline-flex items-center gap-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold border border-blue-200 shadow-sm">🎯 mission</span>')
+    .replace(/tirelire/gi, '<span class="inline-flex items-center gap-1 bg-gradient-to-r from-pink-100 to-rose-100 text-pink-800 px-3 py-1 rounded-full text-sm font-bold border border-pink-200 shadow-sm">🐷 tirelire</span>')
+    .replace(/achat[s]?/gi, '<span class="inline-flex items-center gap-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold border border-green-200 shadow-sm">🛒 achat</span>')
+    .replace(/cadeau[x]?/gi, '<span class="inline-flex items-center gap-1 bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 px-3 py-1 rounded-full text-sm font-bold border border-orange-200 shadow-sm">🎁 cadeau</span>')
+    .replace(/✅|terminé[e]?|complété[e]?/gi, '<span class="inline-flex items-center gap-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold border border-green-200 shadow-sm animate-bounce">✅ Terminé</span>')
+    .replace(/⏳|en cours|en attente/gi, '<span class="inline-flex items-center gap-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-bold border border-yellow-200 shadow-sm">⏳ En cours</span>')
+    .replace(/❌|erreur|problème/gi, '<span class="inline-flex items-center gap-1 bg-gradient-to-r from-red-100 to-pink-100 text-red-800 px-3 py-1 rounded-full text-sm font-bold border border-red-200 shadow-sm">❌ Attention</span>')
+    .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-blue-600 hover:text-blue-800 underline font-medium transition-colors">$1</a>');
 
   return (
     <div
-      className="prose prose-sm max-w-none"
+      className="prose prose-sm max-w-none leading-relaxed"
       style={{ wordBreak: 'break-word' }}
       dangerouslySetInnerHTML={{ __html: formatted }}
     />
+  );
+};
+
+// Composant d'avatar animé
+const AnimatedAvatar = ({ sender, isTyping = false }: { sender: 'user' | 'bot', isTyping?: boolean }) => {
+  return (
+    <motion.div
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      className={`relative w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg ${
+        sender === 'user' 
+          ? 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500' 
+          : 'bg-gradient-to-br from-purple-500 via-pink-500 to-red-500'
+      }`}
+    >
+      {sender === 'user' ? (
+        <User className="w-5 h-5" />
+      ) : (
+        <motion.div
+          animate={isTyping ? { rotate: [0, 5, -5, 0] } : {}}
+          transition={{ duration: 0.5, repeat: isTyping ? Infinity : 0 }}
+        >
+          <Bot className="w-5 h-5" />
+        </motion.div>
+      )}
+      
+      {/* Effet de halo */}
+      <div className={`absolute inset-0 rounded-full animate-pulse ${
+        sender === 'user' 
+          ? 'bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400' 
+          : 'bg-gradient-to-br from-purple-400 via-pink-400 to-red-400'
+      } opacity-20 scale-110`} />
+    </motion.div>
   );
 };
 
@@ -69,26 +106,24 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   const chatbotNameKey = `chatbot_name_${childName || 'default'}`;
   
   // État pour le nom du chatbot
-  const [chatbotName, setChatbotName] = useState<string>('Assistant Personnel');
+  const [chatbotName, setChatbotName] = useState<string>('Assistant Magique');
   const [isEditingName, setIsEditingName] = useState(false);
   const [newChatbotName, setNewChatbotName] = useState('');
   
   const [messages, setMessages] = useState<ChatMessage[]>([{
     sender: 'bot',
-    text: `Bonjour ${childName ? decodeURIComponent(childName) : ''} ! 👋 Je suis ton assistant familial intelligent. Je peux t'aider avec tes missions, tes points, tes récompenses et bien plus encore ! Que puis-je faire pour toi aujourd'hui ?`,
+    text: `Salut ${childName ? decodeURIComponent(childName) : 'champion'} ! 👋✨ Je suis ton assistant magique ! Que puis-je faire pour toi aujourd'hui ?`,
     timestamp: new Date()
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showEncouragement, setShowEncouragement] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Ajout d'un état pour mémoriser l'attente d'une activité
+  // États existants
   const [pendingActivity, setPendingActivity] = useState<null | { weather: any; age: number | null }>(null);
-
-  // Ajout d'un état pour la ville détectée
   const [city, setCity] = useState<string>(() => {
-    // On tente de charger la ville depuis le localStorage
     return localStorage.getItem('user_city') || 'Paris';
   });
   const [cityLoading, setCityLoading] = useState(false);
@@ -113,24 +148,21 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
         // Si erreur, on garde le message de bienvenue
       }
     }
-    // eslint-disable-next-line
   }, [childName]);
 
   // Sauvegarder l'historique à chaque changement
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(messages));
-    // eslint-disable-next-line
   }, [messages, childName]);
 
   // Détection automatique de la ville au montage
   useEffect(() => {
-    if (city && city !== 'Paris') return; // déjà détectée
+    if (city && city !== 'Paris') return;
     setCityLoading(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(async (pos) => {
         try {
           const { latitude, longitude } = pos.coords;
-          // Reverse geocoding via Nominatim
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=fr`);
           const data = await res.json();
           const detectedCity = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || data.address?.county || 'Paris';
@@ -151,6 +183,15 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     }
   }, []);
 
+  // Fonction pour afficher des encouragements aléatoirement
+  useEffect(() => {
+    if (messages.length > 3 && Math.random() < 0.3) {
+      setShowEncouragement(true);
+      const timeout = setTimeout(() => setShowEncouragement(false), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [messages.length]);
+
   // Fonction pour changer le nom du chatbot
   const handleNameChange = () => {
     if (newChatbotName.trim()) {
@@ -159,16 +200,14 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
       setIsEditingName(false);
       setNewChatbotName('');
       
-      // Ajouter un message informatif
       setMessages(prev => [...prev, {
         sender: 'bot',
-        text: `Parfait ! Tu peux maintenant m'appeler "${newChatbotName.trim()}" ! 😊`,
+        text: `Parfait ! Tu peux maintenant m'appeler "${newChatbotName.trim()}" ! 😊✨`,
         timestamp: new Date()
       }]);
     }
   };
 
-  // Fonction pour annuler le changement de nom
   const cancelNameChange = () => {
     setIsEditingName(false);
     setNewChatbotName('');
@@ -178,7 +217,6 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     const messageContent = content || input.trim();
     if (!messageContent) return;
     
-    // Ajouter le message utilisateur à l'historique local
     setMessages(prev => [...prev, { 
       sender: 'user', 
       text: messageContent,
@@ -187,7 +225,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     if (!content) setInput('');
     setLoading(true);
 
-    // Si on attend une activité, on la traite ici
+    // Gestion des activités en attente
     if (pendingActivity) {
       try {
         const activity = messageContent;
@@ -220,12 +258,11 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
       return;
     }
 
-    // --- INTERCEPTION DES QUESTIONS MÉTÉO ---
+    // Interception météo
     const regexMeteo = /(météo|temps|température|fait-il chaud|froid|quel temps|quelle température)/i;
     if (regexMeteo.test(messageContent)) {
       try {
         const forecast = await getDailyForecast(city);
-        // Choix de l'emoji météo
         let emoji = '🌤️';
         const desc = forecast.description.toLowerCase();
         if (desc.includes('pluie')) emoji = '🌧️';
@@ -235,17 +272,16 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
         else if (desc.includes('soleil') || desc.includes('dégagé')) emoji = '☀️';
         else if (desc.includes('brume') || desc.includes('brouillard')) emoji = '🌫️';
 
-        // Conseil météo simple
         let conseil = '';
-        if (forecast.temp_max >= 28) conseil = "Pense à bien t'hydrater et mets une casquette si tu sors !";
-        else if (forecast.temp_min <= 5) conseil = "Couvre-toi bien, il fait frais aujourd'hui !";
-        else if (desc.includes('pluie')) conseil = "N'oublie pas ton parapluie ou un imperméable !";
-        else if (desc.includes('vent')) conseil = "Attention au vent, prends une veste !";
-        else conseil = "Passe une super journée !";
+        if (forecast.temp_max >= 28) conseil = "Pense à bien t'hydrater et mets une casquette si tu sors ! 💧";
+        else if (forecast.temp_min <= 5) conseil = "Couvre-toi bien, il fait frais aujourd'hui ! 🧥";
+        else if (desc.includes('pluie')) conseil = "N'oublie pas ton parapluie ou un imperméable ! ☂️";
+        else if (desc.includes('vent')) conseil = "Attention au vent, prends une veste ! 🌬️";
+        else conseil = "Passe une super journée ! 🌟";
 
         setMessages(prev => [...prev, {
           sender: 'bot',
-          text: `${emoji} Coucou ! Voici la météo prévue aujourd'hui à ${city} :\n- **Matin** : ${forecast.morning !== null ? forecast.morning + '°C' : 'N/A'}\n- **Après-midi** : ${forecast.afternoon !== null ? forecast.afternoon + '°C' : 'N/A'}\n- **Soir** : ${forecast.evening !== null ? forecast.evening + '°C' : 'N/A'}\nTempératures de la journée : de **${forecast.temp_min}°C** à **${forecast.temp_max}°C**.\nTemps dominant : **${forecast.description}**.\n${conseil}`,
+          text: `${emoji} Voici la météo prévue aujourd'hui à ${city} :\n\n**🌅 Matin** : ${forecast.morning !== null ? forecast.morning + '°C' : 'N/A'}\n**☀️ Après-midi** : ${forecast.afternoon !== null ? forecast.afternoon + '°C' : 'N/A'}\n**🌙 Soir** : ${forecast.evening !== null ? forecast.evening + '°C' : 'N/A'}\n\n🌡️ Températures : de **${forecast.temp_min}°C** à **${forecast.temp_max}°C**\n🌤️ Temps : **${forecast.description}**\n\n${conseil}`,
           timestamp: new Date()
         }]);
       } catch (e) {
@@ -259,9 +295,8 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
       }
       return;
     }
-    // --- FIN INTERCEPTION ---
 
-    // --- INTERCEPTION DES QUESTIONS TENUE/VÊTEMENTS ---
+    // Interception tenue
     const regexTenue = /(tenue|vêtements?|habiller|porter|comment m'habiller|comment dois-je m'habiller|comment dois-je m\s?habiller|comment s'habiller|comment s\s?habiller|que dois-je porter|quelle tenue)/i;
     if (regexTenue.test(messageContent)) {
       try {
@@ -288,7 +323,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
         } else {
           setMessages(prev => [...prev, {
             sender: 'bot',
-            text: `Pour quelle activité veux-tu une suggestion de tenue ? (école, sport, sortie, maison…)`,
+            text: `Pour quelle activité veux-tu une suggestion de tenue ? (école, sport, sortie, maison…) 🤔`,
             timestamp: new Date()
           }]);
           setPendingActivity({ weather, age });
@@ -304,7 +339,6 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
       }
       return;
     }
-    // --- FIN INTERCEPTION TENUE ---
 
     try {
       const conversationHistory = messages
@@ -341,7 +375,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   const resetConversation = () => {
     const welcome = [{
       sender: 'bot' as const,
-      text: `Bonjour ${childName ? decodeURIComponent(childName) : ''} ! 👋 Je suis ${chatbotName}. Je peux t'aider avec tes missions, tes points, tes récompenses et bien plus encore ! Que puis-je faire pour toi aujourd'hui ?`,
+      text: `Salut ${childName ? decodeURIComponent(childName) : 'champion'} ! 👋✨ Je suis ${chatbotName}. Je peux t'aider avec tes missions, tes points, tes récompenses et bien plus encore ! Que puis-je faire pour toi aujourd'hui ?`,
       timestamp: new Date()
     }];
     setMessages(welcome);
@@ -360,14 +394,6 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     });
   };
 
-  // Scroll automatique en bas à chaque nouveau message ou loading
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, loading]);
-
-  // Fonction pour relancer la localisation
   const handleLocate = async () => {
     setCityLoading(true);
     if (navigator.geolocation) {
@@ -394,16 +420,68 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     }
   };
 
+  // Scroll automatique
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, loading]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90%] flex flex-col h-[80vh] p-0 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 border-0 shadow-2xl">
-        {/* Header avec gradient */}
-        <DialogHeader className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white p-6 rounded-t-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-full">
-                <MessageCircleIcon className="w-6 h-6" />
-              </div>
+      <DialogContent className="max-w-[95%] max-h-[90vh] flex flex-col p-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-0 shadow-2xl overflow-hidden">
+        
+        {/* Message d'encouragement flottant */}
+        <AnimatePresence>
+          {showEncouragement && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.8 }}
+              className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-4 py-2 rounded-full shadow-lg font-medium text-sm flex items-center gap-2"
+            >
+              <Heart className="w-4 h-4 animate-pulse" />
+              {encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Header amélioré */}
+        <DialogHeader className="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white p-6 relative overflow-hidden">
+          {/* Effet de particules en arrière-plan */}
+          <div className="absolute inset-0 opacity-20">
+            {[...Array(15)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-white rounded-full"
+                initial={{ 
+                  x: Math.random() * 400, 
+                  y: Math.random() * 100,
+                  opacity: 0 
+                }}
+                animate={{
+                  opacity: [0, 1, 0],
+                  scale: [0, 1, 0],
+                  y: [null, -20, -40]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  delay: i * 0.2
+                }}
+              />
+            ))}
+          </div>
+          
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-4">
+              <motion.div 
+                className="p-3 bg-white/20 rounded-full backdrop-blur-sm"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <MessageCircleIcon className="w-7 h-7" />
+              </motion.div>
               <div>
                 {isEditingName ? (
                   <div className="flex items-center gap-2">
@@ -418,28 +496,29 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
                         }
                       }}
                       placeholder="Nouveau nom..."
-                      className="bg-white/20 text-white placeholder-white/70 border-white/30 focus:border-white/50"
+                      className="bg-white/20 text-white placeholder-white/70 border-white/30 focus:border-white/50 backdrop-blur-sm"
                       autoFocus
                     />
                     <Button
                       size="sm"
                       onClick={handleNameChange}
-                      className="bg-white/20 hover:bg-white/30 text-white"
+                      className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
                     >
                       ✓
                     </Button>
                     <Button
                       size="sm"
                       onClick={cancelNameChange}
-                      className="bg-white/20 hover:bg-white/30 text-white"
+                      className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
                     >
                       ✕
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <DialogTitle className="text-xl font-bold">
+                  <div className="flex items-center gap-3">
+                    <DialogTitle className="text-2xl font-bold flex items-center gap-2">
                       {chatbotName}
+                      <SparklesIcon className="w-6 h-6 animate-pulse" />
                     </DialogTitle>
                     <Button
                       variant="ghost"
@@ -448,203 +527,196 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
                         setIsEditingName(true);
                         setNewChatbotName(chatbotName);
                       }}
-                      className="text-white hover:bg-white/20 p-1"
+                      className="text-white hover:bg-white/20 p-2 backdrop-blur-sm"
                       title="Changer le nom du chatbot"
                     >
-                      <Edit3 className="w-3 h-3" />
+                      <Edit3 className="w-4 h-4" />
                     </Button>
                   </div>
                 )}
-                <p className="text-sm text-white/80">
-                  {childName ? decodeURIComponent(childName) : ''}
+                <p className="text-lg text-white/90 font-medium">
+                  Bonjour {childName ? decodeURIComponent(childName) : 'champion'} ! 🌟
                 </p>
-                {/* Affichage ville + bouton localiser */}
-                <div className="flex items-center gap-2 mt-1">
+                
+                {/* Ville avec design amélioré */}
+                <div className="flex items-center gap-3 mt-2">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleLocate}
-                    className="text-white hover:bg-white/20 px-2 py-1"
+                    className="text-white hover:bg-white/20 px-3 py-2 backdrop-blur-sm rounded-full"
                     title="Localiser ma ville"
                     disabled={cityLoading}
                   >
-                    <LocateIcon className="w-4 h-4 mr-1" />
+                    <LocateIcon className="w-4 h-4 mr-2" />
                     {cityLoading ? (
-                      <span className="flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Localisation...</span>
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" /> 
+                        Localisation...
+                      </span>
                     ) : (
                       <span>Localiser</span>
                     )}
                   </Button>
-                  <span className="text-xs text-white/80 bg-black/20 rounded px-2 py-0.5">
+                  <span className="text-sm text-white/90 bg-white/20 rounded-full px-4 py-2 backdrop-blur-sm">
                     {cityLoading ? '...' : city}
                   </span>
                 </div>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={askForStats}
                 disabled={loading}
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 p-2 backdrop-blur-sm"
                 title="Demander des statistiques"
               >
-                <BarChart3 className="w-4 h-4" />
+                <BarChart3 className="w-5 h-5" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={resetConversation}
                 disabled={loading}
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 p-2 backdrop-blur-sm"
                 title="Nouvelle conversation"
               >
-                <RotateCcw className="w-4 h-4" />
+                <RotateCcw className="w-5 h-5" />
               </Button>
             </div>
           </div>
         </DialogHeader>
-        
-        {/* Zone de chat avec scroll */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+
+        {/* Zone de chat améliorée */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <AnimatePresence>
             {messages.map((m, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                initial={{ opacity: 0, y: 25, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                transition={{ duration: 0.3, delay: idx * 0.1 }}
-                className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                exit={{ opacity: 0, y: -25, scale: 0.9 }}
+                transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+                className={`flex items-end gap-3 max-w-[85%] ${m.sender === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto flex-row'}`}
               >
-                <div className={`flex items-start gap-3 max-w-[85%] ${m.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                  {/* Avatar */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
-                    m.sender === 'user' 
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-500' 
-                      : 'bg-gradient-to-r from-purple-500 to-pink-500'
-                  }`}>
-                    {m.sender === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                  </div>
-                  
-                  {/* Message */}
-                  <div className={`rounded-2xl px-4 py-3 shadow-sm ${
-                    m.sender === 'user'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
-                      : 'bg-white border border-gray-200 text-gray-800'
-                  }`}>
-                    {m.sender === 'bot' ? (
-                      <FormattedMessage text={m.text} />
-                    ) : (
-                      <p className="text-sm leading-relaxed">{m.text}</p>
-                    )}
-                    {m.timestamp && (
-                      <p className={`text-xs mt-2 ${
-                        m.sender === 'user' ? 'text-white/70' : 'text-gray-500'
-                      }`}>
-                        {formatTime(m.timestamp)}
-                      </p>
-                    )}
-                  </div>
+                <AnimatedAvatar sender={m.sender} />
+                <div className={`rounded-3xl px-5 py-3 shadow-lg ${
+                  m.sender === 'user'
+                    ? 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 text-white rounded-br-lg'
+                    : 'bg-white/80 backdrop-blur-sm border border-gray-200/50 text-gray-800 rounded-bl-lg'
+                }`}>
+                  {m.sender === 'bot' ? (
+                    <FormattedMessage text={m.text} />
+                  ) : (
+                    <p className="text-base leading-relaxed">{m.text}</p>
+                  )}
+                  {m.timestamp && (
+                    <p className={`text-xs mt-2 text-right ${
+                      m.sender === 'user' ? 'text-white/70' : 'text-gray-400'
+                    }`}>
+                      {formatTime(m.timestamp)}
+                    </p>
+                  )}
                 </div>
               </motion.div>
             ))}
           </AnimatePresence>
           
-          {/* Indicateur de chargement */}
+          {/* Indicateur de chargement animé */}
           {loading && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-3"
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              className="flex items-end gap-3"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                <Bot className="w-4 h-4 text-white" />
-              </div>
-              <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3">
+              <AnimatedAvatar sender="bot" isTyping={true} />
+              <div className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-3xl rounded-bl-lg px-5 py-3 shadow-lg">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
-                  <span className="text-sm text-gray-600">{chatbotName} réfléchit...</span>
+                  <motion.div
+                    className="w-2 h-2 bg-purple-400 rounded-full"
+                    animate={{ scale: [1, 1.5, 1], y: [0, -2, 0] }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div
+                    className="w-2 h-2 bg-purple-400 rounded-full"
+                    animate={{ scale: [1, 1.5, 1], y: [0, -2, 0] }}
+                    transition={{ duration: 0.8, delay: 0.2, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div
+                    className="w-2 h-2 bg-purple-400 rounded-full"
+                    animate={{ scale: [1, 1.5, 1], y: [0, -2, 0] }}
+                    transition={{ duration: 0.8, delay: 0.4, repeat: Infinity, ease: "easeInOut" }}
+                  />
                 </div>
               </div>
             </motion.div>
           )}
-          {/* Ajout du ref pour le scroll automatique */}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Suggestions de questions rapides */}
+        {/* Suggestions de questions rapides améliorées */}
         {messages.length === 1 && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="px-3 pb-2"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="px-6 pb-4"
           >
-            <p className="text-xs text-gray-600 mb-2 font-medium">💡 Questions rapides :</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {quickQuestions.map((question, index) => (
+            <h4 className="text-sm font-semibold text-purple-800/80 mb-3 flex items-center gap-2">
+              <SparklesIcon className="w-5 h-5 text-purple-500" />
+              Suggestions Magiques
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {quickQuestions.map((q, i) => (
                 <motion.button
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.03 }}
-                  onClick={() => handleQuickQuestion(question.text)}
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: i * 0.05 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleQuickQuestion(q.text)}
                   disabled={loading}
-                  className={`
-                    flex flex-col items-center justify-center w-full
-                    p-2 rounded-lg font-medium text-xs
-                    bg-white border-2 border-transparent
-                    shadow hover:shadow-md
-                    transition-all duration-150
-                    hover:scale-105 active:scale-95
-                    ${question.color ? `bg-gradient-to-r ${question.color} text-white` : 'border-purple-200'}
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                  `}
-                  style={{
-                    minHeight: '48px',
-                    boxShadow: question.color
-                      ? '0 2px 8px 0 rgba(180, 100, 255, 0.10)'
-                      : undefined,
-                  }}
+                  className={`flex flex-col items-center justify-center w-full p-3 rounded-2xl font-semibold text-xs text-center text-white bg-gradient-to-br ${q.color} shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${q.glow} hover:${q.glow}`}
                 >
-                  <span className="text-lg mb-0.5">{question.icon}</span>
-                  <span className="text-[11px] leading-tight text-center">{question.text}</span>
+                  <span className="text-2xl mb-1">{q.icon}</span>
+                  <span className="leading-tight">{q.text}</span>
                 </motion.button>
               ))}
             </div>
           </motion.div>
         )}
         
-        {/* Zone de saisie */}
-        <div className="p-6 pt-0">
-          <div className="flex gap-3 items-end">
-            <div className="flex-1 relative">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-                placeholder="Écris ton message..."
-                className="pr-12 bg-white border-2 border-gray-200 focus:border-purple-400 rounded-2xl py-3 px-4 shadow-sm transition-all duration-200"
-                disabled={loading}
-              />
-              <Button
-                onClick={() => sendMessage()}
-                disabled={loading || !input.trim()}
-                size="sm"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full w-8 h-8 p-0 shadow-md hover:shadow-lg transition-all duration-200"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
+        {/* Zone de saisie améliorée */}
+        <div className="p-6 pt-2 border-t border-purple-200/50 bg-white/30 backdrop-blur-sm">
+          <div className="relative">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              placeholder="Écris ton message magique..."
+              className="w-full pr-14 pl-5 py-3 bg-white/80 border-2 border-purple-200/50 focus:border-purple-400 focus:ring-4 focus:ring-purple-200/50 rounded-full shadow-inner transition-all duration-300"
+              disabled={loading}
+            />
+            <motion.button
+              onClick={() => sendMessage()}
+              disabled={loading || !input.trim()}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+            >
+              <Send className="w-5 h-5" />
+            </motion.button>
           </div>
           <p className="text-xs text-gray-500 mt-2 text-center">
-            Appuie sur Entrée pour envoyer, Shift+Entrée pour une nouvelle ligne
+            Appuie sur Entrée pour envoyer, Maj+Entrée pour sauter une ligne
           </p>
         </div>
       </DialogContent>
