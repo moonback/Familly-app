@@ -84,6 +84,52 @@ export async function getWeather(city: string = 'Paris') {
   return {
     name: data.name,
     temp: Math.round(data.main.temp),
+    temp_min: Math.round(data.main.temp_min),
+    temp_max: Math.round(data.main.temp_max),
     description: data.weather[0].description
+  };
+}
+
+// Prévisions détaillées de la journée (matin, après-midi, soir, min, max, description dominante)
+export async function getDailyForecast(city = 'Paris') {
+  const API_KEY = '942c1a83a2948447b2ba4e057708b506';
+  const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=fr`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Erreur lors de la récupération des prévisions');
+  const data = await res.json();
+  const now = new Date();
+  const today = now.getDate();
+  // Filtrer les prévisions du jour
+  const todayForecasts = data.list.filter((f: any) => {
+    const date = new Date(f.dt_txt);
+    return date.getDate() === today;
+  });
+  if (todayForecasts.length === 0) throw new Error('Pas de prévisions pour aujourd\'hui');
+  // Températures min/max
+  const temp_min = Math.min(...todayForecasts.map((f: any) => f.main.temp_min));
+  const temp_max = Math.max(...todayForecasts.map((f: any) => f.main.temp_max));
+  // Matin = 6h-11h, Après-midi = 12h-17h, Soir = 18h-23h
+  const getPeriodTemp = (start: number, end: number) => {
+    const period = todayForecasts.filter((f: any) => {
+      const hour = new Date(f.dt_txt).getHours();
+      return hour >= start && hour <= end;
+    });
+    if (period.length === 0) return null;
+    // Moyenne
+    return Math.round(period.reduce((sum: number, f: any) => sum + f.main.temp, 0) / period.length);
+  };
+  const morning = getPeriodTemp(6, 11);
+  const afternoon = getPeriodTemp(12, 17);
+  const evening = getPeriodTemp(18, 23);
+  // Description dominante
+  const descs = todayForecasts.map((f: any) => f.weather[0].description);
+  const descDominante = descs.sort((a: string, b: string) => descs.filter((v: string) => v === a).length - descs.filter((v: string) => v === b).length).pop();
+  return {
+    temp_min: Math.round(temp_min),
+    temp_max: Math.round(temp_max),
+    morning,
+    afternoon,
+    evening,
+    description: descDominante
   };
 }
