@@ -437,31 +437,20 @@ export default function ChildDashboard() {
   const completedTasks = childTasks.filter(t => t.is_completed).length;
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-  // const tabs = [
-  //   { id: 'tasks', label: 'Mes Missions', icon: TargetIcon, color: 'text-blue-600' },
-  //   { id: 'rewards', label: 'Mes Récompenses', icon: TrophyIcon, color: 'text-yellow-600' },
-  //   { id: 'shop', label: 'Boutique', icon: ShoppingCartIcon, color: 'text-green-600' },
-  //   { id: 'purchases', label: 'Mes Achats', icon: PackageIcon, color: 'text-indigo-600' },
-  //   { id: 'piggy', label: 'Ma Tirelire', icon: PiggyBankIcon, color: 'text-orange-600' },
-  //   { id: 'riddles', label: 'Devinettes', icon: BrainIcon, color: 'text-purple-600' },
-  //   { id: 'weather', label: 'Météo', icon: CalendarIcon, color: 'text-sky-600' },
-  //   { id: 'profile', label: 'Mon Profil', icon: UsersIcon, color: 'text-pink-600' }
-  // ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100">
-      {/* Header avec avatar et points */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Header compact et professionnel */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/90 backdrop-blur-md border-b border-gray-200/50 fixed top-0 left-0 right-0 z-50 shadow-sm"
+        className="bg-white/95 backdrop-blur-lg border-b border-slate-200/60 fixed top-0 left-0 right-0 z-50 shadow-sm"
       >
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-4 py-2.5">
           <div className="flex items-center justify-between">
-            {/* Section gauche - Avatar et nom */}
-            <div className="flex items-center gap-4">
+            {/* Avatar et nom */}
+            <div className="flex items-center gap-3">
               {child.avatar_url ? (
-                <div className="w-10 h-10 rounded-full overflow-hidden shadow-md ring-2 ring-purple-100">
+                <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm ring-1 ring-slate-200">
                   <img 
                     src={child.avatar_url} 
                     alt={`Photo de ${child.name}`}
@@ -473,7 +462,7 @@ export default function ChildDashboard() {
                     }}
                   />
                   <div 
-                    className={`w-full h-full flex items-center justify-center text-white text-lg font-bold ${
+                    className={`w-full h-full flex items-center justify-center text-white text-sm font-semibold ${
                       child.avatar_url ? 'hidden' : ''
                     }`}
                     style={{ backgroundColor: child.custom_color }}
@@ -483,33 +472,31 @@ export default function ChildDashboard() {
                 </div>
               ) : (
                 <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md ring-2 ring-purple-100"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold shadow-sm ring-1 ring-slate-200"
                   style={{ backgroundColor: child.custom_color }}
                 >
                   {child.name.charAt(0).toUpperCase()}
                 </div>
               )}
               <div className="hidden sm:block">
-                <h1 className="text-base font-semibold text-gray-900">Salut {child.name} ! 👋</h1>
-                <p className="text-xs text-gray-500">Prêt pour de nouvelles aventures ?</p>
+                <h1 className="text-sm font-semibold text-slate-900">Salut {child.name} ! 👋</h1>
+                <p className="text-xs text-slate-500">Prêt pour de nouvelles aventures ?</p>
               </div>
             </div>
 
-            {/* Section centrale - Points */}
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1.5 rounded-lg font-semibold text-sm shadow-sm flex items-center gap-1.5">
-                <StarIcon className="w-3.5 h-3.5" />
-                <span>{child.points} pts</span>
-                <span className="text-xs opacity-90">({convertPointsToEuros(child.points)}€)</span>
+            {/* Points compacts */}
+            <div className="flex items-center gap-2">
+              <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2.5 py-1 rounded-md font-medium text-xs shadow-sm flex items-center gap-1">
+                <StarIcon className="w-3 h-3" />
+                <span>{child.points}</span>
               </div>
-              <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-3 py-1.5 rounded-lg font-semibold text-sm shadow-sm flex items-center gap-1.5">
-                <PiggyBankIcon className="w-3.5 h-3.5" />
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-2.5 py-1 rounded-md font-medium text-xs shadow-sm flex items-center gap-1">
+                <PiggyBankIcon className="w-3 h-3" />
                 <span>{getPiggyBankStats().currentBalance}</span>
-                <span className="text-xs opacity-90">({convertPointsToEuros(getPiggyBankStats().currentBalance)}€)</span>
               </div>
             </div>
 
-            {/* Section droite - Météo */}
+            {/* Météo compacte */}
             <div className="hidden lg:block">
               <WeatherWidget city="Paris" />
             </div>
@@ -517,118 +504,134 @@ export default function ChildDashboard() {
         </div>
       </motion.div>
 
-      {/* Contenu principal avec padding-top réduit pour le header compact */}
-      <div className="pt-8 pb-24">
-        {/* Navigation par onglets */}
-        <div className="container mx-auto p-4">
+      {/* Contenu principal optimisé */}
+      <div className="pt-6 pb-20">
+        <div className="container mx-auto px-4">
           
+          {/* Navigation par onglets compacte */}
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-1 shadow-sm border border-slate-200/50">
+              <div className="flex items-center gap-1">
+                {[
+                  { id: 'tasks', label: 'Missions', icon: TargetIcon, color: 'from-blue-500 to-indigo-500' },
+                  { id: 'rewards', label: 'Récompenses', icon: TrophyIcon, color: 'from-amber-500 to-orange-500' },
+                  { id: 'shop', label: 'Boutique', icon: ShoppingCartIcon, color: 'from-emerald-500 to-teal-500' },
+                  { id: 'piggy', label: 'Tirelire', icon: PiggyBankIcon, color: 'from-purple-500 to-pink-500' },
+                  { id: 'riddles', label: 'Devinettes', icon: BrainIcon, color: 'from-indigo-500 to-purple-500' },
+                  { id: 'profile', label: 'Profil', icon: UsersIcon, color: 'from-slate-500 to-gray-500' }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id as typeof activeTab)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                      activeTab === tab.id
+                        ? `bg-gradient-to-r ${tab.color} text-white shadow-sm`
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <tab.icon className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
-          {/* Contenu des onglets */}
+          {/* Contenu des onglets optimisé */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-4"
             >
-              {/* Onglet Missions */}
+              {/* Onglet Missions - Version compacte */}
               {activeTab === 'tasks' && (
-                <div className="space-y-6">
-                  {/* Progression générale */}
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3 text-2xl">
-                        <TargetIcon className="w-8 h-8 text-blue-600" />
-                        Mes Missions du Jour
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="text-center">
-                          <div className="text-4xl font-bold text-blue-600 mb-2">{completedTasks}</div>
-                          <div className="text-gray-600">Missions accomplies</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-4xl font-bold text-purple-600 mb-2">{totalTasks}</div>
-                          <div className="text-gray-600">Total des missions</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-4xl font-bold text-green-600 mb-2">{streak}</div>
-                          <div className="text-gray-600">Jours consécutifs 🔥</div>
-                        </div>
-                      </div>
-                      <div className="mt-6">
-                        <div className="flex justify-between text-sm text-gray-600 mb-2">
-                          <span>Progression</span>
-                          <span>{Math.round(progressPercentage)}%</span>
-                        </div>
-                        <Progress value={progressPercentage} className="h-3" />
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className="space-y-4">
+                  {/* Stats rapides */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-2xl font-bold text-blue-600">{completedTasks}</div>
+                      <div className="text-xs text-slate-600">Complétées</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-2xl font-bold text-slate-600">{totalTasks}</div>
+                      <div className="text-xs text-slate-600">Total</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-2xl font-bold text-orange-600">{streak}</div>
+                      <div className="text-xs text-slate-600">Jours 🔥</div>
+                    </div>
+                  </div>
 
-                  {/* Liste des missions */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Progression */}
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50">
+                    <div className="flex justify-between text-sm text-slate-600 mb-2">
+                      <span>Progression</span>
+                      <span>{Math.round(progressPercentage)}%</span>
+                    </div>
+                    <Progress value={progressPercentage} className="h-2" />
+                  </div>
+
+                  {/* Missions en grille compacte */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {childTasks.map((childTask) => (
                       <motion.div
                         key={childTask.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        whileHover={{ scale: 1.02 }}
-                        className={`relative overflow-hidden rounded-2xl shadow-lg transition-all duration-300 ${
+                        className={`relative rounded-xl p-4 border transition-all duration-200 ${
                           childTask.is_completed 
-                            ? 'bg-green-50 border-2 border-green-200' 
-                            : 'bg-white/90 backdrop-blur-sm border-2 border-gray-200 hover:border-purple-300'
+                            ? 'bg-green-50/80 border-green-200' 
+                            : 'bg-white/80 border-slate-200 hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
                         {completedTaskId === childTask.id && (
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="absolute inset-0 bg-green-400/20 flex items-center justify-center z-10"
+                            className="absolute inset-0 bg-green-400/20 flex items-center justify-center z-10 rounded-xl"
                           >
-                            <CheckCircleIcon className="w-16 h-16 text-green-600 animate-bounce" />
+                            <CheckCircleIcon className="w-8 h-8 text-green-600 animate-bounce" />
                           </motion.div>
                         )}
                         
-                        <div className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                              <span className="text-3xl">{getCategoryIcon(childTask.task.category)}</span>
-                              <Badge className={`bg-gradient-to-r ${getCategoryColor(childTask.task.category)} text-white`}>
-                                {childTask.task.category}
-                              </Badge>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleTaskToggle(childTask.id, childTask.is_completed)}
-                              className={`rounded-full w-10 h-10 ${
-                                childTask.is_completed 
-                                  ? 'bg-green-100 text-green-600 hover:bg-green-200' 
-                                  : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
-                              }`}
-                            >
-                              {childTask.is_completed ? <CheckCircleIcon className="w-5 h-5" /> : <StarIcon className="w-5 h-5" />}
-                            </Button>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{getCategoryIcon(childTask.task.category)}</span>
+                            <Badge className={`text-xs ${getCategoryColor(childTask.task.category)} text-white`}>
+                              {childTask.task.category}
+                            </Badge>
                           </div>
-                          
-                          <h3 className={`text-lg font-semibold mb-3 ${
-                            childTask.is_completed ? 'line-through text-gray-500' : 'text-gray-800'
-                          }`}>
-                            {childTask.task.label}
-                          </h3>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-yellow-600 font-bold">
-                              <StarIcon className="w-4 h-4" />
-                              {childTask.task.points_reward} points
-                              <span className="text-xs text-gray-500">(≈ {convertPointsToEuros(childTask.task.points_reward)} €)</span>
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {format(new Date(childTask.due_date), 'dd/MM', { locale: fr })}
-                            </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleTaskToggle(childTask.id, childTask.is_completed)}
+                            className={`w-8 h-8 p-0 rounded-lg ${
+                              childTask.is_completed 
+                                ? 'bg-green-100 text-green-600 hover:bg-green-200' 
+                                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                            }`}
+                          >
+                            {childTask.is_completed ? <CheckCircleIcon className="w-4 h-4" /> : <StarIcon className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                        
+                        <h3 className={`text-sm font-medium mb-2 ${
+                          childTask.is_completed ? 'line-through text-slate-500' : 'text-slate-800'
+                        }`}>
+                          {childTask.task.label}
+                        </h3>
+                        
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1 text-amber-600 font-medium">
+                            <StarIcon className="w-3 h-3" />
+                            {childTask.task.points_reward} pts
+                          </div>
+                          <div className="text-slate-500">
+                            {format(new Date(childTask.due_date), 'dd/MM', { locale: fr })}
                           </div>
                         </div>
                       </motion.div>
@@ -636,1027 +639,483 @@ export default function ChildDashboard() {
                   </div>
 
                   {childTasks.length === 0 && (
-                    <Card className="bg-white/80 backdrop-blur-sm text-center py-12">
-                      <CardContent>
-                        <div className="text-6xl mb-4">🎯</div>
-                        <h3 className="text-xl font-semibold text-gray-800 mb-2">Aucune mission pour aujourd'hui !</h3>
-                        <p className="text-gray-600">Tes missions seront bientôt disponibles !</p>
-                      </CardContent>
-                    </Card>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 text-center border border-slate-200/50">
+                      <div className="text-4xl mb-3">🎯</div>
+                      <h3 className="text-lg font-semibold text-slate-800 mb-2">Aucune mission pour aujourd'hui !</h3>
+                      <p className="text-slate-600">Tes missions seront bientôt disponibles !</p>
+                    </div>
                   )}
                 </div>
               )}
 
-              {/* Onglet Récompenses */}
+              {/* Onglet Récompenses - Version compacte */}
               {activeTab === 'rewards' && (
-                <div className="space-y-6">
-                  {/* Statistiques des récompenses */}
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3 text-2xl">
-                        <TrophyIcon className="w-8 h-8 text-yellow-600" />
-                        Mes Récompenses
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
-                          <div className="text-2xl font-bold text-yellow-600">{rewards.filter(r => !isRewardClaimed(r.id) && child.points >= r.cost).length}</div>
-                          <div className="text-sm text-gray-600">Récompenses disponibles</div>
-                        </div>
-                        <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
-                          <div className="text-2xl font-bold text-green-600">{claimedRewards.filter(cr => isRewardValidated(cr.reward_id)).length}</div>
-                          <div className="text-sm text-gray-600">Récompenses validées</div>
-                        </div>
-                        <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border-2 border-orange-200 text-center">
-                          <div className="text-2xl font-bold text-orange-600">{claimedRewards.filter(cr => !isRewardValidated(cr.reward_id)).length}</div>
-                          <div className="text-sm text-gray-600">En attente de validation</div>
-                        </div>
-                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 text-center">
-                          <div className="text-2xl font-bold text-purple-600">{child.points}</div>
-                          <div className="text-sm text-gray-600">Points disponibles</div>
-                          <div className="text-xs text-purple-500 mt-1">≈ {convertPointsToEuros(child.points)} €</div>
-                        </div>
-                      </div>
+                <div className="space-y-4">
+                  {/* Stats rapides */}
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-xl font-bold text-amber-600">{rewards.filter(r => !isRewardClaimed(r.id) && child.points >= r.cost).length}</div>
+                      <div className="text-xs text-slate-600">Disponibles</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-xl font-bold text-green-600">{claimedRewards.filter(cr => isRewardValidated(cr.reward_id)).length}</div>
+                      <div className="text-xs text-slate-600">Validées</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-xl font-bold text-orange-600">{claimedRewards.filter(cr => !isRewardValidated(cr.reward_id)).length}</div>
+                      <div className="text-xs text-slate-600">En attente</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-xl font-bold text-slate-600">{child.points}</div>
+                      <div className="text-xs text-slate-600">Points</div>
+                    </div>
+                  </div>
 
-                      {/* Barre de progression vers la prochaine récompense */}
-                      {(() => {
-                        const { progress, pointsNeeded, nextReward } = getProgressToNextReward();
-                        if (nextReward) {
-                          return (
-                            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-200 mb-6">
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-semibold text-gray-800">
-                                  {progress >= 100 ? '🎉' : '🎯'} Prochaine récompense
-                                </h4>
-                                <span className="text-sm text-gray-600">
-                                  {progress >= 100 ? 'Prête !' : `${Math.round(progress)}%`}
-                                </span>
-                              </div>
-                              <div className="mb-2">
-                                <div className="text-sm text-gray-700 mb-1">
-                                  {nextReward.label} ({nextReward.cost} points ≈ {convertPointsToEuros(nextReward.cost)} €)
-                                </div>
-                                <Progress value={progress} className="h-2" />
-                              </div>
-                              {progress < 100 && (
-                                <div className="text-xs text-gray-600">
-                                  Il te faut encore {pointsNeeded} points pour débloquer cette récompense
-                                </div>
-                              )}
+                  {/* Récompenses disponibles */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {rewards.map((reward) => {
+                      const isClaimed = isRewardClaimed(reward.id);
+                      const canAfford = child.points >= reward.cost;
+                      
+                      if (isClaimed) return null;
+                      
+                      return (
+                        <motion.div
+                          key={reward.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`rounded-xl p-4 border transition-all duration-200 ${
+                            canAfford 
+                              ? 'bg-amber-50/80 border-amber-200 hover:border-amber-300' 
+                              : 'bg-slate-50/80 border-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="p-2 rounded-lg bg-amber-100 text-amber-600">
+                              <GiftIcon className="w-4 h-4" />
                             </div>
-                          );
-                        }
-                        return null;
-                      })()}
-
-                      {rewards.length > 0 ? (
-                        <div className="space-y-6">
-                          {/* Récompenses disponibles */}
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                              <GiftIcon className="w-5 h-5 text-green-600" />
-                              Récompenses disponibles
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                              {rewards.map((reward) => {
-                                const isClaimed = isRewardClaimed(reward.id);
-                                const canAfford = child.points >= reward.cost;
-                                const isClaiming = claiming === reward.id;
-                                
-                                // Ne pas afficher les récompenses déjà réclamées
-                                if (isClaimed) return null;
-                                
-                                return (
-                                  <motion.div
-                                    key={reward.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className={`rounded-2xl p-6 border-2 shadow-lg transition-all duration-300 ${
-                                      isClaimed 
-                                        ? 'bg-gradient-to-br from-green-50 to-blue-50 border-green-200' 
-                                        : canAfford
-                                          ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200 hover:border-yellow-300'
-                                          : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200'
-                                    }`}
-                                  >
-                                    <div className="flex items-center justify-between mb-4">
-                                      <div className={`p-3 rounded-full ${
-                                        isClaimed 
-                                          ? 'bg-green-100 text-green-600' 
-                                          : canAfford
-                                            ? 'bg-yellow-100 text-yellow-600'
-                                            : 'bg-gray-100 text-gray-400'
-                                      }`}>
-                                        <GiftIcon className="w-6 h-6" />
-                                      </div>
-                                      <Badge className={`${
-                                        isClaimed 
-                                          ? 'bg-green-100 text-green-800' 
-                                          : canAfford
-                                            ? 'bg-yellow-100 text-yellow-800'
-                                            : 'bg-gray-100 text-gray-500'
-                                      }`}>
-                                        {reward.cost} points
-                                      </Badge>
-                                      <div className="text-xs text-gray-500 mt-1">≈ {convertPointsToEuros(reward.cost)} €</div>
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-3">{reward.label}</h3>
-                                    
-                                    {isClaimed ? (
-                                      <div className="space-y-2">
-                                        <div className="flex items-center gap-2 text-green-600 font-bold">
-                                          <CheckCircleIcon className="w-5 h-5" />
-                                          <span>Réclamée !</span>
-                                        </div>
-                                        <p className="text-sm text-gray-600">Tu as déjà réclamé cette récompense</p>
-                                      </div>
-                                    ) : (
-                                      <div className="space-y-3">
-                                        <Button
-                                          onClick={() => claimReward(reward.id)}
-                                          disabled={!canAfford || isClaiming}
-                                          className={`w-full ${
-                                            canAfford 
-                                              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white' 
-                                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                          }`}
-                                        >
-                                          {isClaiming ? (
-                                            <>
-                                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                              Réclamation...
-                                            </>
-                                          ) : canAfford ? (
-                                            <>
-                                              <GiftIcon className="w-4 h-4 mr-2" />
-                                              Réclamer
-                                            </>
-                                          ) : (
-                                            <>
-                                              <StarIcon className="w-4 h-4 mr-2" />
-                                              Il te faut {reward.cost - child.points} points de plus
-                                            </>
-                                          )}
-                                        </Button>
-                                        
-                                        {!canAfford && (
-                                          <div className="text-xs text-gray-500 text-center">
-                                            Tu as {child.points} points, il en faut {reward.cost}
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-                                  </motion.div>
-                                );
-                              })}
-                            </div>
+                            <Badge className={`text-xs ${
+                              canAfford ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500'
+                            }`}>
+                              {reward.cost} pts
+                            </Badge>
                           </div>
+                          
+                          <h3 className="text-sm font-medium text-slate-800 mb-3">{reward.label}</h3>
+                          
+                          <Button
+                            onClick={() => claimReward(reward.id)}
+                            disabled={!canAfford || claiming === reward.id}
+                            className={`w-full text-xs ${
+                              canAfford 
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white' 
+                                : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                            }`}
+                          >
+                            {claiming === reward.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                                Réclamation...
+                              </>
+                            ) : canAfford ? (
+                              <>
+                                <GiftIcon className="w-3 h-3 mr-1" />
+                                Réclamer
+                              </>
+                            ) : (
+                              <>
+                                <StarIcon className="w-3 h-3 mr-1" />
+                                {reward.cost - child.points} pts manquants
+                              </>
+                            )}
+                          </Button>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
 
-                          {/* Récompenses réclamées */}
-                          {claimedRewards.length > 0 && (
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                                Récompenses réclamées ({claimedRewards.length})
-                              </h3>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {claimedRewards.map((claimedReward) => {
-                                  const reward = rewards.find(r => r.id === claimedReward.reward_id);
-                                  if (!reward) return null;
-                                  
-                                  const isValidated = isRewardValidated(reward.id);
-                                  
-                                  return (
-                                    <motion.div
-                                      key={claimedReward.id}
-                                      initial={{ opacity: 0, scale: 0.9 }}
-                                      animate={{ opacity: 1, scale: 1 }}
-                                      className={`rounded-xl p-4 border-2 ${
-                                        isValidated 
-                                          ? 'bg-gradient-to-br from-green-50 to-blue-50 border-green-200' 
-                                          : 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200'
-                                      }`}
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-full ${
-                                          isValidated 
-                                            ? 'bg-green-100 text-green-600' 
-                                            : 'bg-orange-100 text-orange-600'
-                                        }`}>
-                                          {isValidated ? (
-                                            <CheckCircleIcon className="w-4 h-4" />
-                                          ) : (
-                                            <Clock className="w-4 h-4" />
-                                          )}
-                                        </div>
-                                        <div className="flex-1">
-                                          <h4 className="font-semibold text-gray-800">{reward.label}</h4>
-                                          <p className="text-sm text-gray-600">{reward.cost} points</p>
-                                          <div className="flex items-center gap-2 mt-1">
-                                            <Badge className={`text-xs ${
-                                              isValidated 
-                                                ? 'bg-green-100 text-green-700' 
-                                                : 'bg-orange-100 text-orange-700'
-                                            }`}>
-                                              {isValidated ? '✅ Validée' : '⏳ En attente'}
-                                            </Badge>
-                                            {isValidated && claimedReward.validated_at && (
-                                              <span className="text-xs text-green-600">
-                                                le {format(new Date(claimedReward.validated_at), 'dd/MM', { locale: fr })}
-                                              </span>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </motion.div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-center py-12">
-                          <div className="text-6xl mb-4">🎁</div>
-                          <h3 className="text-xl font-semibold text-gray-800 mb-2">Aucune récompense disponible</h3>
-                          <p className="text-gray-600 mb-4">Demande à tes parents d'ajouter des récompenses !</p>
-                          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-200">
-                            <p className="text-sm text-gray-600">
-                              💡 <strong>Conseil :</strong> Complète tes missions pour gagner des points et débloquer des récompenses !
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                  {rewards.length === 0 && (
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 text-center border border-slate-200/50">
+                      <div className="text-4xl mb-3">🎁</div>
+                      <h3 className="text-lg font-semibold text-slate-800 mb-2">Aucune récompense disponible</h3>
+                      <p className="text-slate-600">Demande à tes parents d'ajouter des récompenses !</p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Onglet Boutique */}
+              {/* Onglet Boutique - Version compacte */}
               {activeTab === 'shop' && (
-                <div className="space-y-6">
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3 text-2xl">
-                        <ShoppingCartIcon className="w-8 h-8 text-green-600" />
-                        Boutique
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {(() => {
-                        const piggyStats = getPiggyBankStats();
-                        const totalAvailablePoints = child.points + piggyStats.currentBalance;
-                        
-                        return (
-                          <div className="space-y-6">
-                            {/* Informations sur les points */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
-                                <div className="text-2xl font-bold text-yellow-600">{child.points}</div>
-                                <div className="text-sm text-gray-600">Points disponibles</div>
-                                <div className="text-xs text-yellow-500 mt-1">≈ {convertPointsToEuros(child.points)} €</div>
-                              </div>
-                              <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
-                                <div className="text-2xl font-bold text-green-600">{piggyStats.currentBalance}</div>
-                                <div className="text-sm text-gray-600">Points épargnés</div>
-                                <div className="text-xs text-green-500 mt-1">≈ {convertPointsToEuros(piggyStats.currentBalance)} €</div>
-                              </div>
-                              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 text-center">
-                                <div className="text-2xl font-bold text-purple-600">{totalAvailablePoints}</div>
-                                <div className="text-sm text-gray-600">Total disponible</div>
-                                <div className="text-xs text-purple-500 mt-1">≈ {convertPointsToEuros(totalAvailablePoints)} €</div>
-                              </div>
-                            </div>
+                <div className="space-y-4">
+                  {/* Stats rapides */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-xl font-bold text-amber-600">{child.points}</div>
+                      <div className="text-xs text-slate-600">Disponibles</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-xl font-bold text-emerald-600">{getPiggyBankStats().currentBalance}</div>
+                      <div className="text-xs text-slate-600">Épargnés</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-xl font-bold text-slate-600">{shopItems.length}</div>
+                      <div className="text-xs text-slate-600">Articles</div>
+                    </div>
+                  </div>
 
-                            {shopLoading ? (
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {Array.from({ length: 3 }).map((_, index) => (
-                                  <div key={index} className="bg-gray-100 rounded-2xl p-6 animate-pulse">
-                                    <div className="h-8 bg-gray-200 rounded mb-4"></div>
-                                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                                    <div className="h-10 bg-gray-200 rounded"></div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : shopItems.length > 0 ? (
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {shopItems.map((item) => {
-                                  const canAffordWithPoints = child.points >= item.price;
-                                  const canAffordWithPiggy = piggyStats.currentBalance >= item.price;
-                                  const canAffordTotal = totalAvailablePoints >= item.price;
-                                  
-                                  return (
-                                    <motion.div
-                                      key={item.id}
-                                      initial={{ opacity: 0, y: 20 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-6 border-2 border-green-200 shadow-lg"
-                                    >
-                                      <div className="flex items-center justify-between mb-4">
-                                        <ShoppingCartIcon className="w-8 h-8 text-green-600" />
-                                        <Badge className="bg-green-100 text-green-800">
-                                          {item.price} points
-                                        </Badge>
-                                      </div>
-                                      <div className="text-xs text-gray-500 mb-2 text-center">≈ {convertPointsToEuros(item.price)} €</div>
-                                      <h3 className="text-lg font-semibold text-gray-800 mb-2">{item.name}</h3>
-                                      <p className="text-gray-600 mb-4">Article disponible en boutique</p>
-                                      
-                                      {/* Indicateur de source de points */}
-                                      {canAffordTotal && (
-                                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                          <p className="text-sm text-blue-700 font-medium mb-1">Paiement possible avec :</p>
-                                          <div className="space-y-1">
-                                            {canAffordWithPoints && (
-                                              <div className="flex items-center gap-2 text-sm">
-                                                <StarIcon className="w-4 h-4 text-yellow-600" />
-                                                <span>Points disponibles ({child.points})</span>
-                                              </div>
-                                            )}
-                                            {canAffordWithPiggy && (
-                                              <div className="flex items-center gap-2 text-sm">
-                                                <PiggyBankIcon className="w-4 h-4 text-green-600" />
-                                                <span>Points épargnés ({piggyStats.currentBalance})</span>
-                                              </div>
-                                            )}
-                                            {!canAffordWithPoints && !canAffordWithPiggy && (
-                                              <div className="flex items-center gap-2 text-sm">
-                                                <span className="text-purple-600">Combinaison des deux sources</span>
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      )}
-                                      
-                                      <Button
-                                        onClick={() => {
-                                          setSelectedShopItem(item);
-                                          setShowShopDialog(true);
-                                        }}
-                                        disabled={!canAffordTotal}
-                                        className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
-                                      >
-                                        <ShoppingCartIcon className="w-4 h-4 mr-2" />
-                                        {canAffordTotal ? 'Acheter' : 'Points insuffisants'}
-                                      </Button>
-                                      
-                                      {!canAffordTotal && (
-                                        <div className="text-xs text-gray-500 text-center mt-2">
-                                          Il te faut {item.price - totalAvailablePoints} points de plus
-                                        </div>
-                                      )}
-                                    </motion.div>
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              <div className="text-center py-12">
-                                <div className="text-6xl mb-4">🛒</div>
-                                <h3 className="text-xl font-semibold text-gray-800 mb-2">Boutique vide !</h3>
-                                <p className="text-gray-600">Demande à tes parents d'ajouter des articles à la boutique.</p>
-                              </div>
-                            )}
+                  {/* Articles en grille compacte */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {shopItems.map((item) => {
+                      const piggyStats = getPiggyBankStats();
+                      const totalAvailablePoints = child.points + piggyStats.currentBalance;
+                      const canAfford = totalAvailablePoints >= item.price;
+                      
+                      return (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 hover:border-emerald-300 transition-all duration-200"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="p-2 rounded-lg bg-emerald-100 text-emerald-600">
+                              <ShoppingCartIcon className="w-4 h-4" />
+                            </div>
+                            <Badge className="bg-emerald-100 text-emerald-800 text-xs">
+                              {item.price} pts
+                            </Badge>
                           </div>
-                        );
-                      })()}
-                    </CardContent>
-                  </Card>
+                          
+                          <h3 className="text-sm font-medium text-slate-800 mb-2">{item.name}</h3>
+                          <p className="text-xs text-slate-600 mb-3">Article disponible en boutique</p>
+                          
+                          <Button
+                            onClick={() => {
+                              setSelectedShopItem(item);
+                              setShowShopDialog(true);
+                            }}
+                            disabled={!canAfford}
+                            className={`w-full text-xs ${
+                              canAfford 
+                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white' 
+                                : 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                            }`}
+                          >
+                            <ShoppingCartIcon className="w-3 h-3 mr-1" />
+                            {canAfford ? 'Acheter' : 'Points insuffisants'}
+                          </Button>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+
+                  {shopItems.length === 0 && (
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 text-center border border-slate-200/50">
+                      <div className="text-4xl mb-3">🛒</div>
+                      <h3 className="text-lg font-semibold text-slate-800 mb-2">Boutique vide !</h3>
+                      <p className="text-slate-600">Demande à tes parents d'ajouter des articles à la boutique.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Onglet Tirelire */}
+              {/* Onglet Tirelire - Version compacte */}
               {activeTab === 'piggy' && (
-                <div className="space-y-6">
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3 text-2xl">
-                        <PiggyBankIcon className="w-8 h-8 text-orange-600" />
-                        Ma Tirelire
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {(() => {
-                        const stats = getPiggyBankStats();
-                        return (
-                          <div className="space-y-6">
-                            {/* Statistiques principales */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                              <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border-2 border-orange-200 text-center">
-                                <div className="text-2xl font-bold text-orange-600">{stats.currentBalance}</div>
-                                <div className="text-sm text-gray-600">Solde actuel</div>
-                                <div className="text-xs text-orange-500 mt-1">≈ {convertPointsToEuros(stats.currentBalance)} €</div>
-                              </div>
-                              <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
-                                <div className="text-2xl font-bold text-green-600">{stats.totalSavings}</div>
-                                <div className="text-sm text-gray-600">Total épargné</div>
-                                <div className="text-xs text-green-500 mt-1">≈ {convertPointsToEuros(stats.totalSavings)} €</div>
-                              </div>
-                              <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-4 border-2 border-red-200 text-center">
-                                <div className="text-2xl font-bold text-red-600">{stats.totalSpending}</div>
-                                <div className="text-sm text-gray-600">Total dépensé</div>
-                                <div className="text-xs text-red-500 mt-1">≈ {convertPointsToEuros(stats.totalSpending)} €</div>
-                              </div>
-                              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-200 text-center">
-                                <div className="text-2xl font-bold text-blue-600">{stats.transactionCount}</div>
-                                <div className="text-sm text-gray-600">Transactions</div>
-                              </div>
-                            </div>
+                <div className="space-y-4">
+                  {/* Stats rapides */}
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-xl font-bold text-orange-600">{getPiggyBankStats().currentBalance}</div>
+                      <div className="text-xs text-slate-600">Solde</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-xl font-bold text-emerald-600">{getPiggyBankStats().totalSavings}</div>
+                      <div className="text-xs text-slate-600">Épargné</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-xl font-bold text-red-600">{getPiggyBankStats().totalSpending}</div>
+                      <div className="text-xs text-slate-600">Dépensé</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 text-center">
+                      <div className="text-xl font-bold text-slate-600">{getPiggyBankStats().transactionCount}</div>
+                      <div className="text-xs text-slate-600">Transactions</div>
+                    </div>
+                  </div>
 
-                            {/* Section de dépôt et de retrait côte à côte */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {/* Dépôt */}
-                              <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border-2 border-orange-200 flex flex-col justify-between h-full">
-                                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                  <PiggyBankIcon className="w-5 h-5 text-orange-600" />
-                                  Déposer des points
-                                </h4>
-                                <div className="flex-1 flex flex-col justify-between">
-                                  <div>
-                                    <Label htmlFor="piggy-amount">Montant à déposer</Label>
-                                    <Input
-                                      id="piggy-amount"
-                                      type="number"
-                                      value={piggyAmount}
-                                      onChange={(e) => setPiggyAmount(e.target.value)}
-                                      placeholder="Points à déposer"
-                                      max={child.points}
-                                      disabled={depositing}
-                                    />
-                                    {/* Boutons rapides pour le dépôt */}
-                                    <div className="flex gap-2 mt-2">
-                                    {[10, 20, 50, 100].map((val) => (
-                                        <Button
-                                          key={val}
-                                          type="button"
-                                          size="sm"
-                                          variant="outline"
-                                          className="px-3 py-1"
-                                          onClick={() => setPiggyAmount(String(val))}
-                                          disabled={depositing || val > child.points}
-                                        >
-                                          {val}
-                                        </Button>
-                                      ))}
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        className="px-3 py-1 font-semibold"
-                                        onClick={() => setPiggyAmount(String(child.points))}
-                                        disabled={depositing || child.points === 0}
-                                      >
-                                        Tout
-                                      </Button>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                      Points disponibles : {child.points}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-end mt-4">
-                                    <Button
-                                      onClick={() => setShowPiggyDialog(true)}
-                                      disabled={!piggyAmount || parseInt(piggyAmount) <= 0 || parseInt(piggyAmount) > child.points || depositing}
-                                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
-                                    >
-                                      {depositing ? (
-                                        <>
-                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                          Dépôt en cours...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <PiggyBankIcon className="w-4 h-4 mr-2" />
-                                          Déposer
-                                        </>
-                                      )}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                              {/* Retrait */}
-                              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border-2 border-blue-200 flex flex-col justify-between h-full">
-                                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                  <Minus className="w-5 h-5 text-blue-600" />
-                                  Retirer des points
-                                </h4>
-                                <div className="flex-1 flex flex-col justify-between">
-                                  <div>
-                                    <Label htmlFor="piggy-withdraw-amount">Montant à retirer</Label>
-                                    <Input
-                                      id="piggy-withdraw-amount"
-                                      type="number"
-                                      value={piggyWithdrawAmount}
-                                      onChange={(e) => setPiggyWithdrawAmount(e.target.value)}
-                                      placeholder="Points à retirer"
-                                      max={stats.currentBalance}
-                                      disabled={depositing}
-                                    />
-                                    {/* Boutons rapides pour le retrait */}
-                                    <div className="flex gap-2 mt-2">
-                                      {[10, 20, 50, 100].map((val) => (
-                                        <Button
-                                          key={val}
-                                          type="button"
-                                          size="sm"
-                                          variant="outline"
-                                          className="px-3 py-1"
-                                          onClick={() => setPiggyWithdrawAmount(String(val))}
-                                          disabled={depositing || val > stats.currentBalance}
-                                        >
-                                          {val}
-                                        </Button>
-                                      ))}
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        className="px-3 py-1 font-semibold"
-                                        onClick={() => setPiggyWithdrawAmount(String(stats.currentBalance))}
-                                        disabled={depositing || stats.currentBalance === 0}
-                                      >
-                                        Tout
-                                      </Button>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                      Solde épargné : {stats.currentBalance}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-end mt-4">
-                                    <Button
-                                      onClick={() => setShowPiggyWithdrawDialog(true)}
-                                      disabled={!piggyWithdrawAmount || parseInt(piggyWithdrawAmount) <= 0 || parseInt(piggyWithdrawAmount) > stats.currentBalance || depositing}
-                                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
-                                    >
-                                      {depositing ? (
-                                        <>
-                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                          Retrait en cours...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Minus className="w-4 h-4 mr-2" />
-                                          Retirer
-                                        </>
-                                      )}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            {/* Fin section dépôt/retrait côte à côte */}
-
-                            {/* Historique des transactions */}
-                            <div>
-                              <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                <CalendarIcon className="w-5 h-5 text-purple-600" />
-                                Historique des transactions
-                              </h4>
-                              {piggyLoading ? (
-                                <div className="space-y-4">
-                                  {Array.from({ length: 3 }).map((_, index) => (
-                                    <div key={index} className="bg-gray-100 rounded-xl p-4 animate-pulse">
-                                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : piggyTransactions.length > 0 ? (
-                                <div className="space-y-3">
-                                  {piggyTransactions.map((transaction) => (
-                                    <motion.div
-                                      key={transaction.id}
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      className={`flex items-center justify-between p-4 rounded-xl border-2 ${
-                                        transaction.type === 'savings' 
-                                          ? 'bg-green-50 border-green-200' 
-                                          : transaction.type === 'spending'
-                                            ? 'bg-red-50 border-red-200'
-                                            : 'bg-blue-50 border-blue-200'
-                                      }`}
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-full ${
-                                          transaction.type === 'savings' 
-                                            ? 'bg-green-100 text-green-600' 
-                                            : transaction.type === 'spending'
-                                              ? 'bg-red-100 text-red-600'
-                                              : 'bg-blue-100 text-blue-600'
-                                        }`}>
-                                          {transaction.type === 'savings' ? (
-                                            <Plus className="w-4 h-4" />
-                                          ) : transaction.type === 'spending' ? (
-                                            <Minus className="w-4 h-4" />
-                                          ) : (
-                                            <HeartIcon className="w-4 h-4" />
-                                          )}
-                                        </div>
-                                        <div>
-                                          <p className="font-semibold text-gray-800">
-                                            {transaction.type === 'savings' ? 'Épargne' : 
-                                             transaction.type === 'spending' ? 'Dépense' : 'Don'}
-                                          </p>
-                                          <p className="text-sm text-gray-600">
-                                            {format(new Date(transaction.created_at), 'dd/MM/yyyy à HH:mm', { locale: fr })}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <span className={`font-bold text-lg ${
-                                        transaction.type === 'savings' 
-                                          ? 'text-green-600' 
-                                          : transaction.type === 'spending'
-                                            ? 'text-red-600'
-                                            : 'text-blue-600'
-                                      }`}>
-                                        {transaction.type === 'savings' ? '+' : '-'}{transaction.points} pts
-                                      </span>
-                                      <div className="text-xs text-gray-500">
-                                        ≈ {convertPointsToEuros(transaction.points)} €
-                                      </div>
-                                    </motion.div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="text-center py-8">
-                                  <div className="text-6xl mb-4">🐷</div>
-                                  <h3 className="text-xl font-semibold text-gray-800 mb-2">Aucune transaction</h3>
-                                  <p className="text-gray-600">Commence à épargner tes points !</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* Onglet Devinettes */}
-              {activeTab === 'riddles' && (
-                <div className="space-y-6">
-                  <Card className="bg-white/80 backdrop-sm border-0 shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3 text-2xl">
-                        <BrainIcon className="w-8 h-8 text-purple-600" />
-                        Devinette du Jour
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {currentRiddle ? (
-                        <div className="text-center">
-                          <div className="text-6xl mb-6">🧩</div>
-                          <div className={`rounded-2xl p-8 border-2 mb-6 ${
-                            riddleSolved 
-                              ? 'bg-gradient-to-br from-green-50 to-blue-50 border-green-200' 
-                              : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
-                          }`}>
-                            <h3 className="text-xl font-semibold text-gray-800 mb-4">{currentRiddle.question}</h3>
-                            <p className="text-gray-600 mb-4">Récompense : {currentRiddle.points} points (≈ {convertPointsToEuros(currentRiddle.points)} €)</p>
-                            
-                            {/* Affichage de l'indice si acheté */}
-                            {hintPurchased && !riddleSolved && (
-                              <div className="mb-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-2xl">💡</span>
-                                  <span className="font-semibold text-yellow-800">Indice acheté :</span>
-                                </div>
-                                <p className="text-yellow-700">{hintText}</p>
-                              </div>
-                            )}
-                            
-                            {riddleSolved ? (
-                              <div className="space-y-4">
-                                <div className="flex items-center justify-center gap-2 text-green-600 font-bold">
-                                  <CheckCircleIcon className="w-6 h-6" />
-                                  <span>Bravo ! Tu as résolu la devinette d'aujourd'hui !</span>
-                                </div>
-                                <p className="text-gray-600">Reviens demain pour une nouvelle devinette !</p>
-                              </div>
-                            ) : (
-                              <div className="space-y-4">
-                                <Button
-                                  onClick={() => setShowRiddleDialog(true)}
-                                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-                                >
-                                  <BrainIcon className="w-4 h-4 mr-2" />
-                                  Répondre
-                                </Button>
-                                
-                                {!hintPurchased ? (
-                                  <Button
-                                    onClick={purchaseHint}
-                                    variant="outline"
-                                    disabled={child.points < 5 || !currentRiddle?.hint}
-                                    className={`border-purple-300 text-purple-600 hover:bg-purple-50 ${
-                                      child.points < 5 || !currentRiddle?.hint ? 'opacity-50 cursor-not-allowed' : ''
-                                    }`}
-                                  >
-                                    💡 Acheter un indice (5 points)
-                                    {!currentRiddle?.hint && (
-                                      <span className="ml-2 text-xs">(Non disponible)</span>
-                                    )}
-                                  </Button>
-                                ) : (
-                                  <div className="text-sm text-gray-500">
-                                    ✅ Indice déjà acheté pour aujourd'hui
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center py-12">
-                          <div className="text-6xl mb-4">🎉</div>
-                          <h3 className="text-xl font-semibold text-gray-800 mb-2">Bravo !</h3>
-                          <p className="text-gray-600">Tu as résolu toutes les devinettes d'aujourd'hui !</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* Onglet Météo */}
-              {activeTab === 'weather' && (
-                <div className="space-y-6">
-                  <Card className="bg-white/80 backdrop-sm border-0 shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3 text-2xl">
-                        <CalendarIcon className="w-8 h-8 text-sky-600" />
-                        Météo complète
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="max-w-md mx-auto">
-                        <WeatherWidget city="Paris" mode="full" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* Onglet Profil */}
-              {activeTab === 'profile' && (
-                <div className="space-y-8">
-                  <Card className="bg-white/90 backdrop-md border-0 shadow-2xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3 text-3xl font-extrabold">
-                        <UsersIcon className="w-9 h-9 text-pink-500" />
-                        Mon Profil
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-                        {/* Avatar et infos principales */}
-                        <div className="flex flex-col items-center md:col-span-1">
-                          {child.avatar_url ? (
-                            <div className="w-36 h-36 rounded-full overflow-hidden shadow-2xl mx-auto mb-4 border-4 border-pink-200">
-                              <img 
-                                src={child.avatar_url} 
-                                alt={`Photo de ${child.name}`}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  // En cas d'erreur de chargement, afficher l'avatar par défaut
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  target.nextElementSibling?.classList.remove('hidden');
-                                }}
-                              />
-                              <div 
-                                className={`w-full h-full flex items-center justify-center text-white text-5xl font-extrabold ${
-                                  child.avatar_url ? 'hidden' : ''
-                                }`}
-                                style={{ backgroundColor: child.custom_color }}
-                              >
-                                {child.name.charAt(0).toUpperCase()}
-                              </div>
-                            </div>
-                          ) : (
-                            <div 
-                              className="w-36 h-36 rounded-full flex items-center justify-center text-white text-5xl font-extrabold shadow-2xl mx-auto mb-4 border-4 border-pink-200"
-                              style={{ backgroundColor: child.custom_color }}
+                  {/* Actions rapides */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50">
+                      <h4 className="text-sm font-medium text-slate-800 mb-3 flex items-center gap-2">
+                        <PiggyBankIcon className="w-4 h-4 text-orange-600" />
+                        Déposer
+                      </h4>
+                      <div className="space-y-2">
+                        <Input
+                          type="number"
+                          value={piggyAmount}
+                          onChange={(e) => setPiggyAmount(e.target.value)}
+                          placeholder="Points à déposer"
+                          max={child.points}
+                          className="text-sm"
+                        />
+                        <div className="flex gap-1">
+                          {[10, 20, 50, 100].map((val) => (
+                            <Button
+                              key={val}
+                              size="sm"
+                              variant="outline"
+                              className="text-xs px-2 py-1"
+                              onClick={() => setPiggyAmount(String(val))}
+                              disabled={val > child.points}
                             >
-                              {child.name.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <h3 className="text-3xl font-extrabold text-gray-800 mb-1">{child.name}</h3>
-                          <p className="text-lg text-gray-500 mb-2">{child.age} {child.age > 1 ? 'ans' : 'an'}</p>
-                          <div className="flex flex-wrap justify-center gap-2">
-                            <span className="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-semibold">
-                              <StarIcon className="w-4 h-4 mr-1 text-yellow-500" />
-                              {child.points} pts
-                            </span>
-                            <span className="inline-flex items-center px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm font-semibold">
-                              <AwardIcon className="w-4 h-4 mr-1 text-pink-500" />
-                              {streak} j 🔥
-                            </span>
-                            <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
-                              <TargetIcon className="w-4 h-4 mr-1 text-green-500" />
-                              {completedTasks}/{totalTasks} missions
-                            </span>
-                          </div>
+                              {val}
+                            </Button>
+                          ))}
                         </div>
-                        {/* Statistiques détaillées */}
-                        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                          <div className="bg-gradient-to-br from-yellow-50 to-orange-100 rounded-2xl p-5 border-2 border-yellow-200 flex flex-col items-center">
-                            <div className="flex items-center gap-2 mb-1">
-                              <StarIcon className="w-7 h-7 text-yellow-600" />
-                              <span className="font-semibold text-gray-800">Points actuels</span>
-                            </div>
-                            <div className="text-4xl font-extrabold text-yellow-600">{child.points}</div>
-                            <div className="text-sm text-yellow-500 mt-1">≈ {convertPointsToEuros(child.points)} €</div>
-                          </div>
-                          <div className="bg-gradient-to-br from-red-50 to-pink-100 rounded-2xl p-5 border-2 border-red-200 flex flex-col items-center">
-                            <div className="flex items-center gap-2 mb-1">
-                              <AwardIcon className="w-7 h-7 text-red-600" />
-                              <span className="font-semibold text-gray-800">Série de jours</span>
-                            </div>
-                            <div className="text-4xl font-extrabold text-red-600">{streak}</div>
-                            <div className="text-sm text-red-500 mt-1">{streak > 1 ? 'jours' : 'jour'} consécutif{streak > 1 ? 's' : ''} 🔥</div>
-                          </div>
-                          <div className="bg-gradient-to-br from-green-50 to-blue-100 rounded-2xl p-5 border-2 border-green-200 flex flex-col items-center">
-                            <div className="flex items-center gap-2 mb-1">
-                              <TargetIcon className="w-7 h-7 text-green-600" />
-                              <span className="font-semibold text-gray-800">Missions complétées</span>
-                            </div>
-                            <div className="text-4xl font-extrabold text-green-600">{completedTasks}</div>
-                            <div className="text-sm text-green-500 mt-1">sur {totalTasks} mission{totalTasks > 1 ? 's' : ''}</div>
-                          </div>
-                          <div className="bg-gradient-to-br from-orange-50 to-pink-100 rounded-2xl p-5 border-2 border-orange-200 flex flex-col items-center">
-                            <div className="flex items-center gap-2 mb-1">
-                              <PiggyBankIcon className="w-7 h-7 text-orange-600" />
-                              <span className="font-semibold text-gray-800">Points épargnés</span>
-                            </div>
-                            <div className="text-4xl font-extrabold text-orange-600">{getPiggyBankStats().currentBalance}</div>
-                            <div className="text-sm text-orange-500 mt-1">≈ {convertPointsToEuros(getPiggyBankStats().currentBalance)} €</div>
-                          </div>
-                        </div>
+                        <Button
+                          onClick={() => setShowPiggyDialog(true)}
+                          disabled={!piggyAmount || parseInt(piggyAmount) <= 0 || parseInt(piggyAmount) > child.points}
+                          className="w-full text-xs bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+                        >
+                          <PiggyBankIcon className="w-3 h-3 mr-1" />
+                          Déposer
+                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50">
+                      <h4 className="text-sm font-medium text-slate-800 mb-3 flex items-center gap-2">
+                        <Minus className="w-4 h-4 text-blue-600" />
+                        Retirer
+                      </h4>
+                      <div className="space-y-2">
+                        <Input
+                          type="number"
+                          value={piggyWithdrawAmount}
+                          onChange={(e) => setPiggyWithdrawAmount(e.target.value)}
+                          placeholder="Points à retirer"
+                          max={getPiggyBankStats().currentBalance}
+                          className="text-sm"
+                        />
+                        <div className="flex gap-1">
+                          {[10, 20, 50, 100].map((val) => (
+                            <Button
+                              key={val}
+                              size="sm"
+                              variant="outline"
+                              className="text-xs px-2 py-1"
+                              onClick={() => setPiggyWithdrawAmount(String(val))}
+                              disabled={val > getPiggyBankStats().currentBalance}
+                            >
+                              {val}
+                            </Button>
+                          ))}
+                        </div>
+                        <Button
+                          onClick={() => setShowPiggyWithdrawDialog(true)}
+                          disabled={!piggyWithdrawAmount || parseInt(piggyWithdrawAmount) <= 0 || parseInt(piggyWithdrawAmount) > getPiggyBankStats().currentBalance}
+                          className="w-full text-xs bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+                        >
+                          <Minus className="w-3 h-3 mr-1" />
+                          Retirer
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Historique compact */}
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50">
+                    <h4 className="text-sm font-medium text-slate-800 mb-3 flex items-center gap-2">
+                      <CalendarIcon className="w-4 h-4 text-slate-600" />
+                      Historique récent
+                    </h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {piggyTransactions.slice(0, 5).map((transaction) => (
+                        <div
+                          key={transaction.id}
+                          className={`flex items-center justify-between p-2 rounded-lg text-xs ${
+                            transaction.type === 'savings' 
+                              ? 'bg-green-50 border border-green-200' 
+                              : 'bg-red-50 border border-red-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className={`p-1 rounded ${
+                              transaction.type === 'savings' 
+                                ? 'bg-green-100 text-green-600' 
+                                : 'bg-red-100 text-red-600'
+                            }`}>
+                              {transaction.type === 'savings' ? (
+                                <Plus className="w-3 h-3" />
+                              ) : (
+                                <Minus className="w-3 h-3" />
+                              )}
+                            </div>
+                            <span className="font-medium">
+                              {transaction.type === 'savings' ? 'Épargne' : 'Dépense'}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <div className={`font-bold ${
+                              transaction.type === 'savings' ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {transaction.type === 'savings' ? '+' : '-'}{transaction.points} pts
+                            </div>
+                            <div className="text-slate-500">
+                              {format(new Date(transaction.created_at), 'dd/MM', { locale: fr })}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {/* Onglet Mes Achats */}
-              {activeTab === 'purchases' && (
-                <div className="space-y-6">
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3 text-2xl">
-                        <PackageIcon className="w-8 h-8 text-indigo-600" />
-                        Mes Achats
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {(() => {
-                        const stats = getPurchaseStats();
-                        return (
-                          <div className="space-y-6">
-                            {/* Statistiques des achats */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border-2 border-indigo-200 text-center">
-                                <div className="text-2xl font-bold text-indigo-600">{stats.totalPurchases}</div>
-                                <div className="text-sm text-gray-600">Total des achats</div>
-                              </div>
-                              <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-200 text-center">
-                                <div className="text-2xl font-bold text-green-600">{stats.totalSpent}</div>
-                                <div className="text-sm text-gray-600">Points dépensés</div>
-                                <div className="text-xs text-green-500 mt-1">≈ {convertPointsToEuros(stats.totalSpent)} €</div>
-                              </div>
-                              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-200 text-center">
-                                <div className="text-2xl font-bold text-yellow-600">{stats.uniqueItems}</div>
-                                <div className="text-sm text-gray-600">Articles différents</div>
-                              </div>
-                              <div className="bg-gradient-to-br from-pink-50 to-red-50 rounded-xl p-4 border-2 border-pink-200 text-center">
-                                <div className="text-2xl font-bold text-pink-600">
-                                  {stats.totalPurchases > 0 ? Math.round(stats.totalSpent / stats.totalPurchases) : 0}
-                                </div>
-                                <div className="text-sm text-gray-600">Moyenne par achat</div>
-                              </div>
+              {/* Onglet Devinettes - Version compacte */}
+              {activeTab === 'riddles' && (
+                <div className="space-y-4">
+                  {currentRiddle ? (
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-slate-200/50 text-center">
+                      <div className="text-4xl mb-4">🧩</div>
+                      <div className={`rounded-xl p-4 border-2 mb-4 ${
+                        riddleSolved 
+                          ? 'bg-green-50 border-green-200' 
+                          : 'bg-purple-50 border-purple-200'
+                      }`}>
+                        <h3 className="text-lg font-medium text-slate-800 mb-3">{currentRiddle.question}</h3>
+                        <p className="text-sm text-slate-600 mb-3">Récompense : {currentRiddle.points} points</p>
+                        
+                        {hintPurchased && !riddleSolved && (
+                          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg">💡</span>
+                              <span className="text-sm font-medium text-amber-800">Indice :</span>
                             </div>
-
-                            {/* Historique des achats */}
-                            <div>
-                              <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                <CalendarIcon className="w-5 h-5 text-purple-600" />
-                                Historique des achats
-                              </h4>
-                              {purchasesLoading ? (
-                                <div className="space-y-4">
-                                  {Array.from({ length: 3 }).map((_, index) => (
-                                    <div key={index} className="bg-gray-100 rounded-xl p-4 animate-pulse">
-                                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : purchases.length > 0 ? (
-                                <div className="space-y-3">
-                                  {purchases.map((purchase) => (
-                                    <motion.div
-                                      key={purchase.id}
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border-2 border-indigo-200 shadow-sm"
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                          <div className="p-2 rounded-full bg-indigo-100 text-indigo-600">
-                                            <PackageIcon className="w-4 h-4" />
-                                          </div>
-                                          <div>
-                                            <p className="font-semibold text-gray-800">
-                                              {purchase.item?.name || 'Article supprimé'}
-                                            </p>
-                                            <p className="text-sm text-gray-600">
-                                              {format(new Date(purchase.purchased_at), 'dd/MM/yyyy à HH:mm', { locale: fr })}
-                                            </p>
-                                          </div>
-                                        </div>
-                                        <div className="text-right">
-                                          <div className="flex items-center gap-1 text-indigo-600 font-bold">
-                                            <StarIcon className="w-4 h-4" />
-                                            <span>{purchase.item?.price || 0} pts</span>
-                                          </div>
-                                          <div className="text-xs text-gray-500">
-                                            ≈ {convertPointsToEuros(purchase.item?.price || 0)} €
-                                          </div>
-                                          <p className="text-xs text-gray-500">
-                                            Achat #{purchase.id.slice(0, 8)}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </motion.div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="text-center py-12">
-                                  <div className="text-6xl mb-4">📦</div>
-                                  <h3 className="text-xl font-semibold text-gray-800 mb-2">Aucun achat</h3>
-                                  <p className="text-gray-600 mb-4">Tu n'as pas encore acheté d'articles !</p>
-                                  <Button
-                                    onClick={() => handleTabChange('shop')}
-                                    className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
-                                  >
-                                    <ShoppingCartIcon className="w-4 h-4 mr-2" />
-                                    Aller à la boutique
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Statistiques mensuelles */}
-                            {Object.keys(stats.monthlyStats).length > 0 && (
-                              <div>
-                                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                  <TrendingUp className="w-5 h-5 text-green-600" />
-                                  Statistiques mensuelles
-                                </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                  {Object.entries(stats.monthlyStats)
-                                    .sort(([a], [b]) => b.localeCompare(a))
-                                    .slice(0, 6)
-                                    .map(([month, data]) => {
-                                      const [year, monthNum] = month.split('-');
-                                      const monthName = new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-                                      
-                                      return (
-                                        <div key={month} className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-4 border-2 border-blue-200">
-                                          <h5 className="font-semibold text-gray-800 mb-2">{monthName}</h5>
-                                          <div className="space-y-1">
-                                            <div className="flex justify-between text-sm">
-                                              <span className="text-gray-600">Achats :</span>
-                                              <span className="font-medium">{data.count}</span>
-                                            </div>
-                                            <div className="flex justify-between text-sm">
-                                              <span className="text-gray-600">Points :</span>
-                                              <span className="font-medium text-green-600">{data.total}</span>
-                                            </div>
-                                            <div className="flex justify-between text-xs">
-                                              <span className="text-gray-500">Valeur :</span>
-                                              <span className="text-green-500">≈ {convertPointsToEuros(data.total)} €</span>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                </div>
-                              </div>
+                            <p className="text-sm text-amber-700">{hintText}</p>
+                          </div>
+                        )}
+                        
+                        {riddleSolved ? (
+                          <div className="flex items-center justify-center gap-2 text-green-600 font-medium">
+                            <CheckCircleIcon className="w-5 h-5" />
+                            <span>Bravo ! Tu as résolu la devinette d'aujourd'hui !</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <Button
+                              onClick={() => setShowRiddleDialog(true)}
+                              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                            >
+                              <BrainIcon className="w-4 h-4 mr-2" />
+                              Répondre
+                            </Button>
+                            
+                            {!hintPurchased && (
+                              <Button
+                                onClick={purchaseHint}
+                                variant="outline"
+                                disabled={child.points < 5 || !currentRiddle?.hint}
+                                className="text-xs border-purple-300 text-purple-600 hover:bg-purple-50"
+                              >
+                                💡 Acheter un indice (5 points)
+                              </Button>
                             )}
                           </div>
-                        );
-                      })()}
-                    </CardContent>
-                  </Card>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 text-center border border-slate-200/50">
+                      <div className="text-4xl mb-3">🎉</div>
+                      <h3 className="text-lg font-semibold text-slate-800 mb-2">Bravo !</h3>
+                      <p className="text-slate-600">Tu as résolu toutes les devinettes d'aujourd'hui !</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Onglet Profil - Version compacte */}
+              {activeTab === 'profile' && (
+                <div className="space-y-4">
+                  {/* Avatar et infos principales */}
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-slate-200/50 text-center">
+                    {child.avatar_url ? (
+                      <div className="w-20 h-20 rounded-full overflow-hidden shadow-lg mx-auto mb-4 border-4 border-purple-200">
+                        <img 
+                          src={child.avatar_url} 
+                          alt={`Photo de ${child.name}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div 
+                        className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg mx-auto mb-4 border-4 border-purple-200"
+                        style={{ backgroundColor: child.custom_color }}
+                      >
+                        {child.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <h3 className="text-xl font-bold text-slate-800 mb-1">{child.name}</h3>
+                    <p className="text-slate-600 mb-3">{child.age} {child.age > 1 ? 'ans' : 'an'}</p>
+                    
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <span className="inline-flex items-center px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
+                        <StarIcon className="w-4 h-4 mr-1" />
+                        {child.points} pts
+                      </span>
+                      <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
+                        <AwardIcon className="w-4 h-4 mr-1" />
+                        {streak} j 🔥
+                      </span>
+                      <span className="inline-flex items-center px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
+                        <TargetIcon className="w-4 h-4 mr-1" />
+                        {completedTasks}/{totalTasks}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Statistiques détaillées */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 text-center">
+                      <div className="text-2xl font-bold text-amber-600 mb-1">{child.points}</div>
+                      <div className="text-xs text-slate-600">Points actuels</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 text-center">
+                      <div className="text-2xl font-bold text-emerald-600 mb-1">{getPiggyBankStats().currentBalance}</div>
+                      <div className="text-xs text-slate-600">Points épargnés</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 text-center">
+                      <div className="text-2xl font-bold text-orange-600 mb-1">{streak}</div>
+                      <div className="text-xs text-slate-600">Jours consécutifs</div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 text-center">
+                      <div className="text-2xl font-bold text-blue-600 mb-1">{completedTasks}</div>
+                      <div className="text-xs text-slate-600">Missions réussies</div>
+                    </div>
+                  </div>
                 </div>
               )}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Animation de confettis */}
+      {showConfetti && (
+        <div className="fixed inset-0 pointer-events-none z-50">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="text-6xl"
+            >
+              🎉
+            </motion.div>
+          </div>
+        </div>
+      )}
 
       {/* Dialogues */}
       
@@ -1923,267 +1382,6 @@ export default function ChildDashboard() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Animation de confettis */}
-      {showConfetti && (
-        <div className="fixed inset-0 pointer-events-none z-50">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              className="text-6xl"
-            >
-              🎉
-            </motion.div>
-          </div>
-        </div>
-      )}
-
-      {/* Indicateurs flottants fixes en bas */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm border-t border-purple-200 shadow-lg">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-            {/* Missions non complétées */}
-            <div className="relative group">
-              <div 
-                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => handleTabChange('tasks')}
-              >
-                <TargetIcon className="w-6 h-6" />
-              </div>
-              {(() => {
-                const incompleteTasks = childTasks.filter(t => !t.is_completed);
-                if (incompleteTasks.length > 0) {
-                  return (
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-2 -right-2 bg-blue-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
-                    >
-                      {incompleteTasks.length}
-                    </motion.div>
-                  );
-                }
-                return null;
-              })()}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                {(() => {
-                  const incompleteTasks = childTasks.filter(t => !t.is_completed);
-                  return incompleteTasks.length > 0 
-                    ? `${incompleteTasks.length} mission${incompleteTasks.length > 1 ? 's' : ''} à accomplir`
-                    : 'Toutes les missions sont accomplies !';
-                })()}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-              </div>
-            </div>
-            {/* Récompenses validées */}
-            <div className="relative group">
-              <div 
-                className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => handleTabChange('rewards')}
-              >
-                <CheckCircleIcon className="w-6 h-6" />
-              </div>
-              {(() => {
-                const validatedRewards = claimedRewards.filter(cr => isRewardValidated(cr.reward_id));
-                
-                if (validatedRewards.length > 0) {
-                  return (
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-2 -right-2 bg-green-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold"
-                    >
-                      {validatedRewards.length}
-                    </motion.div>
-                  );
-                }
-                return null;
-              })()}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                {(() => {
-                  const validatedRewards = claimedRewards.filter(cr => isRewardValidated(cr.reward_id));
-                  return validatedRewards.length > 0 
-                    ? `${validatedRewards.length} récompense${validatedRewards.length > 1 ? 's' : ''} validée${validatedRewards.length > 1 ? 's' : ''}`
-                    : 'Aucune récompense validée';
-                })()}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-              </div>
-            </div>
-
-            {/* Récompenses disponibles */}
-            <div className="relative group">
-              <div 
-                className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => handleTabChange('rewards')}
-              >
-                <TrophyIcon className="w-6 h-6" />
-              </div>
-              {(() => {
-                const piggyStats = getPiggyBankStats();
-                const totalAvailablePoints = child.points + piggyStats.currentBalance;
-                const affordableRewards = rewards.filter(r => totalAvailablePoints >= r.cost && !isRewardClaimed(r.id));
-                const pendingValidation = claimedRewards.filter(cr => !isRewardValidated(cr.reward_id));
-                
-                if (pendingValidation.length > 0) {
-                  return (
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-2 -right-2 bg-orange-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
-                    >
-                      {pendingValidation.length}
-                    </motion.div>
-                  );
-                } else if (affordableRewards.length > 0) {
-                  return (
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
-                    >
-                      {affordableRewards.length}
-                    </motion.div>
-                  );
-                }
-                return null;
-              })()}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                {(() => {
-                  const piggyStats = getPiggyBankStats();
-                  const totalAvailablePoints = child.points + piggyStats.currentBalance;
-                  const affordableRewards = rewards.filter(r => totalAvailablePoints >= r.cost && !isRewardClaimed(r.id));
-                  const pendingValidation = claimedRewards.filter(cr => !isRewardValidated(cr.reward_id));
-                  
-                  if (pendingValidation.length > 0) {
-                    return `${pendingValidation.length} récompense${pendingValidation.length > 1 ? 's' : ''} en attente de validation`;
-                  } else if (affordableRewards.length > 0) {
-                    return `${affordableRewards.length} récompense${affordableRewards.length > 1 ? 's' : ''} disponible${affordableRewards.length > 1 ? 's' : ''}`;
-                  } else {
-                    return 'Aucune récompense disponible';
-                  }
-                })()}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-              </div>
-            </div>
-
-            {/* Produits en boutique */}
-            <div className="relative group">
-              <div 
-                className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => handleTabChange('shop')}
-              >
-                <ShoppingCartIcon className="w-6 h-6" />
-              </div>
-              {shopItems.length > 0 && (
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 bg-blue-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold"
-                >
-                  {shopItems.length}
-                </motion.div>
-              )}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                {shopItems.length > 0 
-                  ? `${shopItems.length} produit${shopItems.length > 1 ? 's' : ''} en boutique`
-                  : 'Boutique vide'
-                }
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-              </div>
-            </div>
-
-            {/* Devinette du jour */}
-            <div className="relative group">
-              <div
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => handleTabChange('riddles')}
-              >
-                <BrainIcon className="w-6 h-6" />
-              </div>
-              {currentRiddle && !riddleSolved && (
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 bg-purple-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-bounce"
-                >
-                  !
-                </motion.div>
-              )}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                {currentRiddle && !riddleSolved 
-                  ? 'Nouvelle devinette disponible !'
-                  : riddleSolved 
-                    ? 'Devinette résolue aujourd\'hui'
-                    : 'Aucune devinette disponible'
-                }
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-              </div>
-            </div>
-
-            {/* Analyse IA */}
-            <div className="relative group">
-              <div
-                className="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer relative overflow-hidden"
-                onClick={handleOpenAnalysis}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-                <BarChart3 className="w-6 h-6 relative z-10" />
-                {/* Effet de brillance */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              </div>
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4" />
-                  <span>Analyse IA personnalisée</span>
-                </div>
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
-              </div>
-            </div>
-
-            {/* Assistant */}
-            <div className="relative group">
-              <div
-                className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => setShowChatbot(true)}
-              >
-                <MessageCircleIcon className="w-6 h-6" />
-              </div>
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                Besoin d'aide ?
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-              </div>
-            </div>
-            {/* Tirelire */}
-            <div className="relative group">
-              <div 
-                className="bg-gradient-to-r from-orange-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => handleTabChange('piggy')}
-              >
-                <PiggyBankIcon className="w-6 h-6" />
-              </div>
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                Ma Tirelire
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-              </div>
-            </div>
-            {/* Profil */}
-            <div className="relative group">
-              <div 
-                className="bg-gradient-to-r from-pink-500 to-purple-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => handleTabChange('profile')}
-              >
-                <UsersIcon className="w-6 h-6" />
-              </div>
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                Mon Profil
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 } 
