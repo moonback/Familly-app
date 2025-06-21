@@ -199,6 +199,11 @@ export default function ChildDashboard() {
     }
   }, [child, fetchShopItems]);
 
+  // Scroll automatique vers le haut au chargement de la page
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const handleTaskToggle = async (childTaskId: string, isCompleted: boolean) => {
     await toggleTask(childTaskId, isCompleted);
     if (!isCompleted) {
@@ -363,6 +368,12 @@ export default function ChildDashboard() {
         description: 'L\'analyse IA a été mise à jour avec les dernières données',
       });
     }
+  };
+
+  const handleTabChange = (newTab: typeof activeTab) => {
+    setActiveTab(newTab);
+    // Scroll vers le haut avec animation douce
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const getCategoryIcon = (category: string) => {
@@ -1587,7 +1598,7 @@ export default function ChildDashboard() {
                                   <h3 className="text-xl font-semibold text-gray-800 mb-2">Aucun achat</h3>
                                   <p className="text-gray-600 mb-4">Tu n'as pas encore acheté d'articles !</p>
                                   <Button
-                                    onClick={() => setActiveTab('shop')}
+                                    onClick={() => handleTabChange('shop')}
                                     className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
                                   >
                                     <ShoppingCartIcon className="w-4 h-4 mr-2" />
@@ -1937,7 +1948,7 @@ export default function ChildDashboard() {
             <div className="relative group">
               <div 
                 className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => setActiveTab('tasks')}
+                onClick={() => handleTabChange('tasks')}
               >
                 <TargetIcon className="w-6 h-6" />
               </div>
@@ -1970,7 +1981,7 @@ export default function ChildDashboard() {
             <div className="relative group">
               <div 
                 className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => setActiveTab('rewards')}
+                onClick={() => handleTabChange('rewards')}
               >
                 <CheckCircleIcon className="w-6 h-6" />
               </div>
@@ -2005,7 +2016,7 @@ export default function ChildDashboard() {
             <div className="relative group">
               <div 
                 className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => setActiveTab('rewards')}
+                onClick={() => handleTabChange('rewards')}
               >
                 <TrophyIcon className="w-6 h-6" />
               </div>
@@ -2061,7 +2072,7 @@ export default function ChildDashboard() {
             <div className="relative group">
               <div 
                 className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => setActiveTab('shop')}
+                onClick={() => handleTabChange('shop')}
               >
                 <ShoppingCartIcon className="w-6 h-6" />
               </div>
@@ -2087,7 +2098,7 @@ export default function ChildDashboard() {
             <div className="relative group">
               <div
                 className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => setActiveTab('riddles')}
+                onClick={() => handleTabChange('riddles')}
               >
                 <BrainIcon className="w-6 h-6" />
               </div>
@@ -2148,7 +2159,7 @@ export default function ChildDashboard() {
             <div className="relative group">
               <div 
                 className="bg-gradient-to-r from-orange-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => setActiveTab('piggy')}
+                onClick={() => handleTabChange('piggy')}
               >
                 <PiggyBankIcon className="w-6 h-6" />
               </div>
@@ -2161,7 +2172,7 @@ export default function ChildDashboard() {
             <div className="relative group">
               <div 
                 className="bg-gradient-to-r from-pink-500 to-purple-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => setActiveTab('profile')}
+                onClick={() => handleTabChange('profile')}
               >
                 <UsersIcon className="w-6 h-6" />
               </div>
