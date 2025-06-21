@@ -9,6 +9,7 @@ import { useAuth } from '@/context/auth-context';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getWeather, getDailyForecast } from '@/lib/utils';
+import { useVoice } from '@/hooks/useVoice';
 
 interface ChatbotProps {
   open: boolean;
@@ -67,7 +68,7 @@ const FormattedMessage = ({ text }: { text: string }) => {
 };
 
 // Composant d'avatar animé
-const AnimatedAvatar = ({ sender, isTyping = false }: { sender: 'user' | 'bot', isTyping?: boolean }) => {
+const AnimatedAvatar = ({ sender, isTyping = false, isSpeaking = false }: { sender: 'user' | 'bot', isTyping?: boolean, isSpeaking?: boolean }) => {
   return (
     <motion.div
       initial={{ scale: 0 }}
@@ -82,8 +83,15 @@ const AnimatedAvatar = ({ sender, isTyping = false }: { sender: 'user' | 'bot', 
         <User className="w-5 h-5" />
       ) : (
         <motion.div
-          animate={isTyping ? { rotate: [0, 5, -5, 0] } : {}}
-          transition={{ duration: 0.5, repeat: isTyping ? Infinity : 0 }}
+          animate={
+            isTyping ? { rotate: [0, 5, -5, 0] } : 
+            isSpeaking ? { scale: [1, 1.1, 1] } : 
+            {}
+          }
+          transition={{ 
+            duration: isTyping ? 0.5 : 0.3, 
+            repeat: isTyping || isSpeaking ? Infinity : 0 
+          }}
         >
           <Bot className="w-5 h-5" />
         </motion.div>
@@ -94,7 +102,7 @@ const AnimatedAvatar = ({ sender, isTyping = false }: { sender: 'user' | 'bot', 
         sender === 'user' 
           ? 'bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400' 
           : 'bg-gradient-to-br from-purple-400 via-pink-400 to-red-400'
-      } opacity-20 scale-110`} />
+      } ${isSpeaking ? 'opacity-40 scale-125' : 'opacity-20 scale-110'}`} />
     </motion.div>
   );
 };
@@ -129,14 +137,23 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   });
   const [cityLoading, setCityLoading] = useState(false);
 
-  // États pour la fonctionnalité vocale
-  const [isListening, setIsListening] = useState(false);
-  const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [keywordDetected, setKeywordDetected] = useState(false);
-  const recognitionRef = useRef<any>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const lastSpokenMessageId = useRef<number | null>(null);
+  const {
+    isListening,
+    isSpeaking,
+    voiceOutputEnabled,
+    keywordDetected,
+    browserSupportsSpeech,
+    toggleListening,
+    toggleVoiceOutput,
+    speak,
+    stopSpeaking,
+    resetKeyword
+  } = useVoice({
+    chatbotName,
+    onCommand: (command) => {
+      sendMessage(command);
+    },
+  });
 
   // Charger l'historique et le nom du chatbot depuis le localStorage au montage
   useEffect(() => {
@@ -228,7 +245,9 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     if (!messageContent) return;
     
     // Si une commande vocale est annulée par du texte, on réinitialise.
-    if(keywordDetected) setKeywordDetected(false);
+    if(keywordDetected) resetKeyword();
+    // Arrête la synthèse vocale si l'utilisateur envoie un message
+    stopSpeaking();
 
     setMessages(prev => [...prev, { 
       sender: 'user', 
@@ -497,126 +516,13 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     }
   }, [messages, loading]);
 
-  // Synthèse vocale (Text-to-Speech)
-  const speak = (text: string, messageId: number) => {
-    if (!voiceOutputEnabled || isSpeaking) return;
-
-    // Nettoyage basique du texte pour la synthèse
-    const cleanText = text
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/(\r\n|\n|\r)/gm, " ")
-      .replace(/emoji/gi, '');
-
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'fr-FR';
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-      lastSpokenMessageId.current = messageId;
-    };
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    utteranceRef.current = utterance;
-    speechSynthesis.speak(utterance);
-  };
-
   // Parler le dernier message du bot
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
-    if (voiceOutputEnabled && lastMessage && lastMessage.sender === 'bot' && (messages.length - 1) !== lastSpokenMessageId.current) {
-      speak(lastMessage.text, messages.length - 1);
+    if (voiceOutputEnabled && lastMessage && lastMessage.sender === 'bot') {
+      speak(lastMessage.text);
     }
-  }, [messages, voiceOutputEnabled]);
-
-  // Reconnaissance vocale (Speech-to-Text)
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      console.warn("La reconnaissance vocale n'est pas supportée par ce navigateur.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'fr-FR';
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognitionRef.current = recognition;
-
-    let silenceTimeout: NodeJS.Timeout;
-    let finalTranscript = '';
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-
-      if (keywordDetected) {
-        console.log("Commande reçue:", transcript);
-        sendMessage(transcript);
-        setKeywordDetected(false);
-        return;
-      }
-      
-      const keyword = chatbotName.toLowerCase();
-      if (transcript.includes(keyword)) {
-        const command = transcript.split(keyword)[1]?.trim();
-        if (command) {
-          console.log("Mot-clé et commande reçus:", command);
-          sendMessage(command);
-        } else {
-          console.log("Mot-clé détecté ! En attente de la commande.");
-          setKeywordDetected(true);
-          clearTimeout(silenceTimeout);
-          silenceTimeout = setTimeout(() => {
-            setKeywordDetected(false);
-            console.log("Timeout, attente du mot-clé à nouveau.");
-          }, 4000); // 4s pour donner la commande
-        }
-      }
-    };
-
-    recognition.onend = () => {
-      if (isListening) {
-        setTimeout(() => recognitionRef.current?.start(), 100);
-      }
-    };
-    
-    recognition.onerror = (event: any) => {
-      console.error("Erreur de reconnaissance vocale:", event.error);
-      if (event.error === 'no-speech' || event.error === 'audio-capture') {
-        // Ne pas désactiver l'écoute pour ces erreurs communes
-      } else {
-        setIsListening(false);
-      }
-    };
-
-    return () => {
-      recognition.stop();
-      speechSynthesis.cancel();
-    };
-  }, [chatbotName, isListening, keywordDetected]);
-
-  const toggleListening = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-    } else {
-      try {
-        recognitionRef.current?.start();
-      } catch (e) {
-        console.error("Erreur au démarrage de la reconnaissance :", e);
-      }
-    }
-    setIsListening(prev => !prev);
-  };
-  
-  const toggleVoiceOutput = () => {
-    setVoiceOutputEnabled(prev => {
-      if (prev && isSpeaking) {
-        speechSynthesis.cancel();
-        setIsSpeaking(false);
-      }
-      return !prev;
-    });
-  };
+  }, [messages, voiceOutputEnabled, speak]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -797,8 +703,9 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
                   variant="ghost"
                   size="sm"
                   onClick={toggleListening}
-                  className={`text-white p-2 rounded-full transition-colors duration-300 ${isListening ? 'bg-red-500/80 hover:bg-red-600/80' : 'hover:bg-white/20'}`}
+                  className={`text-white p-2 rounded-full transition-colors duration-300 ${isListening ? 'bg-red-500/80 hover:bg-red-600/80 animate-pulse' : 'hover:bg-white/20'}`}
                   title={isListening ? "Arrêter l'écoute" : "Activer le micro"}
+                  disabled={!browserSupportsSpeech}
                 >
                   {isListening ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
                 </Button>
@@ -828,7 +735,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
                 transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
                 className={`flex items-end gap-3 max-w-[85%] ${m.sender === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto flex-row'}`}
               >
-                <AnimatedAvatar sender={m.sender} />
+                <AnimatedAvatar sender={m.sender} isSpeaking={isSpeaking && m.sender === 'bot' && idx === messages.length -1} />
                 <div className={`rounded-3xl px-5 py-3 shadow-lg ${
                   m.sender === 'user'
                     ? 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 text-white rounded-br-lg'
@@ -928,13 +835,13 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
                   sendMessage();
                 }
               }}
-              placeholder={keywordDetected ? "J'écoute..." : isListening ? `Dites "${chatbotName}"...` : "Écris ton message magique..."}
+              placeholder={!browserSupportsSpeech ? "Le vocal n'est pas supporté" : keywordDetected ? "J'écoute..." : isListening ? `Dites "${chatbotName}"...` : "Écris ton message magique..."}
               className="w-full pr-14 pl-5 py-3 bg-white/80 border-2 border-purple-200/50 focus:border-purple-400 focus:ring-4 focus:ring-purple-200/50 rounded-full shadow-inner transition-all duration-300"
-              disabled={loading || keywordDetected}
+              disabled={loading || keywordDetected || !browserSupportsSpeech}
             />
             <motion.button
               onClick={() => sendMessage()}
-              disabled={loading || !input.trim()}
+              disabled={loading || !input.trim() || !browserSupportsSpeech}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
