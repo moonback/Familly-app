@@ -8,10 +8,63 @@ export const useTasks = (child: Child | null, onPointsUpdated: () => void) => {
   const [childTasks, setChildTasks] = useState<ChildTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const generateAgeAppropriateTasks = async () => {
+  const checkAndFixTaskData = async () => {
     if (!child) return;
 
     try {
+      // Vérifier s'il y a des tâches sans age_min ou age_max
+      const { data: incompleteTasks, error: checkError } = await supabase
+        .from('tasks')
+        .select('id, label, age_min, age_max')
+        .eq('user_id', child.user_id)
+        .or('age_min.is.null,age_max.is.null');
+
+      if (checkError) {
+        console.error('Erreur lors de la vérification des tâches incomplètes:', checkError);
+        return;
+      }
+
+      if (incompleteTasks && incompleteTasks.length > 0) {
+        console.warn(`${incompleteTasks.length} tâches sans âge défini trouvées`);
+        
+        // Mettre à jour les tâches avec des valeurs par défaut
+        for (const task of incompleteTasks) {
+          const { error: updateError } = await supabase
+            .from('tasks')
+            .update({
+              age_min: task.age_min || 3,
+              age_max: task.age_max || 18
+            })
+            .eq('id', task.id);
+
+          if (updateError) {
+            console.error('Erreur lors de la mise à jour de la tâche:', updateError);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification des données:', error);
+    }
+  };
+
+  const generateAgeAppropriateTasks = async () => {
+    if (!child) return;
+
+    // Vérifier que l'enfant a un âge défini
+    if (!child.age || child.age < 1) {
+      console.warn('L\'enfant n\'a pas d\'âge défini ou l\'âge est invalide');
+      toast({
+        title: 'Information',
+        description: "Veuillez définir l'âge de l'enfant pour générer des tâches appropriées",
+        variant: 'default',
+      });
+      return;
+    }
+
+    try {
+      // Vérifier et corriger les données des tâches
+      await checkAndFixTaskData();
+
       const { data: existingTasks, error: checkError } = await supabase
         .from('child_tasks')
         .select('*')
@@ -20,6 +73,11 @@ export const useTasks = (child: Child | null, onPointsUpdated: () => void) => {
 
       if (checkError) {
         console.error('Erreur lors de la vérification des tâches existantes:', checkError);
+        toast({
+          title: 'Erreur',
+          description: "Impossible de vérifier les tâches existantes",
+          variant: 'destructive',
+        });
         return;
       }
 
@@ -28,12 +86,19 @@ export const useTasks = (child: Child | null, onPointsUpdated: () => void) => {
           .from('tasks')
           .select('*')
           .eq('user_id', child.user_id)
+          .not('age_min', 'is', null)
+          .not('age_max', 'is', null)
           .lte('age_min', child.age)
           .gte('age_max', child.age)
           .order('points_reward', { ascending: false });
 
         if (tasksError) {
           console.error('Erreur lors de la récupération des tâches:', tasksError);
+          toast({
+            title: 'Erreur',
+            description: "Impossible de récupérer les tâches appropriées",
+            variant: 'destructive',
+          });
           return;
         }
 
@@ -76,19 +141,45 @@ export const useTasks = (child: Child | null, onPointsUpdated: () => void) => {
 
           // Créer les tâches dans la base de données
           for (const task of finalTasks) {
-            const { error: insertError } = await supabase
-              .from('child_tasks')
-              .insert([{
-                child_id: child.id,
-                task_id: task.id,
-                due_date: format(new Date(), 'yyyy-MM-dd'),
-                is_completed: false
-              }]);
+            try {
+              const { error: insertError } = await supabase
+                .from('child_tasks')
+                .insert([{
+                  child_id: child.id,
+                  task_id: task.id,
+                  due_date: format(new Date(), 'yyyy-MM-dd'),
+                  is_completed: false
+                }]);
 
-            if (insertError) {
-              console.error('Erreur lors de la création de la tâche:', insertError);
+              if (insertError) {
+                console.error('Erreur lors de la création de la tâche:', {
+                  message: insertError.message,
+                  details: insertError.details,
+                  hint: insertError.hint,
+                  code: insertError.code
+                });
+                toast({
+                  title: 'Erreur',
+                  description: `Impossible de créer la tâche: ${task.label}`,
+                  variant: 'destructive',
+                });
+              }
+            } catch (taskError) {
+              console.error('Erreur lors de la création de la tâche:', taskError);
+              toast({
+                title: 'Erreur',
+                description: `Erreur lors de la création de la tâche: ${task.label}`,
+                variant: 'destructive',
+              });
             }
           }
+        } else {
+          console.warn('Aucune tâche appropriée trouvée pour l\'âge de l\'enfant');
+          toast({
+            title: 'Information',
+            description: "Aucune tâche appropriée trouvée pour l'âge de l'enfant",
+            variant: 'default',
+          });
         }
       }
     } catch (error) {
