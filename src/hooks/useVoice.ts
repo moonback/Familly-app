@@ -56,7 +56,7 @@ export const useVoice = ({ chatbotName, onCommand, onListenToggle }: UseVoicePro
       return;
     }
     
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setBrowserSupportsSpeech(false);
       console.warn("La reconnaissance vocale n'est pas supportée par ce navigateur.");
