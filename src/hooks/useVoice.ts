@@ -19,7 +19,7 @@ export const useVoice = ({ chatbotName, onCommand, onListenToggle }: UseVoicePro
 
   // --- Speech Synthesis (Text-to-Speech) ---
   const speak = useCallback((text: string) => {
-    if (!voiceOutputEnabled || !text) return;
+    if (!voiceOutputEnabled || !text || typeof window === 'undefined' || !window.speechSynthesis) return;
 
     speechSynthesis.cancel();
 
@@ -43,7 +43,7 @@ export const useVoice = ({ chatbotName, onCommand, onListenToggle }: UseVoicePro
   }, [voiceOutputEnabled]);
   
   const stopSpeaking = () => {
-    if (isSpeaking) {
+    if (isSpeaking && typeof window !== 'undefined' && window.speechSynthesis) {
       speechSynthesis.cancel();
       setIsSpeaking(false);
     }
@@ -51,6 +51,11 @@ export const useVoice = ({ chatbotName, onCommand, onListenToggle }: UseVoicePro
 
   // --- Speech Recognition (Speech-to-Text) ---
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      setBrowserSupportsSpeech(false);
+      return;
+    }
+    
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setBrowserSupportsSpeech(false);
@@ -113,8 +118,12 @@ export const useVoice = ({ chatbotName, onCommand, onListenToggle }: UseVoicePro
     };
 
     return () => {
-      recognition.stop();
-      speechSynthesis.cancel();
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        speechSynthesis.cancel();
+      }
       clearTimeout(silenceTimeout);
     };
   }, [chatbotName, isListening, keywordDetected, onCommand, onListenToggle]);
@@ -140,7 +149,7 @@ export const useVoice = ({ chatbotName, onCommand, onListenToggle }: UseVoicePro
   
   const toggleVoiceOutput = useCallback(() => {
     setVoiceOutputEnabled(prev => {
-      if (prev) {
+      if (prev && typeof window !== 'undefined' && window.speechSynthesis) {
         speechSynthesis.cancel();
         setIsSpeaking(false);
       }
