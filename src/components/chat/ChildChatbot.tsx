@@ -27,7 +27,7 @@ const quickQuestions = [
   { text: "Quelles sont mes missions ?", icon: "🎯", color: "from-blue-400 via-indigo-400 to-purple-400", glow: "shadow-blue-200" },
   { text: "Que puis-je acheter ?", icon: "🛒", color: "from-emerald-400 via-green-400 to-teal-400", glow: "shadow-emerald-200" },
   { text: "Quelles récompenses puis-je avoir ?", icon: "🏆", color: "from-purple-400 via-violet-400 to-pink-400", glow: "shadow-purple-200" },
-  { text: "Quelles règles dois-je respecter ?", icon: "📋", color: "from-red-400 via-pink-400 to-rose-400", glow: "shadow-red-200" },
+  { text: "Suggère une activité !", icon: "🎲", color: "from-teal-400 via-cyan-400 to-sky-400", glow: "shadow-teal-200" },
   { text: "Donne-moi des conseils !", icon: "💡", color: "from-cyan-400 via-sky-400 to-blue-400", glow: "shadow-cyan-200" },
   { text: "Quelle est la météo ?", icon: "☀️", color: "from-yellow-300 via-yellow-400 to-orange-400", glow: "shadow-yellow-200" },
   { text: "Combien de points ai-je ?", icon: "⭐", color: "from-yellow-400 via-amber-400 to-orange-400", glow: "shadow-yellow-200" },
@@ -123,6 +123,7 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
 
   // États existants
   const [pendingActivity, setPendingActivity] = useState<null | { weather: any; age: number | null }>(null);
+  const [pendingActivitySuggestion, setPendingActivitySuggestion] = useState<null | { step: 'players' | 'location', players?: 'seul' | 'plusieurs' }>(null);
   const [city, setCity] = useState<string>(() => {
     return localStorage.getItem('user_city') || 'Paris';
   });
@@ -225,7 +226,49 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     if (!content) setInput('');
     setLoading(true);
 
-    // Gestion des activités en attente
+    // --- GESTION SUGGESTION ACTIVITÉ (MULTI-ÉTAPES) ---
+    if (pendingActivitySuggestion) {
+      if (pendingActivitySuggestion.step === 'players') {
+        const players = messageContent.toLowerCase().includes('seul') ? 'seul' : 'plusieurs';
+        setPendingActivitySuggestion({ step: 'location', players });
+        setMessages(prev => [...prev, {
+          sender: 'bot',
+          text: "Parfait ! Et tu préfères une activité à l'intérieur 🏠 ou à l'extérieur 🌳 ?",
+          timestamp: new Date()
+        }]);
+        setLoading(false);
+      } else if (pendingActivitySuggestion.step === 'location') {
+        const location = messageContent.toLowerCase().includes('intérieur') ? 'à l\'intérieur' : 'à l\'extérieur';
+        const { players } = pendingActivitySuggestion;
+
+        try {
+          const weather = await getWeather(city);
+          const prompt = `L'enfant, ${childName ? decodeURIComponent(childName) : ''}, cherche une activité. Contraintes: ${players}, ${location}. Météo à ${city}: ${weather.description}, ${weather.temp}°C. Suggère 3 activités originales et amusantes. Pour chaque, donne: nom avec emoji, courte description, matériel. La réponse doit être en Markdown, engageante et créative.`;
+
+          const conversationHistory = messages
+            .slice(1).map(m => ({ role: m.sender === 'user' ? 'user' as const : 'model' as const, content: m.text }));
+          
+          conversationHistory.push({ role: 'user', content: prompt });
+
+          const currentChildName = childName ? decodeURIComponent(childName) : '';
+          const reply = await getChatbotResponse(conversationHistory, user?.id, currentChildName, chatbotName);
+          
+          setMessages(prev => [...prev, { sender: 'bot', text: reply, timestamp: new Date() }]);
+        } catch (e) {
+          setMessages(prev => [...prev, {
+            sender: 'bot',
+            text: `Oups, je n'arrive pas à trouver d'idée pour le moment. Réessaie un peu plus tard ! 😕`,
+            timestamp: new Date()
+          }]);
+        } finally {
+          setPendingActivitySuggestion(null);
+          setLoading(false);
+        }
+      }
+      return;
+    }
+
+    // Gestion des activités en attente (pour la tenue)
     if (pendingActivity) {
       try {
         const activity = messageContent;
@@ -255,6 +298,21 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
         setPendingActivity(null);
         setLoading(false);
       }
+      return;
+    }
+
+    // --- INTERCEPTION DES QUESTIONS ---
+
+    // Déclenchement de la suggestion d'activité
+    const regexActivite = /(activité|jouer|faire quoi|s'occuper|m'ennuie)/i;
+    if (regexActivite.test(messageContent)) {
+      setPendingActivitySuggestion({ step: 'players' });
+      setMessages(prev => [...prev, {
+        sender: 'bot',
+        text: "Super idée ! 🎲 Tu veux une activité à faire seul(e) ou avec des ami(e)s ?",
+        timestamp: new Date()
+      }]);
+      setLoading(false);
       return;
     }
 
