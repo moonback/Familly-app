@@ -1250,7 +1250,7 @@ export default function ChildDashboard() {
               {/* Onglet Devinettes */}
               {activeTab === 'riddles' && (
                 <div className="space-y-6">
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+                  <Card className="bg-white/80 backdrop-sm border-0 shadow-xl">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-3 text-2xl">
                         <BrainIcon className="w-8 h-8 text-purple-600" />
@@ -1336,7 +1336,7 @@ export default function ChildDashboard() {
               {/* Onglet Météo */}
               {activeTab === 'weather' && (
                 <div className="space-y-6">
-                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+                  <Card className="bg-white/80 backdrop-sm border-0 shadow-xl">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-3 text-2xl">
                         <CalendarIcon className="w-8 h-8 text-sky-600" />
@@ -1355,7 +1355,7 @@ export default function ChildDashboard() {
               {/* Onglet Profil */}
               {activeTab === 'profile' && (
                 <div className="space-y-8">
-                  <Card className="bg-white/90 backdrop-blur-md border-0 shadow-2xl">
+                  <Card className="bg-white/90 backdrop-md border-0 shadow-2xl">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-3 text-3xl font-extrabold">
                         <UsersIcon className="w-9 h-9 text-pink-500" />
@@ -1655,19 +1655,31 @@ export default function ChildDashboard() {
       </Dialog>
 
       <Dialog open={showAnalysis} onOpenChange={setShowAnalysis}>
-        <DialogContent className="w-[90vw] h-[90vh] max-w-none max-h-none p-0 md:p-0">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-blue-600" />
-              Analyse IA
+        <DialogContent className="w-[95vw] h-[95vh] max-w-none max-h-none p-0 md:p-0 bg-gradient-to-br from-slate-50 to-blue-50">
+          <DialogHeader className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-6 text-white rounded-t-lg">
+            <DialogTitle className="flex items-center gap-3 text-xl font-bold">
+              <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                <BarChart3 className="w-6 h-6 text-white" />
+              </div>
+              <span className="drop-shadow-lg">Analyse IA Intelligente</span>
             </DialogTitle>
           </DialogHeader>
+          
           {analysisLoading && (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin" />
+            <div className="flex flex-col items-center justify-center py-16 space-y-4">
+              <div className="relative">
+                <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+                <div className="absolute inset-0 w-12 h-12 border-4 border-blue-200 rounded-full animate-ping"></div>
+              </div>
+              <p className="text-gray-600 font-medium animate-pulse">Analyse en cours...</p>
             </div>
           )}
-          {!analysisLoading && analysis && <ChildAnalysis analysis={analysis} />}
+          
+          {!analysisLoading && analysis && (
+            <div className="h-full overflow-hidden">
+              <ChildAnalysis analysis={analysis} />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -2040,13 +2052,19 @@ export default function ChildDashboard() {
             {/* Analyse IA */}
             <div className="relative group">
               <div
-                className="bg-gradient-to-r from-sky-500 to-blue-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                className="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer relative overflow-hidden"
                 onClick={handleOpenAnalysis}
               >
-                <BarChart3 className="w-6 h-6" />
+                <div className="absolute inset-0 bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                <BarChart3 className="w-6 h-6 relative z-10" />
+                {/* Effet de brillance */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               </div>
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                Analyse IA
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  <span>Analyse IA personnalisée</span>
+                </div>
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
               </div>
             </div>
