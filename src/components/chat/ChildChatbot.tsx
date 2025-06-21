@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MessageCircleIcon, Loader2, SparklesIcon, RotateCcw, BarChart3, Send, Bot, User, Star, Trophy, Target, PiggyBank, ShoppingCart, Gift, AlertCircle, CheckCircle, Clock, Edit3, LocateIcon, Volume2, Zap, Heart } from 'lucide-react';
+import { MessageCircleIcon, Loader2, SparklesIcon, RotateCcw, BarChart3, Send, Bot, User, Star, Trophy, Target, PiggyBank, ShoppingCart, Gift, AlertCircle, CheckCircle, Clock, Edit3, LocateIcon, Volume2, Zap, Heart, Mic, MicOff, VolumeX } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { getChatbotResponse } from '@/lib/gemini';
 import { useAuth } from '@/context/auth-context';
@@ -129,6 +129,15 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
   });
   const [cityLoading, setCityLoading] = useState(false);
 
+  // États pour la fonctionnalité vocale
+  const [isListening, setIsListening] = useState(false);
+  const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [keywordDetected, setKeywordDetected] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const lastSpokenMessageId = useRef<number | null>(null);
+
   // Charger l'historique et le nom du chatbot depuis le localStorage au montage
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
@@ -218,6 +227,9 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     const messageContent = content || input.trim();
     if (!messageContent) return;
     
+    // Si une commande vocale est annulée par du texte, on réinitialise.
+    if(keywordDetected) setKeywordDetected(false);
+
     setMessages(prev => [...prev, { 
       sender: 'user', 
       text: messageContent,
@@ -485,6 +497,127 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
     }
   }, [messages, loading]);
 
+  // Synthèse vocale (Text-to-Speech)
+  const speak = (text: string, messageId: number) => {
+    if (!voiceOutputEnabled || isSpeaking) return;
+
+    // Nettoyage basique du texte pour la synthèse
+    const cleanText = text
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/(\r\n|\n|\r)/gm, " ")
+      .replace(/emoji/gi, '');
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = 'fr-FR';
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      lastSpokenMessageId.current = messageId;
+    };
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    utteranceRef.current = utterance;
+    speechSynthesis.speak(utterance);
+  };
+
+  // Parler le dernier message du bot
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (voiceOutputEnabled && lastMessage && lastMessage.sender === 'bot' && (messages.length - 1) !== lastSpokenMessageId.current) {
+      speak(lastMessage.text, messages.length - 1);
+    }
+  }, [messages, voiceOutputEnabled]);
+
+  // Reconnaissance vocale (Speech-to-Text)
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.warn("La reconnaissance vocale n'est pas supportée par ce navigateur.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR';
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognitionRef.current = recognition;
+
+    let silenceTimeout: NodeJS.Timeout;
+    let finalTranscript = '';
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+
+      if (keywordDetected) {
+        console.log("Commande reçue:", transcript);
+        sendMessage(transcript);
+        setKeywordDetected(false);
+        return;
+      }
+      
+      const keyword = chatbotName.toLowerCase();
+      if (transcript.includes(keyword)) {
+        const command = transcript.split(keyword)[1]?.trim();
+        if (command) {
+          console.log("Mot-clé et commande reçus:", command);
+          sendMessage(command);
+        } else {
+          console.log("Mot-clé détecté ! En attente de la commande.");
+          setKeywordDetected(true);
+          clearTimeout(silenceTimeout);
+          silenceTimeout = setTimeout(() => {
+            setKeywordDetected(false);
+            console.log("Timeout, attente du mot-clé à nouveau.");
+          }, 4000); // 4s pour donner la commande
+        }
+      }
+    };
+
+    recognition.onend = () => {
+      if (isListening) {
+        setTimeout(() => recognitionRef.current?.start(), 100);
+      }
+    };
+    
+    recognition.onerror = (event: any) => {
+      console.error("Erreur de reconnaissance vocale:", event.error);
+      if (event.error === 'no-speech' || event.error === 'audio-capture') {
+        // Ne pas désactiver l'écoute pour ces erreurs communes
+      } else {
+        setIsListening(false);
+      }
+    };
+
+    return () => {
+      recognition.stop();
+      speechSynthesis.cancel();
+    };
+  }, [chatbotName, isListening, keywordDetected]);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+    } else {
+      try {
+        recognitionRef.current?.start();
+      } catch (e) {
+        console.error("Erreur au démarrage de la reconnaissance :", e);
+      }
+    }
+    setIsListening(prev => !prev);
+  };
+  
+  const toggleVoiceOutput = () => {
+    setVoiceOutputEnabled(prev => {
+      if (prev && isSpeaking) {
+        speechSynthesis.cancel();
+        setIsSpeaking(false);
+      }
+      return !prev;
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95%] max-h-[90vh] flex flex-col p-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-0 shadow-2xl overflow-hidden">
@@ -500,6 +633,19 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
             >
               <Heart className="w-4 h-4 animate-pulse" />
               {encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]}
+            </motion.div>
+          )}
+
+          {/* Indicateur de mot-clé détecté */}
+          {keywordDetected && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.8 }}
+              className="absolute top-24 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-green-400 to-blue-500 text-white px-4 py-2 rounded-full shadow-lg font-medium text-sm flex items-center gap-2"
+            >
+              <Mic className="w-4 h-4 animate-pulse" />
+              J'écoute...
             </motion.div>
           )}
         </AnimatePresence>
@@ -622,27 +768,50 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
                 </div>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={askForStats}
-                disabled={loading}
-                className="text-white hover:bg-white/20 p-2 backdrop-blur-sm"
-                title="Demander des statistiques"
-              >
-                <BarChart3 className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={resetConversation}
-                disabled={loading}
-                className="text-white hover:bg-white/20 p-2 backdrop-blur-sm"
-                title="Nouvelle conversation"
-              >
-                <RotateCcw className="w-5 h-5" />
-              </Button>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={askForStats}
+                  disabled={loading}
+                  className="text-white hover:bg-white/20 p-2 backdrop-blur-sm"
+                  title="Demander des statistiques"
+                >
+                  <BarChart3 className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetConversation}
+                  disabled={loading}
+                  className="text-white hover:bg-white/20 p-2 backdrop-blur-sm"
+                  title="Nouvelle conversation"
+                >
+                  <RotateCcw className="w-5 h-5" />
+                </Button>
+              </div>
+              {/* Commandes vocales */}
+              <div className="flex gap-3 bg-white/10 backdrop-blur-sm rounded-full p-1">
+                 <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleListening}
+                  className={`text-white p-2 rounded-full transition-colors duration-300 ${isListening ? 'bg-red-500/80 hover:bg-red-600/80' : 'hover:bg-white/20'}`}
+                  title={isListening ? "Arrêter l'écoute" : "Activer le micro"}
+                >
+                  {isListening ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleVoiceOutput}
+                  className="text-white hover:bg-white/20 p-2 rounded-full"
+                  title={voiceOutputEnabled ? "Désactiver le son" : "Activer le son"}
+                >
+                  {voiceOutputEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogHeader>
@@ -759,9 +928,9 @@ export default function ChildChatbot({ open, onOpenChange }: ChatbotProps) {
                   sendMessage();
                 }
               }}
-              placeholder="Écris ton message magique..."
+              placeholder={keywordDetected ? "J'écoute..." : isListening ? `Dites "${chatbotName}"...` : "Écris ton message magique..."}
               className="w-full pr-14 pl-5 py-3 bg-white/80 border-2 border-purple-200/50 focus:border-purple-400 focus:ring-4 focus:ring-purple-200/50 rounded-full shadow-inner transition-all duration-300"
-              disabled={loading}
+              disabled={loading || keywordDetected}
             />
             <motion.button
               onClick={() => sendMessage()}
