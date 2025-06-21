@@ -10,8 +10,8 @@ interface PurchaseHistoryProps {
 interface HistoryItem {
   id: string;
   purchased_at: string;
-  children: { name: string }[];
-  shop_items: { name: string; price: number }[];
+  child: { name: string };
+  shop_item: { name: string; price: number };
 }
 
 export function PurchaseHistory({ userId }: PurchaseHistoryProps) {
@@ -23,15 +23,61 @@ export function PurchaseHistory({ userId }: PurchaseHistoryProps) {
   }, [userId]);
 
   const fetchHistory = async () => {
-    const { data, error } = await supabase
-      .from('purchases')
-      .select(`id, purchased_at, children(name), shop_items(name, price)`) 
-      .in('child_id',
-        (await supabase.from('children').select('id').eq('user_id', userId)).data?.map(c => c.id) || []
-      )
-      .order('purchased_at', { ascending: false });
-    if (!error) setItems(data || []);
-    setLoading(false);
+    try {
+      // D'abord, récupérer les IDs des enfants de l'utilisateur
+      const { data: childrenData, error: childrenError } = await supabase
+        .from('children')
+        .select('id')
+        .eq('user_id', userId);
+
+      if (childrenError) {
+        console.error('Erreur lors de la récupération des enfants:', childrenError);
+        setLoading(false);
+        return;
+      }
+
+      if (!childrenData || childrenData.length === 0) {
+        setItems([]);
+        setLoading(false);
+        return;
+      }
+
+      const childIds = childrenData.map(child => child.id);
+
+      // Ensuite, récupérer les achats avec les jointures
+      const { data, error } = await supabase
+        .from('purchases')
+        .select(`
+          id,
+          purchased_at,
+          child:children(name),
+          shop_item:shop_items(name, price)
+        `)
+        .in('child_id', childIds)
+        .order('purchased_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Erreur lors de la récupération des achats:', error);
+        setItems([]);
+      } else if (data) {
+        // On doit transformer les données pour correspondre au type HistoryItem
+        const itemsTransformés = data.map((item: any) => ({
+          id: item.id,
+          purchased_at: item.purchased_at,
+          child: { name: item.child?.name ?? '' },
+          shop_item: { name: item.shop_item?.name ?? '', price: item.shop_item?.price ?? 0 }
+        }));
+        setItems(itemsTransformés);
+      } else {
+        setItems([]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de l\'historique:', error);
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -50,7 +96,7 @@ export function PurchaseHistory({ userId }: PurchaseHistoryProps) {
           {items.map((item) => (
             <li key={item.id} className="flex justify-between border-b pb-2 last:border-0 last:pb-0">
               <span>
-                {item.children[0]?.name} - {item.shop_items[0]?.name}
+                {item.child?.name} - {item.shop_item?.name}
               </span>
               <span className="text-sm text-gray-500">
                 {new Date(item.purchased_at).toLocaleDateString('fr-FR')}
