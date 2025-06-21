@@ -1942,96 +1942,60 @@ export default function ChildDashboard() {
 
       {/* Indicateurs flottants fixes en bas */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm border-t border-purple-200 shadow-lg">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-            {/* Missions non complétées */}
+        <div className="container mx-auto px-2 py-2">
+          <div className="flex items-center justify-center gap-2">
+            {/* Missions */}
             <div className="relative group">
               <div 
-                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
                 onClick={() => handleTabChange('tasks')}
               >
-                <TargetIcon className="w-6 h-6" />
+                <TargetIcon className="w-5 h-5" />
               </div>
               {(() => {
                 const incompleteTasks = childTasks.filter(t => !t.is_completed);
-                if (incompleteTasks.length > 0) {
-                  return (
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-2 -right-2 bg-blue-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
-                    >
-                      {incompleteTasks.length}
-                    </motion.div>
-                  );
-                }
-                return null;
+                return incompleteTasks.length > 0 ? (
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse"
+                  >
+                    {incompleteTasks.length}
+                  </motion.div>
+                ) : null;
               })()}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 {(() => {
                   const incompleteTasks = childTasks.filter(t => !t.is_completed);
                   return incompleteTasks.length > 0 
-                    ? `${incompleteTasks.length} mission${incompleteTasks.length > 1 ? 's' : ''} à accomplir`
-                    : 'Toutes les missions sont accomplies !';
-                })()}
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-              </div>
-            </div>
-            {/* Récompenses validées */}
-            <div className="relative group">
-              <div 
-                className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
-                onClick={() => handleTabChange('rewards')}
-              >
-                <CheckCircleIcon className="w-6 h-6" />
-              </div>
-              {(() => {
-                const validatedRewards = claimedRewards.filter(cr => isRewardValidated(cr.reward_id));
-                
-                if (validatedRewards.length > 0) {
-                  return (
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-2 -right-2 bg-green-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold"
-                    >
-                      {validatedRewards.length}
-                    </motion.div>
-                  );
-                }
-                return null;
-              })()}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                {(() => {
-                  const validatedRewards = claimedRewards.filter(cr => isRewardValidated(cr.reward_id));
-                  return validatedRewards.length > 0 
-                    ? `${validatedRewards.length} récompense${validatedRewards.length > 1 ? 's' : ''} validée${validatedRewards.length > 1 ? 's' : ''}`
-                    : 'Aucune récompense validée';
+                    ? `${incompleteTasks.length} mission${incompleteTasks.length > 1 ? 's' : ''}`
+                    : 'Toutes accomplies !';
                 })()}
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
               </div>
             </div>
 
-            {/* Récompenses disponibles */}
+            {/* Récompenses */}
             <div className="relative group">
               <div 
-                className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
                 onClick={() => handleTabChange('rewards')}
               >
-                <TrophyIcon className="w-6 h-6" />
+                <TrophyIcon className="w-5 h-5" />
               </div>
               {(() => {
                 const piggyStats = getPiggyBankStats();
                 const totalAvailablePoints = child.points + piggyStats.currentBalance;
                 const affordableRewards = rewards.filter(r => totalAvailablePoints >= r.cost && !isRewardClaimed(r.id));
                 const pendingValidation = claimedRewards.filter(cr => !isRewardValidated(cr.reward_id));
+                const validatedRewards = claimedRewards.filter(cr => isRewardValidated(cr.reward_id));
                 
                 if (pendingValidation.length > 0) {
                   return (
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-2 -right-2 bg-orange-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
+                      className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse"
                     >
                       {pendingValidation.length}
                     </motion.div>
@@ -2041,82 +2005,95 @@ export default function ChildDashboard() {
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse"
+                      className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
                     >
                       {affordableRewards.length}
+                    </motion.div>
+                  );
+                } else if (validatedRewards.length > 0) {
+                  return (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                    >
+                      {validatedRewards.length}
                     </motion.div>
                   );
                 }
                 return null;
               })()}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 {(() => {
                   const piggyStats = getPiggyBankStats();
                   const totalAvailablePoints = child.points + piggyStats.currentBalance;
                   const affordableRewards = rewards.filter(r => totalAvailablePoints >= r.cost && !isRewardClaimed(r.id));
                   const pendingValidation = claimedRewards.filter(cr => !isRewardValidated(cr.reward_id));
+                  const validatedRewards = claimedRewards.filter(cr => isRewardValidated(cr.reward_id));
                   
                   if (pendingValidation.length > 0) {
-                    return `${pendingValidation.length} récompense${pendingValidation.length > 1 ? 's' : ''} en attente de validation`;
+                    return `${pendingValidation.length} en attente`;
                   } else if (affordableRewards.length > 0) {
-                    return `${affordableRewards.length} récompense${affordableRewards.length > 1 ? 's' : ''} disponible${affordableRewards.length > 1 ? 's' : ''}`;
+                    return `${affordableRewards.length} disponible${affordableRewards.length > 1 ? 's' : ''}`;
+                  } else if (validatedRewards.length > 0) {
+                    return `${validatedRewards.length} validée${validatedRewards.length > 1 ? 's' : ''}`;
                   } else {
-                    return 'Aucune récompense disponible';
+                    return 'Aucune récompense';
                   }
                 })()}
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
               </div>
             </div>
 
-            {/* Produits en boutique */}
+            {/* Boutique */}
             <div className="relative group">
               <div 
-                className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
                 onClick={() => handleTabChange('shop')}
               >
-                <ShoppingCartIcon className="w-6 h-6" />
+                <ShoppingCartIcon className="w-5 h-5" />
               </div>
               {shopItems.length > 0 && (
                 <motion.div 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 bg-blue-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold"
+                  className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
                 >
                   {shopItems.length}
                 </motion.div>
               )}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 {shopItems.length > 0 
-                  ? `${shopItems.length} produit${shopItems.length > 1 ? 's' : ''} en boutique`
+                  ? `${shopItems.length} produit${shopItems.length > 1 ? 's' : ''}`
                   : 'Boutique vide'
                 }
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
               </div>
             </div>
 
-            {/* Devinette du jour */}
+            {/* Devinette */}
             <div className="relative group">
               <div
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
                 onClick={() => handleTabChange('riddles')}
               >
-                <BrainIcon className="w-6 h-6" />
+                <BrainIcon className="w-5 h-5" />
               </div>
               {currentRiddle && !riddleSolved && (
                 <motion.div 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 bg-purple-500 text-white text-sm rounded-full w-6 h-6 flex items-center justify-center font-bold animate-bounce"
+                  className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-bounce"
                 >
                   !
                 </motion.div>
               )}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                 {currentRiddle && !riddleSolved 
-                  ? 'Nouvelle devinette disponible !'
+                  ? 'Nouvelle devinette !'
                   : riddleSolved 
-                    ? 'Devinette résolue aujourd\'hui'
-                    : 'Aucune devinette disponible'
+                    ? 'Résolue aujourd\'hui'
+                    : 'Aucune devinette'
                 }
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
               </div>
@@ -2125,9 +2102,10 @@ export default function ChildDashboard() {
             {/* Analyse IA */}
             <div className="relative group">
               <div
-                className="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer relative overflow-hidden"
+                className="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-200 cursor-pointer"
                 onClick={handleOpenAnalysis}
               >
+                <BarChart3 className="w-5 h-5" />
                 <div className="absolute inset-0 bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
                 <BarChart3 className="w-6 h-6 relative z-10" />
                 {/* Effet de brillance */}
